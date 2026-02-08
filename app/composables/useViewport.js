@@ -92,9 +92,9 @@ function attachInstance(container) {
       }
 
       newModel.position.set(
-        Math.random() * 10 - 5,
-        Math.random() * 2,
-        Math.random() * 10 - 5,
+        camera.position.x + Math.random() * 8 - 4,
+        camera.position.y + Math.random() * 8 - 4,
+        camera.position.z + Math.random() * 8 - 4,
       );
       newModel.scale.set(rand, rand, rand);
       models.push(newModel);
