@@ -23,11 +23,14 @@ useSeoMeta({
   twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
   twitterCard: 'summary_large_image'
 })
+
+const { mode } = useViewport();
 </script>
 
 <template>
   <UApp>
-    <NuxtPage />
+    <Menu v-show="mode === 'overlay'" />
+    <Viewport class="absolute top-0 bottom-0 left-0 right-0 -z-1" />
   </UApp>
 </template>
 
