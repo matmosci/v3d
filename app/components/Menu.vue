@@ -2,6 +2,9 @@
   <div class="absolute top-0 bottom-0 left-0 right-0 bg-black/25 backdrop-blur-sm flex flex-col px-10">
     <div class="flex justify-between items-center py-3">
       <NuxtLink to="/" class="text-lg font-bold">V3D</NuxtLink>
+      <div>
+        <NuxtLink v-if="loggedIn" to="/assets">Assets</NuxtLink>
+      </div>
       <User />
     </div>
     <div class="h-full overflow-auto mt-3">
@@ -12,3 +15,7 @@
     </div>
   </div>
 </template>
+
+<script setup>
+const { loggedIn } = useUserSession();
+</script>
