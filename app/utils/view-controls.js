@@ -139,4 +139,4 @@ class ViewControls {
   }
 }
 
-export default ViewControls;
+export { ViewControls };

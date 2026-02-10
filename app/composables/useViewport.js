@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import ViewControls from "../utils/view-controls.js";
 
 let scene;
 let renderer;
