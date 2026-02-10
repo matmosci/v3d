@@ -33,12 +33,12 @@ async function getUserByLoginToken(email, token, hash = true) {
         return await UserModel.findOne({ email }) || await UserModel.create({ email });
 }
 
-async function getUserByLoginHash(user_id, hash) {
+async function getUserByLoginHash(hash) {
     hash = crypto.createHash("sha256").update(hash).digest("hex");
     const loginToken = await LoginTokenModel.findOne({ hash });
     if (!loginToken) return;
     const { email, token } = loginToken;
-    return await getUserByLoginToken(user_id, email, token, false);
+    return await getUserByLoginToken(email, token, false);
 }
 
 function sendLoginToken(email, credentials) {
