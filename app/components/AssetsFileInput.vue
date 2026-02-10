@@ -16,7 +16,7 @@ async function uploadAssets() {
         formData.append('files', files.value[i]);
     };
     try {
-        const response = await $fetch('/api/assets', {
+        await $fetch('/api/assets', {
             method: 'POST',
             body: formData,
         });
