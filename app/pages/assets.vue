@@ -1,8 +1,7 @@
 <template>
-    <div class="w-fit mx-auto">
-        <UFileUpload :disabled="disabled" :preview="false" v-model="files" label="Drop .glb models" class="size-48"
-            multiple accept=".glb" @change="uploadAssets"
-            :description="files.length ? `Uploading ${files.length} files...` : ''" />
+    <div class="grid gap-4" :class="assets.length ? 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6' : 'grid-cols-1'">
+        <AssetsFileInput @uploaded="fetchAssets" />
+        <AssetsItem v-for="asset in assets" :key="asset._id" :asset="asset" />
     </div>
 </template>
 
@@ -10,24 +9,18 @@
 definePageMeta({
     middleware: 'user'
 });
-const files = ref([]);
-const disabled = computed(() => files.value.length > 0);
 
-async function uploadAssets() {
-    const formData = new FormData();
-    for (let i = 0; i < files.value.length; i++) {
-        formData.append('files', files.value[i]);
-    };
+const assets = ref([]);
+
+async function fetchAssets() {
     try {
-        const response = await $fetch('/api/assets', {
-            method: 'POST',
-            body: formData,
-        });
-        console.log(response);
+        const data = await $fetch('/api/user/assets');
+        assets.value = data;
     } catch (error) {
         console.error(error);
-    } finally {
-        files.value = [];
     }
 }
+onMounted(() => {
+    fetchAssets();
+});
 </script>
