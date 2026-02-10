@@ -1,10 +1,9 @@
 <template>
-    <div class="border border-accented/50 rounded-lg bg-elevated/75 px-1 pb-1 h-48 flex flex-col">
+    <div class="border border-accented/50 hover:border-accented/90 duration-200 rounded-lg bg-elevated/50 hover:bg-elevated/90 cursor-pointer px-1 pb-1 h-48 flex flex-col select-none">
         <div>
-            <p class="font-medium">{{ asset.originalname }}</p>
-            <p class="text-sm text-gray-400">{{ (asset.size / 1024).toFixed(2) }} KB</p>
+            <div class="font-medium">{{ asset.originalname }}</div>
+            <div class="text-sm text-gray-400">{{ (asset.size / 1024).toFixed(2) }} KB</div>
         </div>
-        <div class="text-sm text-gray-500 mt-auto">{{ asset.createdAt.split('T')[0] }}</div>
     </div>
 </template>
 
