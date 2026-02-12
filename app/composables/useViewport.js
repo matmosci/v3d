@@ -31,12 +31,14 @@ function attachInstance(container) {
       0.1,
       1000,
     );
-    view = ViewControls.create(camera, renderer.domElement);
 
     camera.position.x = 1;
     camera.position.y = 1.5;
     camera.position.z = 2;
     camera.lookAt(0, 0.8, 0);
+
+    const cursor = new Cursor3D(camera, scene);
+    view = ViewControls.create(camera, renderer.domElement);
 
     const color = 0x333333;
     scene.background = new THREE.Color(color);
@@ -49,13 +51,14 @@ function attachInstance(container) {
     scene.add(cube);
 
     const gridHelper = new THREE.GridHelper(100, 100, 0x888888, 0x888888);
-    gridHelper.position.set(0, 0, 0);
+    gridHelper.layers.set(1);
+    gridHelper.position.set(0, 0.001, 0);
     scene.add(gridHelper);
     const plane = new THREE.Mesh(
       new THREE.PlaneGeometry(100, 100),
       new THREE.MeshBasicMaterial({ color: 0x444444 }),
     );
-    plane.position.set(0, -0.001, 0);
+    plane.position.set(0, 0, 0);
     plane.rotation.x = -Math.PI / 2;
     scene.add(plane);
 
@@ -87,6 +90,7 @@ function attachInstance(container) {
           color: new THREE.Color(`hsl(${rand * 360}, 100%, 50%)`),
           side: 2,
         });
+        newModel.layers.set(1);
         object3d.add(newModel);
       }
 
@@ -120,6 +124,10 @@ function attachInstance(container) {
     }
     animate(view);
 
+    view.pointerLockControls.addEventListener("change", () => {
+        cursor.update();
+    });
+    
     window.addEventListener("resize", reset);
     window.addEventListener("orientationchange", reset);
     window.addEventListener("keydown", (event) => {
