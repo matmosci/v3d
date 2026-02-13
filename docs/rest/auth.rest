@@ -1,0 +1,27 @@
+@api={{$dotenv host}}/api/auth
+@cookie={{$dotenv cookie}}
+@email={{$dotenv email}}
+
+### no-cookie
+GET {{api}}
+
+### cookie
+GET {{api}}
+Cookie: {{cookie}}
+
+###
+POST {{api}}/token
+Content-Type: application/json
+
+{
+    "email": "{{email}}"
+}
+
+###
+POST {{api}}/login
+Content-Type: application/json
+
+{
+    "email": "{{email}}",
+    "token": "NAEO"
+}
