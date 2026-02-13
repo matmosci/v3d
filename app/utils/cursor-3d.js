@@ -24,7 +24,7 @@ const cursorLine = new Mesh(
     new CylinderGeometry(0.005, 0.005, 0.2, 8).rotateX(Math.PI / 2),
     whiteMaterial
 );
-cursorLine.translateZ(0.1);
+cursorLine.translateZ(0.099);
 cursorLine.layers.set(1);
 
 cursorObject3D.add(cursorRing);
