@@ -24,9 +24,7 @@ onBeforeUnmount(() => {
 
 function setColors(scene) {
     const bgColor = 0x0f172b;
-    const floorColor = 0x1f2937;
     scene.background.set(bgColor);
-    scene.children.find(child => child.geometry?.type === 'PlaneGeometry').material.color.set(floorColor);
     scene.fog.color.set(bgColor);
 }
 </script>

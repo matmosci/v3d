@@ -34,36 +34,30 @@ async function attachInstance(container) {
       1000,
     );
 
-    // camera.position.x = 1;
-    // camera.position.y = 1.5;
-    // camera.position.z = 2;
-    // camera.lookAt(0, 0.8, 0);
+    const cameraLight = new THREE.PointLight(0xffffff, 1);
+    camera.add(cameraLight);
+    scene.add(camera);
 
     const cursor = new Cursor3D(camera, scene);
     view = ViewControls.create(camera, renderer.domElement);
 
     const color = 0x333333;
     scene.background = new THREE.Color(color);
-    scene.fog = new THREE.FogExp2(color, 0.2);
+    scene.fog = new THREE.FogExp2(color, 0.1);
 
-    // const geometry = new THREE.BoxGeometry();
-    // const material = new THREE.MeshNormalMaterial();
-    // const cube = new THREE.Mesh(geometry, material);
-    // cube.position.set(0, 0.5, 0);
-    // scene.add(cube);
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
     scene.add(ambientLight);
 
     await level.load("7f4cde04-c4b2-42d1-9ec3-140aaaf35806", scene, camera);
 
-    const gridHelper = new THREE.GridHelper(100, 100, 0x888888, 0x888888);
+    const gridHelper = new THREE.GridHelper(100, 100, 0x111111, 0x111111);
     gridHelper.layers.set(1);
     gridHelper.position.set(0, 0.001, 0);
     scene.add(gridHelper);
+
     const plane = new THREE.Mesh(
       new THREE.PlaneGeometry(100, 100),
-      new THREE.MeshBasicMaterial({ color: 0x444444 }),
+      new THREE.MeshStandardMaterial({ color: 0x1f2937 }),
     );
     plane.position.set(0, 0, 0);
     plane.rotation.x = -Math.PI / 2;
@@ -76,13 +70,13 @@ async function attachInstance(container) {
     scene.add(object3d);
 
     const models = [];
-    const dustGeometry = new THREE.SphereGeometry(0.005);
+    const dustGeometry = new THREE.SphereGeometry(0.0025, 8, 4);
     const dustMaterial = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       wireframe: false,
     });
 
-    const modelsMaxLength = 1000;
+    const modelsMaxLength = 500;
     for (let i = 0; i < modelsMaxLength; i++) emitModel(models);
 
     function emitModel() {
@@ -93,8 +87,9 @@ async function attachInstance(container) {
         newModel = models.shift();
       } else {
         newModel = new THREE.Mesh(dustGeometry, dustMaterial);
+        const hue = 15 + Math.random() * 30;
         newModel.material = new THREE.MeshBasicMaterial({
-          color: new THREE.Color(`hsl(${rand * 360}, 100%, 50%)`),
+          color: new THREE.Color(`hsl(${hue}, 100%, 50%)`),
           side: 2,
         });
         newModel.layers.set(1);
@@ -119,9 +114,9 @@ async function attachInstance(container) {
           model.position.z,
         );
         model.position.set(
-          model.position.x + newPos.x / 100,
-          model.position.y + newPos.y / 100,
-          model.position.z + newPos.z / 100,
+          model.position.x + newPos.x / 1000,
+          model.position.y + newPos.y / 1000,
+          model.position.z + newPos.z / 1000,
         );
       });
       requestAnimationFrame(() => animate(view));
