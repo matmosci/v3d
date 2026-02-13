@@ -34,10 +34,6 @@ async function attachInstance(container) {
       1000,
     );
 
-    const cameraLight = new THREE.PointLight(0xffffff, 1);
-    camera.add(cameraLight);
-    scene.add(camera);
-
     const cursor = new Cursor3D(camera, scene);
     view = ViewControls.create(camera, renderer.domElement);
 

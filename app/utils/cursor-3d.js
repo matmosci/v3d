@@ -7,6 +7,7 @@ import {
     MeshBasicMaterial,
     RingGeometry,
     CylinderGeometry,
+    PointLight,
 } from "three";
 
 const whiteMaterial = new MeshBasicMaterial({ color: 0xffffff });
@@ -27,8 +28,12 @@ const cursorLine = new Mesh(
 cursorLine.translateZ(0.099);
 cursorLine.layers.set(1);
 
+const cursorLight = new PointLight(0xffffff);
+cursorLight.translateZ(1);
+
 cursorObject3D.add(cursorRing);
 cursorObject3D.add(cursorLine);
+cursorObject3D.add(cursorLight);
 
 class Cursor3D {
     constructor(camera, scene) {
