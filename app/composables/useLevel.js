@@ -8,6 +8,7 @@ const instances = ref([]);
 export default function useLevel() {
   return {
     load,
+    loadGltf,
     meta,
     assets,
     instances,

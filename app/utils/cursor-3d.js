@@ -8,7 +8,11 @@ import {
     RingGeometry,
     CylinderGeometry,
     PointLight,
+    Matrix4,
 } from "three";
+
+let viewport;
+let level;
 
 const whiteMaterial = new MeshBasicMaterial({ color: 0xffffff });
 
@@ -35,6 +39,10 @@ cursorObject3D.add(cursorRing);
 cursorObject3D.add(cursorLine);
 cursorObject3D.add(cursorLight);
 
+const pick = new Object3D();
+pick.layers.set(1);
+cursorObject3D.add(pick);
+
 class Cursor3D {
     constructor(camera, scene) {
         this.camera = camera;
@@ -47,6 +55,37 @@ class Cursor3D {
 
         this.pointer = new Vector2(0, 0);
         this.direction = new Vector3();
+
+        this.pick = pick;
+
+        viewport = useViewport();
+        level = useLevel();
+
+        window.addEventListener("click", async (e) => {
+            // console.log(viewport.mode.value, this.pick.children.length);
+            // return;
+            if (this.pick.children.length === 0 || viewport.mode.value !== "navigation") return;
+
+            if (e.button === 0) {
+                const pickedObject = pick.children[0];
+                const response = await $fetch(`/api/levels/${level.meta.value._id}/instances`, {
+                    method: "POST",
+                    body: {
+                        asset: pickedObject.name,
+                        matrix: pickedObject.matrixWorld.toArray(),
+                    },
+                });
+                if (response) {
+                    level.instances.value.push(response);
+                    // level.assets.value.set(response._id, pickedObject);
+                    // console.log(level.assets.value);
+                    const object = level.assets.value.get(response.asset).clone();
+                    object.applyMatrix4(new Matrix4().fromArray(response.matrix));
+                    viewport.scene.add(object);
+                };
+            }
+            this.clearPick();
+        });
     }
 
     update() {
@@ -63,6 +102,14 @@ class Cursor3D {
             cursorObject3D.visible = true;
         } else {
         }
+    }
+
+    clearPick() {
+        this.pick.clear();
+    }
+
+    placePick(object) {
+        console.log(object);
     }
 }
 

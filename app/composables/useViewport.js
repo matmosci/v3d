@@ -5,6 +5,7 @@ let renderer;
 let camera;
 let view;
 let clock;
+let cursor;
 
 const level = useLevel();
 
@@ -16,6 +17,9 @@ export default function useViewport() {
     dettachInstance,
     reset,
     mode,
+    view,
+    cursor,
+    scene,
   };
 }
 
@@ -34,7 +38,7 @@ async function attachInstance(container) {
       1000,
     );
 
-    const cursor = new Cursor3D(camera, scene);
+    cursor = new Cursor3D(camera, scene);
     view = ViewControls.create(camera, renderer.domElement);
 
     const color = 0x333333;
