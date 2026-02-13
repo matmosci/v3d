@@ -1,0 +1,18 @@
+@api={{$dotenv host}}/api/levels
+@cookie={{$dotenv cookie}}
+
+###
+GET {{api}}/7f4cde04-c4b2-42d1-9ec3-140aaaf35806
+
+###
+GET {{api}}/7f4cde04-c4b2-42d1-9ec3-140aaaf35806/instances
+
+###
+POST {{api}}/7f4cde04-c4b2-42d1-9ec3-140aaaf35806/instances
+Content-Type: application/json
+Cookie: {{cookie}}
+
+{
+    "asset": "7fcd97f0-aeef-4637-bf44-7b8a6dfb3ab8",
+    "matrix": [2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1]
+}

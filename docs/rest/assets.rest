@@ -1,0 +1,8 @@
+@api={{$dotenv host}}/api/assets
+@cookie={{$dotenv cookie}}
+
+###
+GET {{api}}/7fcd97f0-aeef-4637-bf44-7b8a6dfb3ab8
+
+###
+GET {{api}}/7fcd97f0-aeef-4637-bf44-7b8a6dfb3ab8/data

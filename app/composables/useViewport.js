@@ -6,6 +6,8 @@ let camera;
 let view;
 let clock;
 
+const level = useLevel();
+
 const mode = ref("overlay");
 
 export default function useViewport() {
@@ -17,7 +19,7 @@ export default function useViewport() {
   };
 }
 
-function attachInstance(container) {
+async function attachInstance(container) {
   if (!renderer) {
     scene = new THREE.Scene();
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -32,10 +34,10 @@ function attachInstance(container) {
       1000,
     );
 
-    camera.position.x = 1;
-    camera.position.y = 1.5;
-    camera.position.z = 2;
-    camera.lookAt(0, 0.8, 0);
+    // camera.position.x = 1;
+    // camera.position.y = 1.5;
+    // camera.position.z = 2;
+    // camera.lookAt(0, 0.8, 0);
 
     const cursor = new Cursor3D(camera, scene);
     view = ViewControls.create(camera, renderer.domElement);
@@ -44,11 +46,16 @@ function attachInstance(container) {
     scene.background = new THREE.Color(color);
     scene.fog = new THREE.FogExp2(color, 0.2);
 
-    const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshNormalMaterial();
-    const cube = new THREE.Mesh(geometry, material);
-    cube.position.set(0, 0.5, 0);
-    scene.add(cube);
+    // const geometry = new THREE.BoxGeometry();
+    // const material = new THREE.MeshNormalMaterial();
+    // const cube = new THREE.Mesh(geometry, material);
+    // cube.position.set(0, 0.5, 0);
+    // scene.add(cube);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+    scene.add(ambientLight);
+
+    await level.load("7f4cde04-c4b2-42d1-9ec3-140aaaf35806", scene, camera);
 
     const gridHelper = new THREE.GridHelper(100, 100, 0x888888, 0x888888);
     gridHelper.layers.set(1);
@@ -125,9 +132,9 @@ function attachInstance(container) {
     animate(view);
 
     view.pointerLockControls.addEventListener("change", () => {
-        cursor.update();
+      cursor.update();
     });
-    
+
     window.addEventListener("resize", reset);
     window.addEventListener("orientationchange", reset);
     window.addEventListener("keydown", (event) => {

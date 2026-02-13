@@ -2,13 +2,13 @@
 const container = ref(null);
 const { attachInstance, dettachInstance, reset } = useViewport();
 
-onMounted(() => {
+onMounted(async () => {
     const {
         scene,
         renderer,
         camera,
         controls
-    } = attachInstance(container.value);
+    } = await attachInstance(container.value);
 
     setColors(scene);
     reset();
@@ -37,6 +37,6 @@ function setColors(scene) {
 
 <style>
 body {
-  overflow: hidden;
+    overflow: hidden;
 }
 </style>

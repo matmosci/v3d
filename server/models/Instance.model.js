@@ -6,8 +6,8 @@ export const InstanceModel = defineMongooseModel({
   schema: {
     _id: { type: String, default: () => crypto.randomUUID() },
     user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
-    level: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Level' },
-    asset: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Asset' },
+    level: { type: String, required: true, ref: 'Level' },
+    asset: { type: String, required: true, ref: 'Asset' },
     matrix: {
       type: [Number],
       default: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1]

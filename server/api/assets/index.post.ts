@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 
+const directory = "./uploads";
 const acceptedExtensions = [".glb"];
 
 export default defineEventHandler(async (event) => {
@@ -14,7 +15,6 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const directory = "./uploads";
     if (!fs.existsSync(directory)) {
         fs.mkdirSync(directory);
     }
