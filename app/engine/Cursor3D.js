@@ -35,7 +35,7 @@ cursorObject3D.add(cursorRing);
 cursorObject3D.add(cursorLine);
 cursorObject3D.add(cursorLight);
 
-class Cursor3D {
+export default class Cursor3D {
     constructor(camera, scene) {
         this.camera = camera;
         this.camera.layers.enable(1);
@@ -65,5 +65,3 @@ class Cursor3D {
         }
     }
 }
-
-export { Cursor3D };

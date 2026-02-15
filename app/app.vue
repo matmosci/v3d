@@ -24,7 +24,7 @@ useSeoMeta({
   twitterCard: 'summary_large_image'
 })
 
-const { mode } = useViewport();
+const { mode } = useMode();
 </script>
 
 <template>

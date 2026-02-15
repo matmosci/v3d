@@ -1,5 +1,6 @@
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { Vector3 } from "three";
+import events from "./EventBus";
 
 class PointerLockControlsState {
   constructor() {
@@ -36,6 +37,7 @@ class PointerLockControlsState {
           break;
       }
     });
+
     window.addEventListener("keyup", (event) => {
       switch (event.code) {
         case "KeyW":
@@ -64,7 +66,7 @@ class PointerLockControlsState {
   }
 }
 
-class ViewControls {
+class CameraControls {
   constructor(camera, domElement) {
     this.camera = camera;
     this.pointerLockControls = new PointerLockControls(camera, domElement);
@@ -72,31 +74,29 @@ class ViewControls {
 
     this.direction = new Vector3();
 
-    this.activeMode = null;
-
     this.pointerLockControls.enabled = false;
 
+    events.on("mode:change", ({ mode }) => {
+      this.switch(mode);
+    });
+
     window.addEventListener("keydown", (event) => {
+      if (!this.pointerLockControls.enabled) return;
       switch (event.code) {
         case "KeyH":
-          if (this.activeMode !== "navigation") break;
           this.camera.position.x = 0;
           this.camera.position.y = 1.6;
           this.camera.position.z = 0;
           break;
         case "KeyC":
-          if (this.activeMode !== "navigation") break;
           this.camera.position.y = 1.6;
           break;
       }
     });
   }
-  static create(camera, domElement) {
-    return new ViewControls(camera, domElement);
-  }
+
   switch(mode) {
-    this.activeMode = mode;
-    switch (this.activeMode) {
+    switch (mode) {
       case "overlay":
         this.pointerLockControls.unlock();
         this.pointerLockControls.enabled = false;
@@ -106,37 +106,35 @@ class ViewControls {
         this.pointerLockControls.enabled = true;
         break;
     }
-    return this.activeMode;
   }
+
   update(delta) {
-    if (this.activeMode === "navigation") {
-      this.direction.z = Number(
-        this.pointerLockControlsState.moveForward -
-          this.pointerLockControlsState.moveBackward,
-      );
-      this.direction.y = Number(
-        this.pointerLockControlsState.moveUp -
-          this.pointerLockControlsState.moveDown,
-      );
-      this.direction.x = Number(
-        this.pointerLockControlsState.moveRight -
-          this.pointerLockControlsState.moveLeft,
-      );
-      this.direction.normalize();
-      this.pointerLockControls.moveRight(
-        this.direction.x * delta * this.pointerLockControlsState.speed,
-      );
-      this.moveUp(
-        this.direction.y * delta * this.pointerLockControlsState.speed,
-      );
-      this.pointerLockControls.moveForward(
-        this.direction.z * delta * this.pointerLockControlsState.speed,
-      );
-    }
+    this.direction.z = Number(
+      this.pointerLockControlsState.moveForward -
+      this.pointerLockControlsState.moveBackward,
+    );
+    this.direction.y = Number(
+      this.pointerLockControlsState.moveUp -
+      this.pointerLockControlsState.moveDown,
+    );
+    this.direction.x = Number(
+      this.pointerLockControlsState.moveRight -
+      this.pointerLockControlsState.moveLeft,
+    );
+    this.direction.normalize();
+    this.pointerLockControls.moveRight(
+      this.direction.x * delta * this.pointerLockControlsState.speed,
+    );
+    this.moveUp(
+      this.direction.y * delta * this.pointerLockControlsState.speed,
+    );
+    this.pointerLockControls.moveForward(
+      this.direction.z * delta * this.pointerLockControlsState.speed,
+    );
   }
   moveUp(distance) {
     this.camera.position.y += distance;
   }
 }
 
-export { ViewControls };
+export default CameraControls;

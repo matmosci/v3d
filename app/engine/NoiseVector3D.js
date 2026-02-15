@@ -150,7 +150,7 @@ const perlinNoise3d = (function () {
 
 })();
 
-class NoiseVector3D {
+export default class NoiseVector3D {
     constructor(scaleFactor = 1) {
         this.x = new perlinNoise3d();
         this.y = new perlinNoise3d();
@@ -165,5 +165,3 @@ class NoiseVector3D {
         };
     }
 }
-
-export { NoiseVector3D };
