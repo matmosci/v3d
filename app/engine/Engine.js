@@ -91,7 +91,29 @@ export function reset() {
 }
 
 function registerEvents() {
+    // mode
+    // "mode:change": { mode: string }
     events.on("mode:change", ({ mode }) => {
         enabled = mode === "navigation";
     });
+
+    // lifecycle
+    // "world:ready": void
+
+    // selection
+    // "object:selected": { id: string }
+    // "object:deselected": void
+
+    // transform
+    // "object:transform:start": { id: string }
+    // "object:transform:update": { id: string }
+    // "object:transform:end": { id: string }
+
+    // placement
+    // "object:placement:start": { asset: string }
+    // "object:placement:confirm": { id: string }
+    // "object:placement:cancel": void
+
+    // networking
+    // "network:object:update": { id: string }
 }
