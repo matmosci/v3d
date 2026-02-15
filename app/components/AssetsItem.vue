@@ -1,5 +1,5 @@
 <template>
-    <div
+    <div @click="selectAsset"
         class="border border-default duration-150 rounded-lg bg-default hover:bg-elevated/25 cursor-pointer px-2 pb-1 h-48 flex flex-col select-none">
         <div class="font-medium">{{ asset.originalname }}</div>
         <div class="text-sm text-gray-400">{{ (asset.size / 1024).toFixed(2) }} KB</div>
@@ -10,10 +10,16 @@
 </template>
 
 <script setup>
-defineProps({
+import events from "@/engine/EventBus";
+
+const props = defineProps({
     asset: {
         type: Object,
         required: true,
     },
 });
+
+function selectAsset() {
+    events.emit("object:placement:start", { asset: props.asset._id });
+}
 </script>
