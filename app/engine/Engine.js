@@ -8,10 +8,6 @@ import events from "./EventBus";
 export let scene, renderer, camera;
 export let enabled = false;
 
-events.on("mode:change", ({ mode }) => {
-    enabled = mode === "navigation";
-});
-
 export async function attach(container) {
     if (renderer) return;
 
@@ -20,6 +16,8 @@ export async function attach(container) {
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     const clock = new THREE.Clock(true);
+
+    registerEvents();
 
     camera = new THREE.PerspectiveCamera(
         75,
@@ -90,4 +88,10 @@ export function reset() {
     renderer.setSize(clientWidth, clientHeight);
     camera.aspect = clientWidth / clientHeight;
     camera.updateProjectionMatrix();
+}
+
+function registerEvents() {
+    events.on("mode:change", ({ mode }) => {
+        enabled = mode === "navigation";
+    });
 }
