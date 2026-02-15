@@ -10,7 +10,7 @@ export const InstanceModel = defineMongooseModel({
     asset: { type: String, required: true, ref: 'Asset' },
     matrix: {
       type: [Number],
-      default: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1]
+      default: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
     },
   },
   options: {
