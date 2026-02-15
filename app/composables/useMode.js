@@ -8,11 +8,12 @@ events.on("mode:change", ({ mode: newMode }) => {
 
 function change(newMode) {
     mode.value = newMode;
-    events.emit("mode:change", { mode: mode.value });   
+    events.emit("mode:change", { mode: mode.value });
 }
 
 function toggle() {
-    change(mode.value === "overlay" ? "navigation" : "overlay");
+    const newMode = mode.value === "overlay" ? "navigation" : "overlay";
+    change(newMode);
     return mode.value;
 }
 
@@ -25,10 +26,8 @@ export function useMode() {
 }
 
 window?.addEventListener("keydown", (event) => {
-    switch (event.code) {
-        case "Tab":
-            event.preventDefault();
-            toggle();
-            break;
+    if (event.code === "Tab") {
+        event.preventDefault();
+        toggle();
     }
 });
