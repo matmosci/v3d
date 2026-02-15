@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import CameraControls from "./CameraControls";
 import Cursor3D from "./Cursor3D";
+import LevelLoader from "./LevelLoader";
 import Dust from "./Dust";
 import events from "./EventBus";
 
@@ -51,6 +52,8 @@ export async function attach(container) {
     scene.add(plane);
 
     const dust = new Dust(scene, camera);
+
+    await LevelLoader.load("7f4cde04-c4b2-42d1-9ec3-140aaaf35806", scene, camera);
 
     function animate(controls) {
         dust.emit();
