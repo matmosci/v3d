@@ -7,6 +7,7 @@ import events from "./EventBus";
 
 export let scene, renderer, camera;
 export let enabled = false;
+export let levelId = "7f4cde04-c4b2-42d1-9ec3-140aaaf35806";
 
 export async function attach(container) {
     if (renderer) return;
@@ -51,7 +52,7 @@ export async function attach(container) {
 
     const dust = new Dust(scene, camera);
 
-    await LevelLoader.load("7f4cde04-c4b2-42d1-9ec3-140aaaf35806", scene, camera);
+    await LevelLoader.load(levelId, scene, camera);
 
     function animate(controls) {
         dust.emit();
