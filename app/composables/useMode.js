@@ -2,6 +2,10 @@ import events from "../engine/EventBus";
 
 const mode = ref("overlay");
 
+events.on("mode:change", ({ mode: newMode }) => {
+    mode.value = newMode;
+});
+
 function change(newMode) {
     mode.value = newMode;
     events.emit("mode:change", { mode: mode.value });   
