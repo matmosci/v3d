@@ -1,7 +1,7 @@
 export default defineNuxtRouteMiddleware((to, from) => {
     const { user } = useUserSession();
 
-    if (!(user.value && user.value.access > 0)) {
+    if (!user.value) {
         return createError({
             statusCode: 401,
             statusMessage: "Unauthorized: " + to.fullPath,
