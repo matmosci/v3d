@@ -103,11 +103,18 @@ export default class Cursor3D {
         const intersects = this.raycaster.intersectObjects(this.scene.children);
         if (!intersects[0] || !intersects[0].face) return;
         cursorObject3D.position.set(0, 0, 0);
-        this.direction
-            .copy(intersects[0].face.normal)
-            .applyQuaternion(intersects[0].object.quaternion);
+        this.direction.copy(intersects[0].face.normal)
+        const instanceObject = findInstanceRoot(intersects[0].object);
+        if (instanceObject) this.direction.applyQuaternion(instanceObject.quaternion);
+        else this.direction.applyQuaternion(intersects[0].object.quaternion);
         cursorObject3D.lookAt(this.direction);
         cursorObject3D.position.copy(intersects[0].point);
         cursorObject3D.visible = true;
     }
+}
+
+function findInstanceRoot(object) {
+    if (object.isInstance) return object;
+    if (!object.parent) return null;
+    return findInstanceRoot(object.parent);
 }

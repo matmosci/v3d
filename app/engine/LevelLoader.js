@@ -38,6 +38,7 @@ export default class LevelLoader {
             return;
         }
         object.applyMatrix4(new Matrix4().fromArray(matrix));
+        object.isInstance = true;
         scene.add(object);
         return object;
     };
