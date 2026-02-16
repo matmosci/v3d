@@ -24,7 +24,7 @@ export default class LevelLoader {
         );
 
         for (const instance of instancesData) {
-            LevelLoader.placeInstance(instance.asset, instance.matrix, scene);
+            LevelLoader.placeInstance(instance.asset, instance.matrix);
         };
 
         camera.applyMatrix4(new Matrix4().fromArray(metaData.camera.matrix));
