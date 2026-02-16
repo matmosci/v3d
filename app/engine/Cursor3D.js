@@ -7,7 +7,7 @@ import {
     MeshBasicMaterial,
     RingGeometry,
     CylinderGeometry,
-    PointLight,
+    SpotLight,
 } from "three";
 
 import events from "./EventBus";
@@ -31,13 +31,8 @@ const cursorLine = new Mesh(
 cursorLine.translateZ(0.099);
 cursorLine.layers.set(1);
 
-const cursorLight = new PointLight(0xffffff);
-cursorLight.translateZ(1);
-
 cursorObject3D.add(cursorRing);
 cursorObject3D.add(cursorLine);
-cursorObject3D.add(cursorLight);
-
 const pickedObjectGroup = new Object3D();
 pickedObjectGroup.layers.set(1);
 cursorObject3D.add(pickedObjectGroup);
@@ -89,27 +84,34 @@ export default class Cursor3D {
         this.camera.layers.enable(1);
 
         this.scene = scene;
-        this.scene.add(cursorObject3D);
+
+        this.indicator = cursorObject3D;
+        this.scene.add(this.indicator);
 
         this.raycaster = new Raycaster(new Vector3(), new Vector3(), 0, 10);
 
         this.pointer = new Vector2(0, 0);
         this.direction = new Vector3();
+
+        this.light = new SpotLight(0xffffff, 20, 10, Math.PI / 6, 0.1);
+        this.camera.add(this.light);
+        
+        this.light.target = this.indicator;
     }
 
     update() {
-        cursorObject3D.visible = false;
+        this.indicator.visible = false;
         this.raycaster.setFromCamera(this.pointer, this.camera);
         const intersects = this.raycaster.intersectObjects(this.scene.children);
         if (!intersects[0] || !intersects[0].face) return;
-        cursorObject3D.position.set(0, 0, 0);
+        this.indicator.position.set(0, 0, 0);
         this.direction.copy(intersects[0].face.normal)
         const instanceObject = findInstanceRoot(intersects[0].object);
         if (instanceObject) this.direction.applyQuaternion(instanceObject.quaternion);
         else this.direction.applyQuaternion(intersects[0].object.quaternion);
-        cursorObject3D.lookAt(this.direction);
-        cursorObject3D.position.copy(intersects[0].point);
-        cursorObject3D.visible = true;
+        this.indicator.lookAt(this.direction);
+        this.indicator.position.copy(intersects[0].point);
+        this.indicator.visible = true;
     }
 }
 

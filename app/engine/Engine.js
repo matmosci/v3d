@@ -27,6 +27,8 @@ export async function attach(container) {
         1000,
     );
 
+    scene.add(camera);
+
     const cursor = new Cursor3D(camera, scene);
     const controls = new CameraControls(camera, renderer.domElement);
 
