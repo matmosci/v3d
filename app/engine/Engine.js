@@ -115,6 +115,7 @@ export default class Engine {
     disable() {
         this.context.state.enabled = false;
         this.systems.cameraControls.switch(this.context.state.enabled);
+        this.systems.cursor.indicator.ghostObject.finishPlacement({});
     }
 
     animate() {

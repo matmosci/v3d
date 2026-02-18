@@ -52,7 +52,6 @@ class GhostObject extends Object3D {
     clearObject() {
         this.clear();
         this.pickedAsset = null;
-        window.removeEventListener("click", this.confirmPlacement);
     }
 
     setObject(object) {
@@ -60,8 +59,9 @@ class GhostObject extends Object3D {
         if (object) {
             const pickedObjectMaterialCache = new Map();
             this.pickedAsset = object.name;
+            this.finishPlacementBound = this.finishPlacement.bind(this);
             setTimeout(() => {
-                window.addEventListener("click", this.finishPlacement.bind(this), { once: true });
+                window.addEventListener("click", this.finishPlacementBound, { once: true });
             });
             this.add(object);
             this.traverse((child) => {
@@ -76,6 +76,7 @@ class GhostObject extends Object3D {
     }
 
     finishPlacement(event) {
+        window.removeEventListener("click", this.finishPlacementBound);
         if (!this.pickedAsset) return;
         if (event.button === 0) this.ctx.events.emit("object:placement:confirm", { asset: this.pickedAsset, matrix: this.matrixWorld.toArray() });
         this.clearObject();
