@@ -1,4 +1,4 @@
-class EventBus {
+export default class EventBus {
   constructor() {
     this.events = {};
   }
@@ -22,5 +22,3 @@ class EventBus {
     }
   }
 }
-
-export default new EventBus();

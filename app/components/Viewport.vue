@@ -1,25 +1,19 @@
 <script setup>
-import { attach, dettach, reset } from "../engine/Engine";
-
+const editor = useEditor();
 const container = ref(null);
 
 onMounted(async () => {
-    await attach(container.value);
-    reset();
-});
+    editor.init(container.value);
 
-onBeforeUnmount(() => {
-    dettach();
+    window?.addEventListener("keydown", (event) => {
+        if (event.code === "Tab") {
+            event.preventDefault();
+            editor.toggleMode();
+        }
+    });
 });
-
 </script>
 
 <template>
     <div ref="container"></div>
 </template>
-
-<style>
-body {
-    overflow: hidden;
-}
-</style>

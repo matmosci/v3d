@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import events from "@/engine/EventBus";
+const editor = useEditor();
 
 const props = defineProps({
     asset: {
@@ -20,6 +20,6 @@ const props = defineProps({
 });
 
 function selectAsset() {
-    events.emit("object:placement:start", { asset: props.asset._id });
+    editor.getContext().events.emit("object:placement:start", { asset: props.asset._id });
 }
 </script>

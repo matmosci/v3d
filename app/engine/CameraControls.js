@@ -1,8 +1,7 @@
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { Vector3 } from "three";
-import events from "./EventBus";
 
-class PointerLockControlsState {
+class CameraMovement {
   constructor() {
     this.moveForward = false;
     this.moveBackward = false;
@@ -67,18 +66,14 @@ class PointerLockControlsState {
 }
 
 class CameraControls {
-  constructor(camera, domElement) {
-    this.camera = camera;
-    this.pointerLockControls = new PointerLockControls(camera, domElement);
-    this.pointerLockControlsState = new PointerLockControlsState();
+  constructor(ctx) {
+    this.camera = ctx.camera;
+    this.pointerLockControls = new PointerLockControls(ctx.camera, ctx.renderer.domElement);
+    this.pointerLockControls.enabled = false;
+    this.cameraMovement = new CameraMovement();
 
     this.direction = new Vector3();
 
-    this.pointerLockControls.enabled = false;
-
-    events.on("mode:change", ({ mode }) => {
-      this.switch(mode);
-    });
 
     window.addEventListener("keydown", (event) => {
       if (!this.pointerLockControls.enabled) return;
@@ -95,41 +90,38 @@ class CameraControls {
     });
   }
 
-  switch(mode) {
-    switch (mode) {
-      case "overlay":
-        this.pointerLockControls.unlock();
-        this.pointerLockControls.enabled = false;
-        break;
-      case "navigation":
-        this.pointerLockControls.lock();
-        this.pointerLockControls.enabled = true;
-        break;
+  switch(enabled) {
+    if (enabled) {
+      this.pointerLockControls.lock();
+      this.pointerLockControls.enabled = true;
+    } else {
+      this.pointerLockControls.unlock();
+      this.pointerLockControls.enabled = false;
     }
   }
 
   update(delta) {
     this.direction.z = Number(
-      this.pointerLockControlsState.moveForward -
-      this.pointerLockControlsState.moveBackward,
+      this.cameraMovement.moveForward -
+      this.cameraMovement.moveBackward,
     );
     this.direction.y = Number(
-      this.pointerLockControlsState.moveUp -
-      this.pointerLockControlsState.moveDown,
+      this.cameraMovement.moveUp -
+      this.cameraMovement.moveDown,
     );
     this.direction.x = Number(
-      this.pointerLockControlsState.moveRight -
-      this.pointerLockControlsState.moveLeft,
+      this.cameraMovement.moveRight -
+      this.cameraMovement.moveLeft,
     );
     this.direction.normalize();
     this.pointerLockControls.moveRight(
-      this.direction.x * delta * this.pointerLockControlsState.speed,
+      this.direction.x * delta * this.cameraMovement.speed,
     );
     this.moveUp(
-      this.direction.y * delta * this.pointerLockControlsState.speed,
+      this.direction.y * delta * this.cameraMovement.speed,
     );
     this.pointerLockControls.moveForward(
-      this.direction.z * delta * this.pointerLockControlsState.speed,
+      this.direction.z * delta * this.cameraMovement.speed,
     );
   }
   moveUp(distance) {

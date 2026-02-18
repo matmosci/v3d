@@ -1,122 +1,149 @@
 import * as THREE from "three";
+import EngineContext from "./EngineContext";
 import CameraControls from "./CameraControls";
 import Cursor3D from "./Cursor3D";
 import LevelLoader from "./LevelLoader";
 import Dust from "./Dust";
-import events from "./EventBus";
 
-export let scene, renderer, camera;
-export let enabled = false;
-export let levelId = "7f4cde04-c4b2-42d1-9ec3-140aaaf35806";
+export let test_level = "7f4cde04-c4b2-42d1-9ec3-140aaaf35806";
 
-export async function attach(container) {
-    if (renderer) return;
+export default class Engine {
+    constructor(container, project = test_level) {
+        this.container = container;
+        this.context = new EngineContext();
+        this.context.state.project = project;
+        this.systems = {};
+        this.context.scene = new THREE.Scene();
+        this.context.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.container.appendChild(this.context.renderer.domElement);
+        this.context.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+        this.context.renderer.setPixelRatio(window.devicePixelRatio);
+        this.context.camera = new THREE.PerspectiveCamera(
+            75,
+            this.context.renderer.domElement.clientWidth / this.context.renderer.domElement.clientHeight,
+            0.1,
+            1000,
+        );
+        this.context.clock = new THREE.Clock(true);
 
-    scene = new THREE.Scene();
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    const clock = new THREE.Clock(true);
+        this.context.camera.layers.enable(1);
+        this.context.scene.add(this.context.camera);
 
-    registerEvents();
+        const bgColor = 0x0f172b;
+        this.context.scene.background = new THREE.Color(bgColor);
+        this.context.scene.fog = new THREE.FogExp2(bgColor, 0.1);
 
-    camera = new THREE.PerspectiveCamera(
-        75,
-        renderer.domElement.clientWidth / renderer.domElement.clientHeight,
-        0.1,
-        1000,
-    );
+        this.registerSystems();
+        this.registerEvents();
+        this.setupScene();
 
-    scene.add(camera);
+        this.animate();
 
-    const cursor = new Cursor3D(camera, scene);
-    const controls = new CameraControls(camera, renderer.domElement);
-
-    const bgColor = 0x0f172b;
-    scene.background = new THREE.Color(bgColor);
-    scene.fog = new THREE.FogExp2(bgColor, 0.1);
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
-    scene.add(ambientLight);
-
-    const gridHelper = new THREE.GridHelper(100, 100, 0x888888, 0x888888);
-    gridHelper.layers.set(1);
-    gridHelper.position.set(0, 0.001, 0);
-    scene.add(gridHelper);
-
-    const plane = new THREE.Mesh(
-        new THREE.PlaneGeometry(100, 100),
-        new THREE.MeshStandardMaterial({ color: 0x1f2937 }),
-    );
-    plane.position.set(0, 0, 0);
-    plane.rotation.x = -Math.PI / 2;
-    scene.add(plane);
-
-    const dust = new Dust(scene, camera);
-
-    await LevelLoader.load(levelId, scene, camera);
-
-    function animate(controls) {
-        dust.emit();
-        dust.update();
-        requestAnimationFrame(() => animate(controls));
-        const delta = clock.getDelta();
-        if (enabled) controls.update(delta);
-        renderer.render(scene, camera);
+        window.addEventListener("resize", this.reset.bind(this));
+        window.addEventListener("orientationchange", this.reset.bind(this));
     }
-    animate(controls);
 
-    controls.pointerLockControls.addEventListener("change", () => {
-        cursor.update();
-    });
-
-    window.addEventListener("resize", reset);
-    window.addEventListener("orientationchange", reset);
-
-    if (container && !container.contains(renderer.domElement)) {
-        container.appendChild(renderer.domElement);
+    registerSystems() {
+        this.systems.dust = new Dust(this.context);
+        this.systems.cameraControls = new CameraControls(this.context);
+        this.systems.cursor = new Cursor3D(this.context);
+        this.systems.cameraControls.pointerLockControls.addEventListener("change", () => {
+            this.systems.cursor.update();
+        });
+        this.systems.level = new LevelLoader(this.context);
     }
-}
 
-export function dettach() {
-    if (renderer?.domElement?.parentNode) {
-        renderer.domElement.parentElement.removeChild(renderer.domElement);
+    registerEvents() {
+        // mode
+        this.context.events.on("mode:disable", this.disable.bind(this));
+        this.context.events.on("mode:enable", this.enable.bind(this));
+        // lifecycle
+        // "world:ready": void
+
+        // selection
+        // "object:selected": { id: string }
+        // "object:deselected": void
+
+        // transform
+        // "object:transform:start": { id: string }
+        // "object:transform:update": { id: string }
+        // "object:transform:end": { id: string }
+
+        // placement
+        // "object:placement:start": { asset: string }
+        // "object:placement:confirm": { id: string }
+        // "object:placement:cancel": void
+        this.context.events.on("object:placement:start", ({ asset }) => {
+            this.context.events.emit("mode:enable");
+            this.systems.level.startUserObjectPlacement(asset);
+        });
+        this.context.events.on("object:placement:update", ({ object }) => {
+            this.systems.cursor.indicator.ghostObject.setObject(object);
+        });
+        this.context.events.on("object:placement:confirm", ({ asset, matrix }) => {
+            this.systems.level.confirmUserObjectPlacement(asset, matrix);
+        });
+
+        // networking
+        // "network:object:update": { id: string }
     }
-}
 
-export function reset() {
-    if (!renderer?.domElement?.parentElement) return;
+    setupScene() {
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+        this.context.scene.add(ambientLight);
 
-    const { clientWidth, clientHeight } = renderer.domElement.parentElement;
-    renderer.setSize(clientWidth, clientHeight);
-    camera.aspect = clientWidth / clientHeight;
-    camera.updateProjectionMatrix();
-}
+        const gridHelper = new THREE.GridHelper(100, 100, 0x888888, 0x888888);
+        gridHelper.layers.set(1);
+        gridHelper.position.set(0, 0.001, 0);
+        this.context.scene.add(gridHelper);
 
-function registerEvents() {
-    // mode
-    // "mode:change": { mode: string }
-    events.on("mode:change", ({ mode }) => {
-        enabled = mode === "navigation";
-    });
+        const plane = new THREE.Mesh(
+            new THREE.PlaneGeometry(100, 100),
+            new THREE.MeshStandardMaterial({ color: 0x1f2937 }),
+        );
+        plane.position.set(0, 0, 0);
+        plane.rotation.x = -Math.PI / 2;
+        this.context.scene.add(plane);
+        this.systems.level.load();
+    }
 
-    // lifecycle
-    // "world:ready": void
+    enable() {
+        this.context.state.enabled = true;
+        this.systems.cameraControls.switch(this.context.state.enabled);
+    }
 
-    // selection
-    // "object:selected": { id: string }
-    // "object:deselected": void
+    disable() {
+        this.context.state.enabled = false;
+        this.systems.cameraControls.switch(this.context.state.enabled);
+    }
 
-    // transform
-    // "object:transform:start": { id: string }
-    // "object:transform:update": { id: string }
-    // "object:transform:end": { id: string }
+    animate() {
+        this.systems.dust.emit();
+        this.systems.dust.update();
+        requestAnimationFrame(() => this.animate());
+        const delta = this.context.clock.getDelta();
+        if (this.context.state.enabled) this.systems.cameraControls.update(delta);
+        this.context.renderer.render(this.context.scene, this.context.camera);
+    }
 
-    // placement
-    // "object:placement:start": { asset: string }
-    // "object:placement:confirm": { id: string }
-    // "object:placement:cancel": void
+    reset() {
+        if (!this.context.renderer?.domElement?.parentElement) return;
 
-    // networking
-    // "network:object:update": { id: string }
+        const { clientWidth, clientHeight } = this.context.renderer.domElement.parentElement;
+        this.context.renderer.setSize(clientWidth, clientHeight);
+        this.context.camera.aspect = clientWidth / clientHeight;
+        this.context.camera.updateProjectionMatrix();
+    }
+
+    attach(container) {
+        this.dettach();
+        container.appendChild(this.context.renderer.domElement);
+    }
+
+    dettach() {
+        if (this.context.renderer?.domElement?.parentElement) {
+            this.disable();
+            this.context.renderer.domElement.parentElement.removeChild(this.context.renderer.domElement);
+        }
+    }
 }

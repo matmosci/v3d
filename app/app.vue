@@ -24,7 +24,9 @@ useSeoMeta({
   twitterCard: 'summary_large_image'
 })
 
-const { mode } = useMode();
+const editor = useEditor();
+const mode = computed(() => editor.getMode());
+
 </script>
 
 <template>

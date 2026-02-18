@@ -8,9 +8,9 @@ const dustMaterial = new MeshBasicMaterial({
 });
 
 export default class Dust {
-    constructor(scene, camera) {
-        this.scene = scene;
-        this.camera = camera;
+    constructor(ctx) {
+        this.scene = ctx.scene;
+        this.camera = ctx.camera;
         this.objects = [];
         this.noise = new NoiseVector3D(10);
         this.modelsMaxLength = 500;

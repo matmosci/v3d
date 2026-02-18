@@ -1,47 +1,77 @@
 import { Matrix4 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import events from "./EventBus";
-import { scene, camera, levelId } from "./Engine";
-
-const assets = new Map();
 
 export default class LevelLoader {
-    static async load(id) {
+    constructor(ctx) {
+        this.ctx = ctx;
+        this.scene = this.ctx.scene;
+        this.camera = this.ctx.camera;
+    }
+
+    async load() {
+        const id = this.ctx.state.project;
         const resMeta = await fetch(`/api/levels/${id}`);
-        const metaData = await resMeta.json();
+        this.metaData = await resMeta.json();
         const resInstances = await fetch(`/api/levels/${id}/instances`);
-        const instancesData = await resInstances.json();
+        this.instancesData = await resInstances.json();
+        
+        await this.getAssets();
 
-        const assetsSet = new Set(instancesData.map((instance) => instance.asset));
-
-        await Promise.all(
-            Array.from(assetsSet).map(async (asset) => {
-                const gltf = await loadGltf(`/api/assets/${asset}/data`);
-                const object = gltf.scene;
-                object.name = asset;
-                assets.set(asset, object);
-            })
-        );
-
-        for (const instance of instancesData) {
-            LevelLoader.placeInstance(instance.asset, instance.matrix);
+        for (const instance of this.instancesData) {
+            this.placeInstance(instance.asset, instance.matrix);
         };
 
-        camera.applyMatrix4(new Matrix4().fromArray(metaData.camera.matrix));
-
-        return metaData;
+        this.camera.applyMatrix4(new Matrix4().fromArray(this.metaData.camera.matrix));
+        return this.metaData;
     }
-    static placeInstance(asset, matrix) {
-        const object = assets.get(asset)?.clone();
+
+    async getAssets() {
+        const assetsSet = new Set(this.instancesData.map((instance) => instance.asset));
+        await Promise.all(
+            Array.from(assetsSet).map(async (asset) => {
+                if (!this.ctx.assets.has(asset)) await this.cacheAsset(asset);
+            })
+        );
+    }
+
+    async cacheAsset(asset) {
+        const gltf = await loadGltf(`/api/assets/${asset}/data`);
+        const object = gltf.scene;
+        object.name = asset;
+        this.ctx.assets.set(asset, object);
+    }
+
+    placeInstance(asset, matrix) {
+        const object = this.ctx.assets.get(asset)?.clone();
         if (!object) {
             console.error(`Asset ${asset} not found`);
             return;
         }
         object.applyMatrix4(new Matrix4().fromArray(matrix));
         object.isInstance = true;
-        scene.add(object);
+        this.ctx.scene.add(object);
         return object;
     };
+
+    async startUserObjectPlacement(asset) {
+        if (this.ctx.assets.get(asset)) this.ctx.events.emit("object:placement:update", { object: this.ctx.assets.get(asset).clone() });
+        else {
+            const gltf = await loadGltf(`/api/assets/${asset}/data`);
+            const object = gltf.scene;
+            object.name = asset;
+            this.ctx.assets.set(asset, object);
+            this.ctx.events.emit("object:placement:update", { object: object.clone() });
+        };
+    }
+
+    async confirmUserObjectPlacement(asset, matrix) {
+        if (this.placeInstance(asset, matrix))
+            await fetch(`/api/levels/${this.ctx.state.project}/instances`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ asset, matrix }),
+            });
+    }
 };
 
 const gltf = new GLTFLoader();
@@ -57,22 +87,22 @@ function loadGltf(gltfUrl) {
     });
 };
 
-events.on("object:placement:start", async ({ asset }) => {
-    if (assets.get(asset)) events.emit("object:placement:update", { object: assets.get(asset).clone() });
-    else {
-        const gltf = await loadGltf(`/api/assets/${asset}/data`);
-        const object = gltf.scene;
-        object.name = asset;
-        assets.set(asset, object);
-        events.emit("object:placement:update", { object: object.clone() });
-    };
-});
+// events.on("object:placement:start", async ({ asset }) => {
+//     if (assets.get(asset)) events.emit("object:placement:update", { object: assets.get(asset).clone() });
+//     else {
+//         const gltf = await loadGltf(`/api/assets/${asset}/data`);
+//         const object = gltf.scene;
+//         object.name = asset;
+//         assets.set(asset, object);
+//         events.emit("object:placement:update", { object: object.clone() });
+//     };
+// });
 
-events.on("object:placement:confirm", async ({ asset, matrix }) => {
-    if (LevelLoader.placeInstance(asset, matrix))
-        await fetch(`/api/levels/${levelId}/instances`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ asset, matrix }),
-        });
-});
+// events.on("object:placement:confirm", async ({ asset, matrix }) => {
+//     if (LevelLoader.placeInstance(asset, matrix))
+//         await fetch(`/api/levels/${levelId}/instances`, {
+//             method: "POST",
+//             headers: { "Content-Type": "application/json" },
+//             body: JSON.stringify({ asset, matrix }),
+//         });
+// });
