@@ -9,20 +9,25 @@ export default class LevelLoader {
     }
 
     async load() {
-        const id = this.ctx.state.project;
-        const resMeta = await fetch(`/api/levels/${id}`);
-        this.metaData = await resMeta.json();
-        const resInstances = await fetch(`/api/levels/${id}/instances`);
-        this.instancesData = await resInstances.json();
-        
-        await this.getAssets();
+        try {
+            const id = this.ctx.state.project;
+            const resMeta = await fetch(`/api/levels/${id}`);
+            this.metaData = await resMeta.json();
+            const resInstances = await fetch(`/api/levels/${id}/instances`);
+            this.instancesData = await resInstances.json();
 
-        for (const instance of this.instancesData) {
-            this.placeInstance(instance.asset, instance.matrix);
-        };
+            await this.getAssets();
 
-        this.camera.applyMatrix4(new Matrix4().fromArray(this.metaData.camera.matrix));
-        return this.metaData;
+            for (const instance of this.instancesData) {
+                this.placeInstance(instance.asset, instance.matrix);
+            };
+
+            this.camera.applyMatrix4(new Matrix4().fromArray(this.metaData.camera.matrix));
+            return this.metaData;
+        } catch (error) {
+            alert(`Failed to load level ${id}`);
+            console.error(`Failed to load level ${id}`, error);
+        }
     }
 
     async getAssets() {
