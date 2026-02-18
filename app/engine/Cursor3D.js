@@ -108,17 +108,17 @@ export default class Cursor3D {
         if (!intersects[0] || !intersects[0].face) return;
         this.indicator.position.set(0, 0, 0);
         this.direction.copy(intersects[0].face.normal)
-        const instanceObject = findInstanceRoot(intersects[0].object);
+        const instanceObject = this.findInstanceRoot(intersects[0].object);
         if (instanceObject) this.direction.applyQuaternion(instanceObject.quaternion);
         else this.direction.applyQuaternion(intersects[0].object.quaternion);
         this.indicator.lookAt(this.direction);
         this.indicator.position.copy(intersects[0].point);
         this.indicator.visible = true;
     }
-}
-
-function findInstanceRoot(object) {
-    if (object.isInstance) return object;
-    if (!object.parent) return null;
-    return findInstanceRoot(object.parent);
+    
+    findInstanceRoot(object) {
+        if (object.isInstance) return object;
+        if (!object.parent) return null;
+        return this.findInstanceRoot(object.parent);
+    }
 }
