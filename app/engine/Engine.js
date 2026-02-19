@@ -121,10 +121,10 @@ export default class Engine {
     animate() {
         this.systems.dust.emit();
         this.systems.dust.update();
-        requestAnimationFrame(() => this.animate());
         const delta = this.context.clock.getDelta();
         if (this.context.state.enabled) this.systems.cameraControls.update(delta);
         this.context.renderer.render(this.context.scene, this.context.camera);
+        requestAnimationFrame(this.animate.bind(this));
     }
 
     reset() {
