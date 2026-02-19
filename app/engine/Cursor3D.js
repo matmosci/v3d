@@ -124,4 +124,8 @@ export default class Cursor3D {
         if (!object.parent) return null;
         return this.findInstanceRoot(object.parent);
     }
+
+    cancelPlacement() {
+        this.indicator.ghostObject.finishPlacement({});
+    }
 }
