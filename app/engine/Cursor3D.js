@@ -43,7 +43,9 @@ class GhostObject extends Object3D {
     constructor(ctx) {
         super();
         this.ctx = ctx;
-        this.pickedAssetMaterial = new MeshBasicMaterial({ color: 0x0088ff, opacity: 0.8, transparent: true });
+        this.pickedAssetMaterial = new MeshBasicMaterial({ color: 0x0088ff, opacity: 0.5, transparent: true });
+        this.pickedAssetMaterial.depthWrite = true;
+        this.pickedAssetMaterial.depthTest = true;
         this.pickedAsset = null;
         this.layers.set(1);
         this.rotation.x = Math.PI / 2;
