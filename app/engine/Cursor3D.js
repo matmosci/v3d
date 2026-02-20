@@ -73,14 +73,11 @@ class GhostObject extends Object3D {
             const pickedObjectMaterialCache = new Map();
             this.ctx.state.pickedAsset = object.name;
             this.finishPlacementBound = this.finishPlacement.bind(this);
-            this.finishPlacementTimeout = setTimeout(() => {
-                this.finishPlacementTimeout = null;
-                if (!this.ctx.state.pickedAsset || this.placementSession !== sessionId) return;
-                this.unsubscribeFinishPlacementClick = this.ctx.input.subscribeClick(
-                    this.finishPlacementBound,
-                    { once: true }
-                );
-            });
+            this.finishPlacementTimeout = null;
+            if (!this.ctx.state.pickedAsset || this.placementSession !== sessionId) return;
+            this.unsubscribeFinishPlacementClick = this.ctx.input.subscribeClick(
+                this.finishPlacementBound
+            );
             this.add(object);
             this.traverse((child) => {
                 child.layers.set(1);
@@ -94,11 +91,31 @@ class GhostObject extends Object3D {
     }
 
     finishPlacement(event) {
+        if (!event || typeof event.button !== "number") {
+            this.unsubscribeFinishPlacementClick?.();
+            this.unsubscribeFinishPlacementClick = null;
+            this.clearObject();
+            return;
+        }
+
+        if (!this.isCanvasClick(event)) return;
+
         this.unsubscribeFinishPlacementClick?.();
         this.unsubscribeFinishPlacementClick = null;
         if (!this.ctx.state.pickedAsset) return;
         if (event.button === 0) this.ctx.events.emit("object:placement:confirm", { asset: this.ctx.state.pickedAsset, matrix: this.matrixWorld.toArray() });
         this.clearObject();
+    }
+
+    isCanvasClick(event) {
+        const canvas = this.ctx.renderer?.domElement;
+        if (!canvas) return false;
+        if (event.target === canvas) return true;
+        if (typeof event.composedPath === "function") {
+            const path = event.composedPath();
+            if (Array.isArray(path) && path.includes(canvas)) return true;
+        }
+        return false;
     }
 }
 
