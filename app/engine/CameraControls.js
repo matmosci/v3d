@@ -1,6 +1,5 @@
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { Vector3 } from "three";
-import { th } from "zod/locales";
 
 class CameraMovement {
   constructor() {
