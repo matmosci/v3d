@@ -99,7 +99,7 @@ export default class Cursor3D {
         this.pointer = new Vector2(0, 0);
         this.direction = new Vector3();
 
-        this.light = new SpotLight(0xffffff, 20, 10, Math.PI / 6, 0.1);
+        this.light = new SpotLight(0xffffff, 20, 0, Math.PI / 6, 0.2);
         this.light.visible = true;
         this.camera.add(this.light);
 
