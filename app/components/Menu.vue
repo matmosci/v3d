@@ -11,7 +11,7 @@
       <NuxtPage />
     </div>
     <div class="mt-auto text-center py-3">
-        Press <UKbd>TAB</UKbd> to close menu
+        Press <UKbd>TAB</UKbd> to toggle menu
     </div>
   </div>
 </template>
