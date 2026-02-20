@@ -1,152 +1,151 @@
-import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
 import { Vector3 } from "three";
 
-class CameraMovement {
-  constructor() {
-    this.moveForward = false;
-    this.moveBackward = false;
-    this.moveLeft = false;
-    this.moveRight = false;
-    this.moveUp = false;
-    this.moveDown = false;
-    this.speed = 3;
+class MovementIntent {
+  forward = false;
+  backward = false;
+  left = false;
+  right = false;
+  up = false;
+  down = false;
+  sprint = false;
 
-    window.addEventListener("keydown", (event) => {
-      switch (event.code) {
-        case "KeyW":
-          this.moveForward = true;
-          break;
-        case "KeyA":
-          this.moveLeft = true;
-          break;
-        case "KeyS":
-          this.moveBackward = true;
-          break;
-        case "KeyD":
-          this.moveRight = true;
-          break;
-        case "KeyE":
-          this.moveUp = true;
-          break;
-        case "KeyQ":
-          this.moveDown = true;
-          break;
-        case "ShiftLeft":
-          this.speed = 6;
-          break;
-      }
-    });
-
-    window.addEventListener("keyup", (event) => {
-      switch (event.code) {
-        case "KeyW":
-          this.moveForward = false;
-          break;
-        case "KeyA":
-          this.moveLeft = false;
-          break;
-        case "KeyS":
-          this.moveBackward = false;
-          break;
-        case "KeyD":
-          this.moveRight = false;
-          break;
-        case "KeyE":
-          this.moveUp = false;
-          break;
-        case "KeyQ":
-          this.moveDown = false;
-          break;
-        case "ShiftLeft":
-          this.speed = 3;
-          break;
-      }
-    });
+  get hasMovement() {
+    return (
+      this.forward ||
+      this.backward ||
+      this.left ||
+      this.right ||
+      this.up ||
+      this.down
+    );
   }
 }
+class InputSystem {
+  constructor(intent) {
+    this.intent = intent;
 
-class CameraControls {
+    window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("keyup", this.onKeyUp);
+  }
+
+  onKeyDown = (event) => {
+    switch (event.code) {
+      case "KeyW": this.intent.forward = true; break;
+      case "KeyS": this.intent.backward = true; break;
+      case "KeyA": this.intent.left = true; break;
+      case "KeyD": this.intent.right = true; break;
+      case "KeyE": this.intent.up = true; break;
+      case "KeyQ": this.intent.down = true; break;
+      case "ShiftLeft": this.intent.sprint = true; break;
+    }
+  };
+
+  onKeyUp = (event) => {
+    switch (event.code) {
+      case "KeyW": this.intent.forward = false; break;
+      case "KeyS": this.intent.backward = false; break;
+      case "KeyA": this.intent.left = false; break;
+      case "KeyD": this.intent.right = false; break;
+      case "KeyE": this.intent.up = false; break;
+      case "KeyQ": this.intent.down = false; break;
+      case "ShiftLeft": this.intent.sprint = false; break;
+    }
+  };
+}
+
+const CameraState = {
+  Disabled: 0,
+  Idle: 1,
+  Moving: 2,
+};
+
+export default class CameraController {
   constructor(ctx) {
     this.ctx = ctx;
-    this.camera = this.ctx.camera;
-    this.pointerLockControls = new PointerLockControls(this.ctx.camera, this.ctx.renderer.domElement);
-    this.pointerLockControls.enabled = false;
-    this.cameraMovement = new CameraMovement();
+    this.camera = ctx.camera;
+    this.controls = new PointerLockControls(
+      ctx.camera,
+      ctx.renderer.domElement
+    );
+
+    this.intent = new MovementIntent();
+    this.intent.reset = () => this.reset();
+    this.intent.ground = () => this.ground();
+    this.input = new InputSystem(this.intent);
+
+    this.state = CameraState.Disabled;
 
     this.direction = new Vector3();
-
-
-    window.addEventListener("keydown", (event) => {
-      if (!this.pointerLockControls.enabled) return;
-      switch (event.code) {
-        case "KeyH":
-          this.camera.position.x = 0;
-          this.camera.position.y = 1.6;
-          this.camera.position.z = 0;
-          break;
-        case "KeyC":
-          this.camera.position.y = 1.6;
-          break;
-      }
-    });
+    this.baseSpeed = 3;
+    this.sprintMultiplier = 2;
 
     this.ctx.events.on("mode:enable", () => {
-      this.switch(true);
+      this.enable();
     });
     this.ctx.events.on("mode:disable", () => {
-      this.switch(false);
+      this.disable();
     });
-    this.pointerLockControls.addEventListener("change", () => {
+    this.controls.addEventListener("lock", () => { });
+    this.controls.addEventListener("unlock", () => { });
+    this.controls.addEventListener("change", () => {
       this.ctx.events.emit("camera:rotate");
-    });
-    this.pointerLockControls.addEventListener("lock", () => {
-      this.ctx.events.emit("camera:lock");
-    });
-    this.pointerLockControls.addEventListener("unlock", () => {
-      this.ctx.events.emit("camera:unlock");
     });
   }
 
-  switch(enabled) {
-    if (enabled) {
-      this.pointerLockControls.lock();
-      this.pointerLockControls.enabled = true;
-    } else {
-      this.pointerLockControls.unlock();
-      this.pointerLockControls.enabled = false;
-    }
+  enable() {
+    this.controls.lock();
+    this.state = CameraState.Idle;
+  }
+
+  disable() {
+    this.controls.unlock();
+    this.state = CameraState.Disabled;
   }
 
   update(delta) {
-    this.direction.z = Number(
-      this.cameraMovement.moveForward -
-      this.cameraMovement.moveBackward,
-    );
-    this.direction.y = Number(
-      this.cameraMovement.moveUp -
-      this.cameraMovement.moveDown,
-    );
-    this.direction.x = Number(
-      this.cameraMovement.moveRight -
-      this.cameraMovement.moveLeft,
-    );
-    this.direction.normalize();
-    this.pointerLockControls.moveRight(
-      this.direction.x * delta * this.cameraMovement.speed,
-    );
-    this.moveUp(
-      this.direction.y * delta * this.cameraMovement.speed,
-    );
-    this.pointerLockControls.moveForward(
-      this.direction.z * delta * this.cameraMovement.speed,
-    );
-    if (this.direction.length() > 0) {
-      this.ctx.events.emit("camera:move");
+    if (this.state === CameraState.Disabled) return;
+
+    const hasMovement = this.intent.hasMovement;
+
+    // --- transitions ---
+    if (this.state === CameraState.Idle && hasMovement) {
+      this.state = CameraState.Moving;
+      this.ctx.events.emit("camera:moveStart");
+    }
+
+    if (this.state === CameraState.Moving && !hasMovement) {
+      this.state = CameraState.Idle;
+      this.ctx.events.emit("camera:moveEnd");
+    }
+
+    // --- execution ---
+    if (this.state === CameraState.Moving) {
+      this.applyMovement(delta);
     }
   }
-  moveUp(distance) {
-    this.camera.position.y += distance;
+
+  applyMovement(delta) {
+    this.direction.set(
+      Number(this.intent.right) - Number(this.intent.left),
+      Number(this.intent.up) - Number(this.intent.down),
+      Number(this.intent.forward) - Number(this.intent.backward)
+    );
+
+    if (this.direction.lengthSq() === 0) return;
+
+    this.direction.normalize();
+
+    const speed =
+      this.baseSpeed *
+      (this.intent.sprint ? this.sprintMultiplier : 1);
+
+    const distance = speed * delta;
+
+    this.controls.moveRight(this.direction.x * distance);
+    this.controls.moveForward(this.direction.z * distance);
+    this.camera.position.y += this.direction.y * distance;
+
+    this.ctx.events.emit("camera:move");
   }
 }
-
-export default CameraControls;

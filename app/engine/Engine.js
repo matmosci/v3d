@@ -51,15 +51,18 @@ export default class Engine {
     }
 
     registerEvents() {
-        this.context.events.on("mode:disable", this.disable.bind(this));
-        this.context.events.on("mode:enable", this.enable.bind(this));
-
+        this.context.events.on("mode:disable", () => {
+            this.disable();
+        });
+        this.context.events.on("mode:enable", () => {
+            this.enable();
+        });
         this.context.events.on("object:placement:start", () => {
             this.context.events.emit("mode:enable");
         });
-        this.context.events.on("camera:unlock", () => {
-            this.context.events.emit("mode:disable");
-        });
+        // this.context.events.on("camera:unlock", () => {
+        //     this.context.events.emit("mode:disable");
+        // });
 
         // lifecycle
         // "world:ready": void
