@@ -1,5 +1,6 @@
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { Vector3 } from "three";
+import { th } from "zod/locales";
 
 class CameraMovement {
   constructor() {
@@ -90,13 +91,21 @@ class CameraControls {
       }
     });
 
-      this.ctx.events.on("mode:enable", () => {
-        this.switch(true);
-      });
-      this.ctx.events.on("mode:disable", () => {
-        this.switch(false);
-      });
-
+    this.ctx.events.on("mode:enable", () => {
+      this.switch(true);
+    });
+    this.ctx.events.on("mode:disable", () => {
+      this.switch(false);
+    });
+    this.pointerLockControls.addEventListener("change", () => {
+      this.ctx.events.emit("camera:rotate");
+    });
+    this.pointerLockControls.addEventListener("lock", () => {
+      this.ctx.events.emit("camera:lock");
+    });
+    this.pointerLockControls.addEventListener("unlock", () => {
+      this.ctx.events.emit("camera:unlock");
+    });
   }
 
   switch(enabled) {
@@ -132,6 +141,9 @@ class CameraControls {
     this.pointerLockControls.moveForward(
       this.direction.z * delta * this.cameraMovement.speed,
     );
+    if (this.direction.length() > 0) {
+      this.ctx.events.emit("camera:move");
+    }
   }
   moveUp(distance) {
     this.camera.position.y += distance;

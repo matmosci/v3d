@@ -110,6 +110,15 @@ export default class Cursor3D {
         this.ctx.events.on("mode:disable", () => {
             this.cancelPlacement();
         });
+        this.ctx.events.on("camera:lock", () => {
+            this.update();
+        });
+        this.ctx.events.on("camera:rotate", () => {
+            this.update();
+        });
+        this.ctx.events.on("camera:move", () => {
+            this.update();
+        });
     }
 
     update() {
@@ -126,7 +135,7 @@ export default class Cursor3D {
         this.indicator.position.copy(intersects[0].point);
         this.indicator.visible = true;
     }
-    
+
     findInstanceRoot(object) {
         if (object.isInstance) return object;
         if (!object.parent) return null;

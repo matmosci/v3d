@@ -47,16 +47,20 @@ export default class Engine {
         this.systems.dust = new Dust(this.context);
         this.systems.cameraControls = new CameraControls(this.context);
         this.systems.cursor = new Cursor3D(this.context);
-        this.systems.cameraControls.pointerLockControls.addEventListener("change", () => {
-            this.systems.cursor.update();
-        });
         this.systems.level = new LevelLoader(this.context);
     }
 
     registerEvents() {
-        // mode
         this.context.events.on("mode:disable", this.disable.bind(this));
         this.context.events.on("mode:enable", this.enable.bind(this));
+
+        this.context.events.on("object:placement:start", () => {
+            this.context.events.emit("mode:enable");
+        });
+        this.context.events.on("camera:unlock", () => {
+            this.context.events.emit("mode:disable");
+        });
+
         // lifecycle
         // "world:ready": void
 
@@ -73,11 +77,6 @@ export default class Engine {
         // "object:placement:start": { asset: string }
         // "object:placement:confirm": { id: string }
         // "object:placement:cancel": void
-        this.context.events.on("object:placement:start", () => {
-            this.context.events.emit("mode:enable");
-        });
-        
-
 
         // networking
         // "network:object:update": { id: string }
