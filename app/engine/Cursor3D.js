@@ -100,9 +100,15 @@ export default class Cursor3D {
         this.direction = new Vector3();
 
         this.light = new SpotLight(0xffffff, 20, 10, Math.PI / 6, 0.1);
+        this.light.visible = true;
         this.camera.add(this.light);
 
         this.light.target = this.indicator;
+        this.onToggleLightKeyDown = (event) => {
+            if (event.code !== "KeyF" || event.repeat || !this.ctx.state.enabled) return;
+            this.light.visible = !this.light.visible;
+        };
+        this.ctx.input.subscribeKeyDown(this.onToggleLightKeyDown);
 
         this.ctx.events.on("object:placement:update", ({ object }) => {
             this.startPlacement(object);
