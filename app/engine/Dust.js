@@ -12,8 +12,8 @@ export default class Dust {
         this.scene = ctx.scene;
         this.camera = ctx.camera;
         this.objects = [];
-        this.noise = new NoiseVector3D(10);
-        this.modelsMaxLength = 500;
+        this.noise = new NoiseVector3D(0.1);
+        this.modelsMaxLength = 1000;
         for (let i = 0; i < this.modelsMaxLength; i++) this.emit();
     }
 
@@ -43,7 +43,7 @@ export default class Dust {
         this.objects.push(newModel);
     }
 
-    update(divide = 1000) {
+    update(divide = 500) {
         this.objects.forEach((model) => {
             const newPos = this.noise.get(
                 model.position.x,
