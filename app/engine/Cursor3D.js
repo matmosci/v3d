@@ -93,8 +93,28 @@ class GhostObject extends Object3D {
         this.unsubscribeFinishPlacementClick?.();
         this.unsubscribeFinishPlacementClick = null;
         if (!this.ctx.state.pickedAsset) return;
-        if (event.button === 0) this.ctx.events.emit("object:placement:confirm", { asset: this.ctx.state.pickedAsset, matrix: this.matrixWorld.toArray() });
+        if (event.button === 0) {
+            this.ctx.events.emit("object:placement:confirm", {
+                asset: this.ctx.state.pickedAsset,
+                matrix: this.getPlacementMatrix(event.ctrlKey),
+            });
+        }
         this.clearObject();
+    }
+
+    getPlacementMatrix(shouldSnap = false) {
+        const matrix = this.matrixWorld.toArray();
+        if (!shouldSnap) return matrix;
+
+        const snap = this.ctx.state.placementSnap || {};
+        const step = Number(snap.step) || 1;
+        const axes = snap.axes || {};
+
+        if (axes.x) matrix[12] = Math.round(matrix[12] / step) * step;
+        if (axes.y) matrix[13] = Math.round(matrix[13] / step) * step;
+        if (axes.z) matrix[14] = Math.round(matrix[14] / step) * step;
+
+        return matrix;
     }
 
     isCanvasClick(event) {
@@ -167,6 +187,18 @@ export default class Cursor3D {
         else this.direction.applyQuaternion(intersects[0].object.quaternion);
         this.indicator.lookAt(this.direction);
         this.indicator.position.copy(intersects[0].point);
+
+        const isCtrlHeld = this.ctx.input.isAnyPressed(["ControlLeft", "ControlRight"]);
+
+        if (this.ctx.state.pickedAsset && isCtrlHeld) {
+            const snap = this.ctx.state.placementSnap || {};
+            const step = Number(snap.step) || 1;
+            const axes = snap.axes || {};
+
+            if (axes.x) this.indicator.position.x = Math.round(this.indicator.position.x / step) * step;
+            if (axes.y) this.indicator.position.y = Math.round(this.indicator.position.y / step) * step;
+            if (axes.z) this.indicator.position.z = Math.round(this.indicator.position.z / step) * step;
+        }
     }
 
     findInstanceRoot(object) {
