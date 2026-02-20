@@ -29,10 +29,6 @@ export default class Engine {
         this.context.camera.layers.enable(1);
         this.context.scene.add(this.context.camera);
 
-        const bgColor = 0x0f172b;
-        this.context.scene.background = new THREE.Color(bgColor);
-        this.context.scene.fog = new THREE.FogExp2(bgColor, 0.1);
-
         this.registerSystems();
         this.registerEvents();
         this.setupScene();
@@ -89,18 +85,15 @@ export default class Engine {
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
         this.context.scene.add(ambientLight);
 
-        const gridHelper = new THREE.GridHelper(100, 100, 0x888888, 0x888888);
+        const bgColor = 0x0f172b;
+        this.context.scene.background = new THREE.Color(bgColor);
+        this.context.scene.fog = new THREE.FogExp2(bgColor, 0.01);
+
+        const gridHelper = new THREE.GridHelper(1000, 1000, 0x444444, 0x222222);
         gridHelper.layers.set(1);
         gridHelper.position.set(0, 0.001, 0);
         this.context.scene.add(gridHelper);
 
-        const plane = new THREE.Mesh(
-            new THREE.PlaneGeometry(100, 100),
-            new THREE.MeshStandardMaterial({ color: 0x1f2937 }),
-        );
-        plane.position.set(0, 0, 0);
-        plane.rotation.x = -Math.PI / 2;
-        this.context.scene.add(plane);
         this.systems.level.load();
     }
 
