@@ -87,11 +87,12 @@ class GhostObject extends Object3D {
 
 export default class Cursor3D {
     constructor(ctx) {
-        this.camera = ctx.camera;
+        this.ctx = ctx;
+        this.camera = this.ctx.camera;
         this.camera.layers.enable(1);
 
-        this.scene = ctx.scene;
-        this.indicator = new Cursor3DIndicator(ctx);
+        this.scene = this.ctx.scene;
+        this.indicator = new Cursor3DIndicator(this.ctx);
 
         this.raycaster = new Raycaster(new Vector3(), new Vector3(), 0, 10);
 
@@ -102,6 +103,13 @@ export default class Cursor3D {
         this.camera.add(this.light);
 
         this.light.target = this.indicator;
+
+        this.ctx.events.on("object:placement:update", ({ object }) => {
+            this.startPlacement(object);
+        });
+        this.ctx.events.on("mode:disable", () => {
+            this.cancelPlacement();
+        });
     }
 
     update() {
@@ -110,7 +118,7 @@ export default class Cursor3D {
         const intersects = this.raycaster.intersectObjects(this.scene.children);
         if (!intersects[0] || !intersects[0].face) return;
         this.indicator.position.set(0, 0, 0);
-        this.direction.copy(intersects[0].face.normal)
+        this.direction.copy(intersects[0].face.normal);
         const instanceObject = this.findInstanceRoot(intersects[0].object);
         if (instanceObject) this.direction.applyQuaternion(instanceObject.quaternion);
         else this.direction.applyQuaternion(intersects[0].object.quaternion);
@@ -123,6 +131,10 @@ export default class Cursor3D {
         if (object.isInstance) return object;
         if (!object.parent) return null;
         return this.findInstanceRoot(object.parent);
+    }
+
+    startPlacement(object) {
+        this.indicator.ghostObject.setObject(object);
     }
 
     cancelPlacement() {

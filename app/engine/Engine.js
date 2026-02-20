@@ -73,16 +73,11 @@ export default class Engine {
         // "object:placement:start": { asset: string }
         // "object:placement:confirm": { id: string }
         // "object:placement:cancel": void
-        this.context.events.on("object:placement:start", ({ asset }) => {
+        this.context.events.on("object:placement:start", () => {
             this.context.events.emit("mode:enable");
-            this.systems.level.startUserObjectPlacement(asset);
         });
-        this.context.events.on("object:placement:update", ({ object }) => {
-            this.systems.cursor.indicator.ghostObject.setObject(object);
-        });
-        this.context.events.on("object:placement:confirm", ({ asset, matrix }) => {
-            this.systems.level.confirmUserObjectPlacement(asset, matrix);
-        });
+        
+
 
         // networking
         // "network:object:update": { id: string }
@@ -109,13 +104,10 @@ export default class Engine {
 
     enable() {
         this.context.state.enabled = true;
-        this.systems.cameraControls.switch(this.context.state.enabled);
     }
 
     disable() {
         this.context.state.enabled = false;
-        this.systems.cameraControls.switch(this.context.state.enabled);
-        this.systems.cursor.cancelPlacement();
     }
 
     animate() {

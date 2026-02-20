@@ -6,6 +6,13 @@ export default class LevelLoader {
         this.ctx = ctx;
         this.scene = this.ctx.scene;
         this.camera = this.ctx.camera;
+
+        this.ctx.events.on("object:placement:start", ({ asset }) => {
+            this.startUserObjectPlacement(asset);
+        });
+        this.ctx.events.on("object:placement:confirm", ({ asset, matrix }) => {
+            this.confirmUserObjectPlacement(asset, matrix);
+        });
     }
 
     async load() {

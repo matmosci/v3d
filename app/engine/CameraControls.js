@@ -67,8 +67,9 @@ class CameraMovement {
 
 class CameraControls {
   constructor(ctx) {
-    this.camera = ctx.camera;
-    this.pointerLockControls = new PointerLockControls(ctx.camera, ctx.renderer.domElement);
+    this.ctx = ctx;
+    this.camera = this.ctx.camera;
+    this.pointerLockControls = new PointerLockControls(this.ctx.camera, this.ctx.renderer.domElement);
     this.pointerLockControls.enabled = false;
     this.cameraMovement = new CameraMovement();
 
@@ -88,6 +89,14 @@ class CameraControls {
           break;
       }
     });
+
+      this.ctx.events.on("mode:enable", () => {
+        this.switch(true);
+      });
+      this.ctx.events.on("mode:disable", () => {
+        this.switch(false);
+      });
+
   }
 
   switch(enabled) {
