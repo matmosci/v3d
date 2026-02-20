@@ -17,5 +17,6 @@ export default class EngineContext {
 
     state = {
         enabled: false,
+        pickedAsset: null,
     }
 };

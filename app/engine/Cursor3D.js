@@ -46,21 +46,20 @@ class GhostObject extends Object3D {
         this.pickedAssetMaterial = new MeshBasicMaterial({ color: 0x0088ff, opacity: 0.5, transparent: true });
         this.pickedAssetMaterial.depthWrite = true;
         this.pickedAssetMaterial.depthTest = true;
-        this.pickedAsset = null;
         this.layers.set(1);
         this.rotation.x = Math.PI / 2;
     }
 
     clearObject() {
         this.clear();
-        this.pickedAsset = null;
+        this.ctx.state.pickedAsset = null;
     }
 
     setObject(object) {
         this.clearObject();
         if (object) {
             const pickedObjectMaterialCache = new Map();
-            this.pickedAsset = object.name;
+            this.ctx.state.pickedAsset = object.name;
             this.finishPlacementBound = this.finishPlacement.bind(this);
             setTimeout(() => {
                 window.addEventListener("click", this.finishPlacementBound, { once: true });
@@ -79,8 +78,8 @@ class GhostObject extends Object3D {
 
     finishPlacement(event) {
         window.removeEventListener("click", this.finishPlacementBound);
-        if (!this.pickedAsset) return;
-        if (event.button === 0) this.ctx.events.emit("object:placement:confirm", { asset: this.pickedAsset, matrix: this.matrixWorld.toArray() });
+        if (!this.ctx.state.pickedAsset) return;
+        if (event.button === 0) this.ctx.events.emit("object:placement:confirm", { asset: this.ctx.state.pickedAsset, matrix: this.matrixWorld.toArray() });
         this.clearObject();
     }
 }
