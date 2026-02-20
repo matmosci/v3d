@@ -3,6 +3,7 @@ export default class InputHandler {
 		this.target = target;
 		this.keys = new Set();
 		this.keyDownSubscribers = new Set();
+		this.keyUpSubscribers = new Set();
 
 		this.target.addEventListener("keydown", this.onKeyDown);
 		this.target.addEventListener("keyup", this.onKeyUp);
@@ -16,6 +17,7 @@ export default class InputHandler {
 
 	onKeyUp = (event) => {
 		this.keys.delete(event.code);
+		this.keyUpSubscribers.forEach((callback) => callback(event));
 	};
 
 	onBlur = () => {
@@ -37,11 +39,19 @@ export default class InputHandler {
 		};
 	}
 
+	subscribeKeyUp(callback) {
+		this.keyUpSubscribers.add(callback);
+		return () => {
+			this.keyUpSubscribers.delete(callback);
+		};
+	}
+
 	dispose() {
 		this.target.removeEventListener("keydown", this.onKeyDown);
 		this.target.removeEventListener("keyup", this.onKeyUp);
 		this.target.removeEventListener("blur", this.onBlur);
 		this.keys.clear();
 		this.keyDownSubscribers.clear();
+		this.keyUpSubscribers.clear();
 	}
 }

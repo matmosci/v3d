@@ -10,6 +10,7 @@ export default class EngineContext {
     controls = null;
     cursor = null;
     input = null;
+    keybindings = null;
 
     instances = [];
     assets = new Map();

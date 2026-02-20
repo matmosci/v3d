@@ -5,6 +5,7 @@ import Cursor3D from "./Cursor3D";
 import LevelLoader from "./LevelLoader";
 import Dust from "./Dust";
 import InputHandler from "./InputHandler";
+import Keybindings from "./Keybindings";
 
 export let test_level = "7f4cde04-c4b2-42d1-9ec3-140aaaf35806";
 
@@ -27,6 +28,8 @@ export default class Engine {
         );
         this.context.clock = new THREE.Clock(true);
         this.context.input = new InputHandler(window);
+        this.context.keybindings = new Keybindings(this.context.input);
+        this.registerKeybindings();
 
         this.context.camera.layers.enable(1);
         this.context.scene.add(this.context.camera);
@@ -46,6 +49,17 @@ export default class Engine {
         this.systems.cameraControls = new CameraControls(this.context);
         this.systems.cursor = new Cursor3D(this.context);
         this.systems.level = new LevelLoader(this.context);
+    }
+
+    registerKeybindings() {
+        this.context.keybindings.bindAction("moveForward", ["KeyW"]);
+        this.context.keybindings.bindAction("moveBackward", ["KeyS"]);
+        this.context.keybindings.bindAction("moveLeft", ["KeyA"]);
+        this.context.keybindings.bindAction("moveRight", ["KeyD"]);
+        this.context.keybindings.bindAction("moveUp", ["KeyE"]);
+        this.context.keybindings.bindAction("moveDown", ["KeyQ"]);
+        this.context.keybindings.bindAction("sprint", ["ShiftLeft", "ShiftRight"]);
+        this.context.keybindings.bindAction("toggleCursorLight", ["KeyF"]);
     }
 
     registerEvents() {

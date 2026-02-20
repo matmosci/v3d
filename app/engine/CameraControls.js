@@ -31,7 +31,7 @@ const CameraState = {
 export default class CameraController {
   constructor(ctx) {
     this.ctx = ctx;
-    this.input = ctx.input;
+    this.keybindings = ctx.keybindings;
     this.camera = ctx.camera;
     this.controls = new PointerLockControls(
       ctx.camera,
@@ -74,13 +74,13 @@ export default class CameraController {
   update(delta) {
     if (this.state === CameraState.Disabled) return;
 
-    this.intent.forward = this.input.isPressed("KeyW");
-    this.intent.backward = this.input.isPressed("KeyS");
-    this.intent.left = this.input.isPressed("KeyA");
-    this.intent.right = this.input.isPressed("KeyD");
-    this.intent.up = this.input.isPressed("KeyE");
-    this.intent.down = this.input.isPressed("KeyQ");
-    this.intent.sprint = this.input.isAnyPressed(["ShiftLeft", "ShiftRight"]);
+    this.intent.forward = this.keybindings.isActive("moveForward");
+    this.intent.backward = this.keybindings.isActive("moveBackward");
+    this.intent.left = this.keybindings.isActive("moveLeft");
+    this.intent.right = this.keybindings.isActive("moveRight");
+    this.intent.up = this.keybindings.isActive("moveUp");
+    this.intent.down = this.keybindings.isActive("moveDown");
+    this.intent.sprint = this.keybindings.isActive("sprint");
 
     const hasMovement = this.intent.hasMovement;
 
