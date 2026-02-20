@@ -11,7 +11,7 @@ export const LevelModel = defineMongooseModel({
     camera: {
       position: {
         type: [Number],
-        default: [0, 0, 0]
+        default: [0, 1.6, 5]
       },
       quaternion: {
         type: [Number],
