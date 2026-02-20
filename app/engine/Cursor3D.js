@@ -194,13 +194,11 @@ export default class Cursor3D {
 
     update() {
         this.raycaster.setFromCamera(this.pointer, this.camera);
-        if (this.scene.children.length === 0) {
-            this.indicator.position.set(0, 0, 0);
+        const intersects = this.raycaster.intersectObjects(this.scene.children);
+        if (!intersects[0] || !intersects[0].face) {
             this.indicator.rotation.x = -Math.PI / 2;
             return;
         }
-        const intersects = this.raycaster.intersectObjects(this.scene.children);
-        if (!intersects[0] || !intersects[0].face) return;
         this.indicator.position.set(0, 0, 0);
         this.direction.copy(intersects[0].face.normal);
         const instanceObject = this.findInstanceRoot(intersects[0].object);
