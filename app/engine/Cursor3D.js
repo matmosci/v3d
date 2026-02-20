@@ -94,7 +94,7 @@ export default class Cursor3D {
         this.scene = this.ctx.scene;
         this.indicator = new Cursor3DIndicator(this.ctx);
 
-        this.raycaster = new Raycaster(new Vector3(), new Vector3(), 0, 10);
+        this.raycaster = new Raycaster(new Vector3(), new Vector3(), 0, 100);
 
         this.pointer = new Vector2(0, 0);
         this.direction = new Vector3();
@@ -122,8 +122,12 @@ export default class Cursor3D {
     }
 
     update() {
-        this.indicator.visible = false;
         this.raycaster.setFromCamera(this.pointer, this.camera);
+        if (this.scene.children.length === 0) {
+            this.indicator.position.set(0, 0, 0);
+            this.indicator.rotation.x = -Math.PI / 2;
+            return;
+        }
         const intersects = this.raycaster.intersectObjects(this.scene.children);
         if (!intersects[0] || !intersects[0].face) return;
         this.indicator.position.set(0, 0, 0);
@@ -133,7 +137,6 @@ export default class Cursor3D {
         else this.direction.applyQuaternion(intersects[0].object.quaternion);
         this.indicator.lookAt(this.direction);
         this.indicator.position.copy(intersects[0].point);
-        this.indicator.visible = true;
     }
 
     findInstanceRoot(object) {
