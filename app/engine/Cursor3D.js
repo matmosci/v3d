@@ -44,6 +44,7 @@ class GhostObject extends Object3D {
         super();
         this.ctx = ctx;
         this.unsubscribeFinishPlacementClick = null;
+        this.unsubscribePlacementWheel = null;
         this.pickedAssetMaterial = new MeshBasicMaterial({ color: 0x0088ff, opacity: 0.5, transparent: true });
         this.pickedAssetMaterial.depthWrite = true;
         this.pickedAssetMaterial.depthTest = true;
@@ -54,6 +55,8 @@ class GhostObject extends Object3D {
     clearObject() {
         this.unsubscribeFinishPlacementClick?.();
         this.unsubscribeFinishPlacementClick = null;
+        this.unsubscribePlacementWheel?.();
+        this.unsubscribePlacementWheel = null;
         this.clear();
         this.ctx.state.pickedAsset = null;
     }
@@ -65,8 +68,12 @@ class GhostObject extends Object3D {
             const pickedObjectMaterialCache = new Map();
             this.ctx.state.pickedAsset = object.name;
             this.finishPlacementBound = this.finishPlacement.bind(this);
+            this.rotatePlacementBound = this.rotatePlacement.bind(this);
             this.unsubscribeFinishPlacementClick = this.ctx.input.subscribeClick(
                 this.finishPlacementBound
+            );
+            this.unsubscribePlacementWheel = this.ctx.input.subscribeWheel(
+                this.rotatePlacementBound
             );
             this.add(object);
             this.traverse((child) => {
@@ -126,6 +133,20 @@ class GhostObject extends Object3D {
             if (Array.isArray(path) && path.includes(canvas)) return true;
         }
         return false;
+    }
+
+    rotatePlacement(event) {
+        if (!this.ctx.state.pickedAsset) return;
+        if (!this.isCanvasClick(event)) return;
+        if (!event.deltaY) return;
+
+        event.preventDefault();
+
+        const stepDeg = Number(this.ctx.state.placementRotationStepDeg) || 15;
+        const stepRad = (stepDeg * Math.PI) / 180;
+        const direction = Math.sign(event.deltaY);
+
+        this.rotation.y += direction * stepRad;
     }
 }
 

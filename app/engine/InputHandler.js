@@ -5,10 +5,12 @@ export default class InputHandler {
 		this.keyDownSubscribers = new Set();
 		this.keyUpSubscribers = new Set();
 		this.clickSubscribers = new Set();
+		this.wheelSubscribers = new Set();
 
 		this.target.addEventListener("keydown", this.onKeyDown);
 		this.target.addEventListener("keyup", this.onKeyUp);
 		this.target.addEventListener("click", this.onClick);
+		this.target.addEventListener("wheel", this.onWheel, { passive: false });
 		this.target.addEventListener("blur", this.onBlur);
 	}
 
@@ -24,6 +26,10 @@ export default class InputHandler {
 
 	onClick = (event) => {
 		for (const callback of Array.from(this.clickSubscribers)) callback(event);
+	};
+
+	onWheel = (event) => {
+		for (const callback of Array.from(this.wheelSubscribers)) callback(event);
 	};
 
 	onBlur = () => {
@@ -72,14 +78,23 @@ export default class InputHandler {
 		};
 	}
 
+	subscribeWheel(callback) {
+		this.wheelSubscribers.add(callback);
+		return () => {
+			this.wheelSubscribers.delete(callback);
+		};
+	}
+
 	dispose() {
 		this.target.removeEventListener("keydown", this.onKeyDown);
 		this.target.removeEventListener("keyup", this.onKeyUp);
 		this.target.removeEventListener("click", this.onClick);
+		this.target.removeEventListener("wheel", this.onWheel);
 		this.target.removeEventListener("blur", this.onBlur);
 		this.keys.clear();
 		this.keyDownSubscribers.clear();
 		this.keyUpSubscribers.clear();
 		this.clickSubscribers.clear();
+		this.wheelSubscribers.clear();
 	}
 }
