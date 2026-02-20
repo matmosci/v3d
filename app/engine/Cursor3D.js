@@ -43,6 +43,9 @@ class GhostObject extends Object3D {
     constructor(ctx) {
         super();
         this.ctx = ctx;
+        this.unsubscribeFinishPlacementClick = null;
+        this.finishPlacementTimeout = null;
+        this.placementSession = 0;
         this.pickedAssetMaterial = new MeshBasicMaterial({ color: 0x0088ff, opacity: 0.5, transparent: true });
         this.pickedAssetMaterial.depthWrite = true;
         this.pickedAssetMaterial.depthTest = true;
@@ -51,18 +54,32 @@ class GhostObject extends Object3D {
     }
 
     clearObject() {
+        if (this.finishPlacementTimeout) {
+            clearTimeout(this.finishPlacementTimeout);
+            this.finishPlacementTimeout = null;
+        }
+        this.unsubscribeFinishPlacementClick?.();
+        this.unsubscribeFinishPlacementClick = null;
         this.clear();
         this.ctx.state.pickedAsset = null;
     }
 
     setObject(object) {
         this.clearObject();
+        this.placementSession += 1;
+        const sessionId = this.placementSession;
+
         if (object) {
             const pickedObjectMaterialCache = new Map();
             this.ctx.state.pickedAsset = object.name;
             this.finishPlacementBound = this.finishPlacement.bind(this);
-            setTimeout(() => {
-                window.addEventListener("click", this.finishPlacementBound, { once: true });
+            this.finishPlacementTimeout = setTimeout(() => {
+                this.finishPlacementTimeout = null;
+                if (!this.ctx.state.pickedAsset || this.placementSession !== sessionId) return;
+                this.unsubscribeFinishPlacementClick = this.ctx.input.subscribeClick(
+                    this.finishPlacementBound,
+                    { once: true }
+                );
             });
             this.add(object);
             this.traverse((child) => {
@@ -77,7 +94,8 @@ class GhostObject extends Object3D {
     }
 
     finishPlacement(event) {
-        window.removeEventListener("click", this.finishPlacementBound);
+        this.unsubscribeFinishPlacementClick?.();
+        this.unsubscribeFinishPlacementClick = null;
         if (!this.ctx.state.pickedAsset) return;
         if (event.button === 0) this.ctx.events.emit("object:placement:confirm", { asset: this.ctx.state.pickedAsset, matrix: this.matrixWorld.toArray() });
         this.clearObject();
