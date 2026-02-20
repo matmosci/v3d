@@ -105,7 +105,7 @@ export default class Cursor3D {
 
         this.light.target = this.indicator;
         this.onToggleLightKeyDown = (event) => {
-            if (event.repeat || !this.ctx.state.enabled) return;
+            if (event.repeat) return;
             this.light.visible = !this.light.visible;
         };
         this.ctx.keybindings.onActionDown("toggleCursorLight", this.onToggleLightKeyDown);

@@ -28,7 +28,7 @@ export default class Engine {
         );
         this.context.clock = new THREE.Clock(true);
         this.context.input = new InputHandler(window);
-        this.context.keybindings = new Keybindings(this.context.input);
+        this.context.keybindings = new Keybindings(this.context.input, () => this.context.state.enabled);
         this.registerKeybindings();
 
         this.context.camera.layers.enable(1);

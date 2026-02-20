@@ -1,6 +1,7 @@
 export default class Keybindings {
-    constructor(input) {
+    constructor(input, isEnabled = () => true) {
         this.input = input;
+        this.isEnabled = isEnabled;
         this.actionBindings = new Map();
         this.actionDownSubscribers = new Map();
         this.actionUpSubscribers = new Map();
@@ -19,6 +20,7 @@ export default class Keybindings {
     }
 
     isActive(action) {
+        if (!this.isEnabled()) return false;
         const codes = this.actionBindings.get(action) || [];
         return this.input.isAnyPressed(codes);
     }
@@ -41,6 +43,8 @@ export default class Keybindings {
     }
 
     emitAction(type, event) {
+        if (!this.isEnabled()) return;
+
         for (const [action, codes] of this.actionBindings.entries()) {
             if (!codes.includes(event.code)) continue;
 
