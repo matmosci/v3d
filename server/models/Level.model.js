@@ -9,9 +9,17 @@ export const LevelModel = defineMongooseModel({
     name: { type: String, required: true },
     description: { type: String, required: false },
     camera: {
-      matrix: {
+      position: {
         type: [Number],
-        default: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+        default: [0, 0, 0]
+      },
+      quaternion: {
+        type: [Number],
+        default: [0, 0, 0, 1]
+      },
+      scale: {
+        type: [Number],
+        default: [1, 1, 1]
       },
     }
   },

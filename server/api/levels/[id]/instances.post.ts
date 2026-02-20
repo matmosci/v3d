@@ -15,7 +15,9 @@ export default defineEventHandler(async (event) => {
     level: id,
     asset: body.asset,
     user: user.id,
-    matrix: body.matrix
+    position: Array.isArray(body.position) ? body.position : [0, 0, 0],
+    quaternion: Array.isArray(body.quaternion) ? body.quaternion : [0, 0, 0, 1],
+    scale: Array.isArray(body.scale) ? body.scale : [1, 1, 1],
   });
 
   return instance;

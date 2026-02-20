@@ -8,9 +8,17 @@ export const InstanceModel = defineMongooseModel({
     user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
     level: { type: String, required: true, ref: 'Level' },
     asset: { type: String, required: true, ref: 'Asset' },
-    matrix: {
+    position: {
       type: [Number],
-      default: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+      default: [0, 0, 0]
+    },
+    quaternion: {
+      type: [Number],
+      default: [0, 0, 0, 1]
+    },
+    scale: {
+      type: [Number],
+      default: [1, 1, 1]
     },
   },
   options: {

@@ -1,4 +1,3 @@
-import { Matrix4 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 export default class LevelLoader {
@@ -10,8 +9,8 @@ export default class LevelLoader {
         this.ctx.events.on("object:placement:start", ({ asset }) => {
             this.startUserObjectPlacement(asset);
         });
-        this.ctx.events.on("object:placement:confirm", ({ asset, matrix }) => {
-            this.confirmUserObjectPlacement(asset, matrix);
+        this.ctx.events.on("object:placement:confirm", ({ asset, position, quaternion, scale }) => {
+            this.confirmUserObjectPlacement(asset, { position, quaternion, scale });
         });
     }
 
@@ -26,10 +25,10 @@ export default class LevelLoader {
             await this.getAssets();
 
             for (const instance of this.instancesData) {
-                this.placeInstance(instance.asset, instance.matrix);
+                this.placeInstance(instance.asset, instance);
             };
 
-            this.camera.applyMatrix4(new Matrix4().fromArray(this.metaData.camera.matrix));
+            this.applyTransform(this.camera, this.metaData.camera);
             return this.metaData;
         } catch (error) {
             alert(`Failed to load level ${id}`);
@@ -53,16 +52,27 @@ export default class LevelLoader {
         this.ctx.assets.set(asset, object);
     }
 
-    placeInstance(asset, matrix) {
+    placeInstance(asset, transform) {
         const object = this.ctx.assets.get(asset)?.clone();
         if (!object) {
             console.error(`Asset ${asset} not found`);
             return;
         }
-        object.applyMatrix4(new Matrix4().fromArray(matrix));
+        this.applyTransform(object, transform);
         object.isInstance = true;
         this.ctx.scene.add(object);
         return object;
+    }
+
+    applyTransform(object, transform = {}) {
+        const position = Array.isArray(transform.position) ? transform.position : [0, 0, 0];
+        const quaternion = Array.isArray(transform.quaternion) ? transform.quaternion : [0, 0, 0, 1];
+        const scale = Array.isArray(transform.scale) ? transform.scale : [1, 1, 1];
+
+        object.position.fromArray(position);
+        object.quaternion.fromArray(quaternion);
+        object.scale.fromArray(scale);
+        object.updateMatrixWorld(true);
     }
 
     async startUserObjectPlacement(asset) {
@@ -76,12 +86,12 @@ export default class LevelLoader {
         };
     }
 
-    async confirmUserObjectPlacement(asset, matrix) {
-        if (this.placeInstance(asset, matrix))
+    async confirmUserObjectPlacement(asset, transform) {
+        if (this.placeInstance(asset, transform))
             await fetch(`/api/levels/${this.ctx.state.project}/instances`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ asset, matrix }),
+                body: JSON.stringify({ asset, ...transform }),
             });
     }
 };

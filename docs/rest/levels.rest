@@ -14,5 +14,7 @@ Cookie: {{cookie}}
 
 {
     "asset": "7fcd97f0-aeef-4637-bf44-7b8a6dfb3ab8",
-    "matrix": [2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1]
+    "position": [1, 0, 0],
+    "quaternion": [0, 0, 0, 1],
+    "scale": [1, 1, 1]
 }

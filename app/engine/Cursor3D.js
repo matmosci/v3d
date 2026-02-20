@@ -1,5 +1,6 @@
 import {
     Object3D,
+    Quaternion,
     Raycaster,
     Vector2,
     Vector3,
@@ -103,25 +104,40 @@ class GhostObject extends Object3D {
         if (event.button === 0) {
             this.ctx.events.emit("object:placement:confirm", {
                 asset: this.ctx.state.pickedAsset,
-                matrix: this.getPlacementMatrix(event.ctrlKey),
+                ...this.getPlacementTransform(event.ctrlKey),
             });
         }
         this.clearObject();
     }
 
-    getPlacementMatrix(shouldSnap = false) {
-        const matrix = this.matrixWorld.toArray();
-        if (!shouldSnap) return matrix;
+    getPlacementTransform(shouldSnap = false) {
+        const position = new Vector3();
+        const quaternion = new Quaternion();
+        const scale = new Vector3();
+
+        this.matrixWorld.decompose(position, quaternion, scale);
+
+        if (!shouldSnap) {
+            return {
+                position: position.toArray(),
+                quaternion: quaternion.toArray(),
+                scale: scale.toArray(),
+            };
+        }
 
         const snap = this.ctx.state.placementSnap || {};
         const step = Number(snap.step) || 1;
         const axes = snap.axes || {};
 
-        if (axes.x) matrix[12] = Math.round(matrix[12] / step) * step;
-        if (axes.y) matrix[13] = Math.round(matrix[13] / step) * step;
-        if (axes.z) matrix[14] = Math.round(matrix[14] / step) * step;
+        if (axes.x) position.x = Math.round(position.x / step) * step;
+        if (axes.y) position.y = Math.round(position.y / step) * step;
+        if (axes.z) position.z = Math.round(position.z / step) * step;
 
-        return matrix;
+        return {
+            position: position.toArray(),
+            quaternion: quaternion.toArray(),
+            scale: scale.toArray(),
+        };
     }
 
     isCanvasClick(event) {
