@@ -21,38 +21,6 @@ class MovementIntent {
     );
   }
 }
-class InputSystem {
-  constructor(intent) {
-    this.intent = intent;
-
-    window.addEventListener("keydown", this.onKeyDown);
-    window.addEventListener("keyup", this.onKeyUp);
-  }
-
-  onKeyDown = (event) => {
-    switch (event.code) {
-      case "KeyW": this.intent.forward = true; break;
-      case "KeyS": this.intent.backward = true; break;
-      case "KeyA": this.intent.left = true; break;
-      case "KeyD": this.intent.right = true; break;
-      case "KeyE": this.intent.up = true; break;
-      case "KeyQ": this.intent.down = true; break;
-      case "ShiftLeft": this.intent.sprint = true; break;
-    }
-  };
-
-  onKeyUp = (event) => {
-    switch (event.code) {
-      case "KeyW": this.intent.forward = false; break;
-      case "KeyS": this.intent.backward = false; break;
-      case "KeyA": this.intent.left = false; break;
-      case "KeyD": this.intent.right = false; break;
-      case "KeyE": this.intent.up = false; break;
-      case "KeyQ": this.intent.down = false; break;
-      case "ShiftLeft": this.intent.sprint = false; break;
-    }
-  };
-}
 
 const CameraState = {
   Disabled: 0,
@@ -63,6 +31,7 @@ const CameraState = {
 export default class CameraController {
   constructor(ctx) {
     this.ctx = ctx;
+    this.input = ctx.input;
     this.camera = ctx.camera;
     this.controls = new PointerLockControls(
       ctx.camera,
@@ -72,7 +41,6 @@ export default class CameraController {
     this.intent = new MovementIntent();
     this.intent.reset = () => this.reset();
     this.intent.ground = () => this.ground();
-    this.input = new InputSystem(this.intent);
 
     this.state = CameraState.Disabled;
 
@@ -105,6 +73,14 @@ export default class CameraController {
 
   update(delta) {
     if (this.state === CameraState.Disabled) return;
+
+    this.intent.forward = this.input.isPressed("KeyW");
+    this.intent.backward = this.input.isPressed("KeyS");
+    this.intent.left = this.input.isPressed("KeyA");
+    this.intent.right = this.input.isPressed("KeyD");
+    this.intent.up = this.input.isPressed("KeyE");
+    this.intent.down = this.input.isPressed("KeyQ");
+    this.intent.sprint = this.input.isAnyPressed(["ShiftLeft", "ShiftRight"]);
 
     const hasMovement = this.intent.hasMovement;
 

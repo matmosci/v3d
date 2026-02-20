@@ -4,6 +4,7 @@ import CameraControls from "./CameraControls";
 import Cursor3D from "./Cursor3D";
 import LevelLoader from "./LevelLoader";
 import Dust from "./Dust";
+import InputHandler from "./InputHandler";
 
 export let test_level = "7f4cde04-c4b2-42d1-9ec3-140aaaf35806";
 
@@ -25,6 +26,7 @@ export default class Engine {
             1000,
         );
         this.context.clock = new THREE.Clock(true);
+        this.context.input = new InputHandler(window);
 
         this.context.camera.layers.enable(1);
         this.context.scene.add(this.context.camera);

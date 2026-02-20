@@ -9,6 +9,7 @@ export default class EngineContext {
     clock = null;
     controls = null;
     cursor = null;
+    input = null;
 
     instances = [];
     assets = new Map();
