@@ -63,7 +63,7 @@ export default class LevelLoader {
         object.isInstance = true;
         this.ctx.scene.add(object);
         return object;
-    };
+    }
 
     async startUserObjectPlacement(asset) {
         if (this.ctx.assets.get(asset)) this.ctx.events.emit("object:placement:update", { object: this.ctx.assets.get(asset).clone() });
@@ -98,23 +98,3 @@ function loadGltf(gltfUrl) {
         );
     });
 };
-
-// events.on("object:placement:start", async ({ asset }) => {
-//     if (assets.get(asset)) events.emit("object:placement:update", { object: assets.get(asset).clone() });
-//     else {
-//         const gltf = await loadGltf(`/api/assets/${asset}/data`);
-//         const object = gltf.scene;
-//         object.name = asset;
-//         assets.set(asset, object);
-//         events.emit("object:placement:update", { object: object.clone() });
-//     };
-// });
-
-// events.on("object:placement:confirm", async ({ asset, matrix }) => {
-//     if (LevelLoader.placeInstance(asset, matrix))
-//         await fetch(`/api/levels/${levelId}/instances`, {
-//             method: "POST",
-//             headers: { "Content-Type": "application/json" },
-//             body: JSON.stringify({ asset, matrix }),
-//         });
-// });
