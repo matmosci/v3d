@@ -81,7 +81,7 @@ const setup = async () => {
     const container = viewport.value;
     if (!container) return;
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
@@ -142,27 +142,40 @@ const createThumbnail = async () => {
   try {
     savingThumbnail.value = true;
 
-    renderer.render(scene, camera);
+    const previousBackground = scene.background;
+    const previousClearAlpha = renderer.getClearAlpha();
+    const previousClearColor = renderer.getClearColor(new THREE.Color());
 
-    const sourceWidth = canvas.width;
-    const sourceHeight = canvas.height;
-    const targetWidth = 192;
-    const targetHeight = Math.max(100, Math.round((sourceHeight / sourceWidth) * targetWidth));
+    let thumbnail = "";
+    try {
+      scene.background = null;
+      renderer.setClearColor(previousClearColor, 0);
+      renderer.render(scene, camera);
 
-    const thumbCanvas = document.createElement("canvas");
-    thumbCanvas.width = targetWidth;
-    thumbCanvas.height = targetHeight;
+      const sourceWidth = canvas.width;
+      const sourceHeight = canvas.height;
+      const targetWidth = 192;
+      const targetHeight = Math.max(100, Math.round((sourceHeight / sourceWidth) * targetWidth));
 
-    const ctx = thumbCanvas.getContext("2d");
-    if (!ctx) throw new Error("Failed to create thumbnail context");
+      const thumbCanvas = document.createElement("canvas");
+      thumbCanvas.width = targetWidth;
+      thumbCanvas.height = targetHeight;
 
-    ctx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
-    const thumbnail = thumbCanvas.toDataURL("image/jpeg", 0.85);
+      const ctx = thumbCanvas.getContext("2d");
+      if (!ctx) throw new Error("Failed to create thumbnail context");
+
+      ctx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+      thumbnail = thumbCanvas.toDataURL("image/png");
+    } finally {
+      scene.background = previousBackground;
+      renderer.setClearColor(previousClearColor, previousClearAlpha);
+    }
 
     await $fetch(`/api/assets/${route.params.id}/thumbnail`, {
       method: "POST",
       body: { thumbnail },
     });
+    router.push("/assets");
   } catch (e) {
     console.error(e);
     error.value = "Failed to create thumbnail";
