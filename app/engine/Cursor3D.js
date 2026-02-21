@@ -1,6 +1,7 @@
 import {
     Object3D,
     Quaternion,
+    Euler,
     Raycaster,
     Vector2,
     Vector3,
@@ -187,12 +188,13 @@ export default class Cursor3D {
         this.tempQuaternionB = new Quaternion();
         this.tempQuaternionC = new Quaternion();
         this.tempQuaternionD = new Quaternion();
+        this.tempEuler = new Euler();
         this.selectedObject = null;
         this.freeTransformObject = null;
         this.freeTransformInitialTransform = null;
         this.freeTransformRotationOffset = null;
         this.freeTransformUserRotationY = 0;
-        this.placementNoSnapQuaternion = null;
+        this.freeTransformBaseRotationY = 0;
         this.unsubscribeFreeTransformClick = null;
         this.selectedObjectMaterialCache = new Map();
         this.selectedObjectMaterial = new MeshBasicMaterial({ color: 0xff8800, opacity: 0.75, transparent: true });
@@ -559,14 +561,17 @@ export default class Cursor3D {
         const preventSnapToNormal = this.ctx.input.isAnyPressed(["ShiftLeft", "ShiftRight"]);
         const shouldAlignToFaceNormal = !(preventSnapToNormal && (this.ctx.state.pickedAsset || this.freeTransformObject));
 
-        if (preventSnapToNormal && this.ctx.state.pickedAsset && this.placementNoSnapQuaternion) {
-            this.indicator.quaternion.copy(this.placementNoSnapQuaternion);
-        } else if (shouldAlignToFaceNormal) {
+        if (shouldAlignToFaceNormal) {
             this.direction.copy(hit.face.normal);
             const instanceObject = this.findInstanceRoot(hit.object);
             if (instanceObject) this.direction.applyQuaternion(instanceObject.quaternion);
             else this.direction.applyQuaternion(hit.object.quaternion);
             this.indicator.lookAt(this.direction);
+        }
+
+        if (preventSnapToNormal && (this.ctx.state.pickedAsset || this.freeTransformObject)) {
+            const indicatorYaw = this.getYawFromQuaternion(this.indicator.quaternion);
+            this.setYawOnlyQuaternion(this.indicator.quaternion, indicatorYaw);
         }
 
         this.indicator.position.copy(hit.point);
@@ -586,11 +591,8 @@ export default class Cursor3D {
         if (this.freeTransformObject) {
             this.freeTransformObject.position.copy(this.indicator.position);
             if (preventSnapToNormal && this.freeTransformInitialTransform) {
-                this.freeTransformObject.quaternion.fromArray(this.freeTransformInitialTransform.quaternion);
-                if (this.freeTransformUserRotationY) {
-                    this.tempQuaternionD.setFromAxisAngle(this.direction.set(0, 1, 0), this.freeTransformUserRotationY);
-                    this.freeTransformObject.quaternion.multiply(this.tempQuaternionD);
-                }
+                const yaw = this.freeTransformBaseRotationY + this.freeTransformUserRotationY;
+                this.setYawOnlyQuaternion(this.freeTransformObject.quaternion, yaw);
             } else if (shouldAlignToFaceNormal) {
                 const targetWorldQuaternion = this.indicator.getWorldQuaternion(this.tempQuaternionA);
 
@@ -669,12 +671,10 @@ export default class Cursor3D {
     }
 
     startPlacement(object) {
-        this.placementNoSnapQuaternion = this.indicator.quaternion.clone();
         this.indicator.ghostObject.setObject(object);
     }
 
     cancelPlacement() {
-        this.placementNoSnapQuaternion = null;
         this.indicator.ghostObject.finishPlacement({});
     }
 
@@ -696,7 +696,7 @@ export default class Cursor3D {
         this.freeTransformInitialTransform = this.getObjectTransform(object);
         this.freeTransformRotationOffset = null;
         this.freeTransformUserRotationY = 0;
-        this.placementNoSnapQuaternion = this.indicator.quaternion.clone();
+        this.freeTransformBaseRotationY = this.getYawFromQuaternion(object.quaternion);
         this.suppressSelectionUntil = performance.now() + 120;
 
         this.unsubscribeFreeTransformClick = this.ctx.input.subscribeClick((event) => {
@@ -732,7 +732,7 @@ export default class Cursor3D {
         this.freeTransformInitialTransform = null;
         this.freeTransformRotationOffset = null;
         this.freeTransformUserRotationY = 0;
-        this.placementNoSnapQuaternion = null;
+        this.freeTransformBaseRotationY = 0;
 
         if (shouldDeselect) {
             this.ctx.events.emit("object:deselected");
@@ -759,5 +759,15 @@ export default class Cursor3D {
             quaternion: object.quaternion.toArray(),
             scale: object.scale.toArray(),
         };
+    }
+
+    getYawFromQuaternion(quaternion) {
+        this.tempEuler.setFromQuaternion(quaternion, "YXZ");
+        return this.tempEuler.y;
+    }
+
+    setYawOnlyQuaternion(targetQuaternion, yaw) {
+        this.tempEuler.set(0, yaw, 0, "YXZ");
+        targetQuaternion.setFromEuler(this.tempEuler);
     }
 }
