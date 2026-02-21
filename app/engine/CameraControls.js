@@ -61,8 +61,12 @@ export default class CameraController {
       if (!this.ctx.state.enabled) return;
       this.controls.lock();
     });
-    this.controls.addEventListener("lock", () => { });
-    this.controls.addEventListener("unlock", () => { });
+    this.controls.addEventListener("lock", () => {
+      this.ctx.events.emit("camera:lock");
+    });
+    this.controls.addEventListener("unlock", () => {
+      this.ctx.events.emit("camera:unlock");
+    });
     this.controls.addEventListener("change", () => {
       this.ctx.events.emit("camera:rotate");
     });
