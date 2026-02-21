@@ -5,7 +5,7 @@
             <img v-if="asset.thumbnail" :src="asset.thumbnail" alt="thumbnail" class="h-full w-full object-cover">
             <UIcon v-else name="i-lucide-image" class="text-white/30" />
         </div>
-        <div class="font-medium mx-1 mt-1">{{ asset.originalname }}</div>
+        <div class="font-medium mx-1 mt-1 overflow-x-clip text-ellipsis">{{ asset.originalname }}</div>
         <div class="flex items-center justify-between ms-1">
             <div class="text-sm text-gray-400">{{ (asset.size / 1024).toFixed(2) }} KB</div>
             <NuxtLink :to="`/assets/${asset._id}`" @click.stop>

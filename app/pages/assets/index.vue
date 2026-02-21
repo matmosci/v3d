@@ -1,5 +1,5 @@
 <template>
-    <div class="grid gap-4" :class="assets.length ? 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6' : 'grid-cols-1'">
+    <div class="grid gap-4" :class="assets.length ? 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12' : 'grid-cols-1'">
         <AssetsFileInput @uploaded="fetchAssets" />
         <AssetsItem v-for="asset in assets" :key="asset._id" :asset="asset" />
     </div>
