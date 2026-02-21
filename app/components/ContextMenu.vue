@@ -54,10 +54,20 @@ const emitTransformUpdate = () => {
     });
 };
 
+const showConfirmation = ref(false);
+
 const confirmDelete = () => {
     if (!props.selected?.id) return;
-    if (!window.confirm("Delete this instance?")) return;
+    showConfirmation.value = true;
+};
+
+const confirmDeleteOk = () => {
+    showConfirmation.value = false;
     emit("delete");
+};
+
+const cancelDelete = () => {
+    showConfirmation.value = false;
 };
 </script>
 
@@ -128,9 +138,19 @@ const confirmDelete = () => {
             <UButton size="sm" icon="i-lucide-scan-eye" @click="$emit('free-transform')">Free Transform</UButton>
         </div>
         <div class="w-fit">
-            <UButton size="sm" color="error" icon="i-lucide-trash" @click="confirmDelete">
-                Delete
-            </UButton>
+            <div v-if="!showConfirmation">
+                <UButton size="sm" color="error" icon="i-lucide-trash" @click="confirmDelete">
+                    Delete
+                </UButton>
+            </div>
+            <div v-else class="flex gap-2">
+                <UButton size="sm" color="error" @click="confirmDeleteOk">
+                    OK
+                </UButton>
+                <UButton size="sm" color="gray" @click="cancelDelete">
+                    Cancel
+                </UButton>
+            </div>
         </div>
     </aside>
 </template>
