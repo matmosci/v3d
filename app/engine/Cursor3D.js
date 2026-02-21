@@ -183,7 +183,14 @@ export default class Cursor3D {
         this.selectionPointer = new Vector2(0, 0);
         this.direction = new Vector3();
         this.worldPosition = new Vector3();
+        this.tempQuaternionA = new Quaternion();
+        this.tempQuaternionB = new Quaternion();
+        this.tempQuaternionC = new Quaternion();
         this.selectedObject = null;
+        this.freeTransformObject = null;
+        this.freeTransformInitialTransform = null;
+        this.freeTransformRotationOffset = null;
+        this.unsubscribeFreeTransformClick = null;
         this.selectedObjectMaterialCache = new Map();
         this.selectedObjectMaterial = new MeshBasicMaterial({ color: 0xff8800, opacity: 0.75, transparent: true });
         this.selectedObjectMaterial.depthWrite = true;
@@ -212,6 +219,14 @@ export default class Cursor3D {
         this.onMouseDown = (event) => {
             if (event.button !== 2) return;
             if (!this.isCanvasClick(event)) return;
+
+            if (this.freeTransformObject) {
+                event.preventDefault();
+                this.finishFreeTransform(false);
+                this.ctx.events.emit("object:deselected");
+                return;
+            }
+
             this.rightClickState.isDown = true;
             this.rightClickState.startX = event.clientX;
             this.rightClickState.startY = event.clientY;
@@ -295,8 +310,12 @@ export default class Cursor3D {
         this.ctx.events.on("object:placement:update", ({ object }) => {
             this.startPlacement(object);
         });
+        this.ctx.events.on("object:free-transform", ({ id }) => {
+            this.startFreeTransformById(id);
+        });
         this.ctx.events.on("mode:disable", () => {
             this.cancelPlacement();
+            this.finishFreeTransform(false);
             this.ctx.events.emit("object:deselected");
         });
         this.ctx.events.on("camera:lock", () => {
@@ -309,11 +328,13 @@ export default class Cursor3D {
             this.update();
         });
         this.ctx.events.on("object:deselected", () => {
+            this.finishFreeTransform(false);
             this.clearSelectedObjectHighlight();
         });
 
         this.onSceneClick = (event) => {
             if (this.ctx.state.pickedAsset) return;
+            if (this.freeTransformObject) return;
             if (!this.isCanvasClick(event)) return;
             if (event.button !== 0) return;
             if (this.isTransformDragging) return;
@@ -347,6 +368,12 @@ export default class Cursor3D {
         this.onSceneContextMenu = (event) => {
             if (!this.isCanvasClick(event)) return;
             event.preventDefault();
+
+            if (this.freeTransformObject) {
+                this.finishFreeTransform(false);
+                this.ctx.events.emit("object:deselected");
+                return;
+            }
 
             const shouldDeselect = !this.rightClickState.dragged;
             this.rightClickState.isDown = false;
@@ -480,6 +507,7 @@ export default class Cursor3D {
         if (!object) return true;
         if (this.isDescendantOf(object, this.indicator)) return true;
         if (this.transformControlsHelper && this.isDescendantOf(object, this.transformControlsHelper)) return true;
+        if (this.freeTransformObject && this.isDescendantOf(object, this.freeTransformObject)) return true;
         return false;
     }
 
@@ -513,7 +541,7 @@ export default class Cursor3D {
 
         const isCtrlHeld = this.ctx.input.isAnyPressed(["ControlLeft", "ControlRight"]);
 
-        if (this.ctx.state.pickedAsset && isCtrlHeld) {
+        if ((this.ctx.state.pickedAsset || this.freeTransformObject) && isCtrlHeld) {
             const snap = this.ctx.state.placementSnap || {};
             const step = Number(snap.step) || 1;
             const axes = snap.axes || {};
@@ -521,6 +549,33 @@ export default class Cursor3D {
             if (axes.x) this.indicator.position.x = Math.round(this.indicator.position.x / step) * step;
             if (axes.y) this.indicator.position.y = Math.round(this.indicator.position.y / step) * step;
             if (axes.z) this.indicator.position.z = Math.round(this.indicator.position.z / step) * step;
+        }
+
+        if (this.freeTransformObject) {
+            this.freeTransformObject.position.copy(this.indicator.position);
+            const targetWorldQuaternion = this.indicator.getWorldQuaternion(this.tempQuaternionA);
+
+            if (!this.freeTransformRotationOffset) {
+                const objectWorldQuaternion = this.freeTransformObject.getWorldQuaternion(this.tempQuaternionB);
+                this.freeTransformRotationOffset = this.tempQuaternionC
+                    .copy(targetWorldQuaternion)
+                    .invert()
+                    .multiply(objectWorldQuaternion)
+                    .clone();
+            }
+
+            if (this.freeTransformRotationOffset) targetWorldQuaternion.multiply(this.freeTransformRotationOffset);
+
+            if (this.freeTransformObject.parent) {
+                const parentWorldQuaternion = this.freeTransformObject.parent.getWorldQuaternion(this.tempQuaternionB);
+                parentWorldQuaternion.invert();
+                this.tempQuaternionC.copy(parentWorldQuaternion).multiply(targetWorldQuaternion);
+                this.freeTransformObject.quaternion.copy(this.tempQuaternionC);
+            } else {
+                this.freeTransformObject.quaternion.copy(targetWorldQuaternion);
+            }
+
+            this.freeTransformObject.updateMatrixWorld(true);
         }
     }
 
@@ -575,5 +630,84 @@ export default class Cursor3D {
 
     cancelPlacement() {
         this.indicator.ghostObject.finishPlacement({});
+    }
+
+    startFreeTransformById(id) {
+        if (!id) return;
+        const object = this.findInstanceById(id);
+        if (!object) return;
+        this.startFreeTransform(object);
+    }
+
+    startFreeTransform(object) {
+        if (!object) return;
+
+        this.finishFreeTransform(false);
+        this.detachObjectControls();
+        this.orbitControls.enabled = false;
+
+        this.freeTransformObject = object;
+        this.freeTransformInitialTransform = this.getObjectTransform(object);
+        this.freeTransformRotationOffset = null;
+        this.suppressSelectionUntil = performance.now() + 120;
+
+        this.unsubscribeFreeTransformClick = this.ctx.input.subscribeClick((event) => {
+            if (!this.isCanvasClick(event)) return;
+            if (event.button !== 0) return;
+            this.finishFreeTransform(true);
+        });
+    }
+
+    finishFreeTransform(confirm) {
+        if (!this.freeTransformObject) return;
+
+        this.unsubscribeFreeTransformClick?.();
+        this.unsubscribeFreeTransformClick = null;
+
+        const object = this.freeTransformObject;
+        const shouldDeselect = !!confirm;
+        if (!confirm && this.freeTransformInitialTransform) {
+            object.position.fromArray(this.freeTransformInitialTransform.position);
+            object.quaternion.fromArray(this.freeTransformInitialTransform.quaternion);
+            object.scale.fromArray(this.freeTransformInitialTransform.scale);
+            object.updateMatrixWorld(true);
+        }
+
+        if (confirm) {
+            this.ctx.events.emit("object:transform:end", {
+                id: object.instanceId || object.uuid,
+                ...this.getObjectTransform(object),
+            });
+        }
+
+        this.freeTransformObject = null;
+        this.freeTransformInitialTransform = null;
+        this.freeTransformRotationOffset = null;
+
+        if (shouldDeselect) {
+            this.ctx.events.emit("object:deselected");
+            return;
+        }
+
+        if (this.selectedObject) {
+            this.attachObjectControls(this.selectedObject);
+        }
+    }
+
+    findInstanceById(id) {
+        let found = null;
+        this.scene.traverse((object) => {
+            if (found) return;
+            if (object?.isInstance && object?.instanceId === id) found = object;
+        });
+        return found;
+    }
+
+    getObjectTransform(object) {
+        return {
+            position: object.position.toArray(),
+            quaternion: object.quaternion.toArray(),
+            scale: object.scale.toArray(),
+        };
     }
 }

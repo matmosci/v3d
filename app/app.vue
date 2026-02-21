@@ -32,11 +32,20 @@ const onDeleteSelectedInstance = () => {
   editor.deleteSelectedInstance();
 };
 
+const onFreeTransformSelectedInstance = () => {
+  editor.freeTransformSelectedInstance();
+};
+
 </script>
 <template>
   <UApp>
     <Menu v-show="mode === 'overlay'" />
-    <ContextMenu v-show="selectedInstance" :selected="selectedInstance" @delete="onDeleteSelectedInstance" />
+    <ContextMenu
+      v-show="selectedInstance"
+      :selected="selectedInstance"
+      @delete="onDeleteSelectedInstance"
+      @free-transform="onFreeTransformSelectedInstance"
+    />
     <Viewport class="absolute top-0 bottom-0 left-0 right-0 -z-1" />
   </UApp>
 </template>

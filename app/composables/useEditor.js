@@ -64,6 +64,14 @@ export default function useEditor() {
         engine.context.events.emit("object:delete", { id });
     }
 
+    function freeTransformSelectedInstance() {
+        if (!engine) return;
+        const id = selectedInstance.value?.id;
+        if (!id) return;
+        engine.context.events.emit("mode:enable");
+        engine.context.events.emit("object:free-transform", { id });
+    }
+
     return {
         init,
         getInstance,
@@ -73,5 +81,6 @@ export default function useEditor() {
         getMode,
         getSelectedInstance,
         deleteSelectedInstance,
+        freeTransformSelectedInstance,
     };
 }
