@@ -28,11 +28,15 @@ const editor = useEditor();
 const mode = computed(() => editor.getMode());
 const selectedInstance = editor.getSelectedInstance();
 
+const onDeleteSelectedInstance = () => {
+  editor.deleteSelectedInstance();
+};
+
 </script>
 <template>
   <UApp>
     <Menu v-show="mode === 'overlay'" />
-    <ContextMenu v-show="selectedInstance" :selected="selectedInstance" />
+    <ContextMenu v-show="selectedInstance" :selected="selectedInstance" @delete="onDeleteSelectedInstance" />
     <Viewport class="absolute top-0 bottom-0 left-0 right-0 -z-1" />
   </UApp>
 </template>

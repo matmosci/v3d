@@ -19,6 +19,8 @@ const props = defineProps({
                 <span class="text-white/60">Asset:</span>
                 <div class="break-all">{{ selected?.asset }}</div>
             </div>
+            <UButton size="sm" @click="$emit('delete')">Delete</UButton>
+            <UButton size="sm" @click="$emit('free-transform')">Free Transform</UButton>
         </div>
     </aside>
 </template>

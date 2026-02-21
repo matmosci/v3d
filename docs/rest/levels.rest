@@ -18,3 +18,7 @@ Cookie: {{cookie}}
     "quaternion": [0, 0, 0, 1],
     "scale": [1, 1, 1]
 }
+
+###
+DELETE {{api}}/7f4cde04-c4b2-42d1-9ec3-140aaaf35806/instances/INSTANCE_ID_HERE
+Cookie: {{cookie}}

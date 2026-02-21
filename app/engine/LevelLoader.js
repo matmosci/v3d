@@ -12,6 +12,9 @@ export default class LevelLoader {
         this.ctx.events.on("object:placement:confirm", ({ asset, position, quaternion, scale }) => {
             this.confirmUserObjectPlacement(asset, { position, quaternion, scale });
         });
+        this.ctx.events.on("object:delete", ({ id }) => {
+            this.deleteUserObjectInstance(id);
+        });
     }
 
     async load() {
@@ -88,12 +91,49 @@ export default class LevelLoader {
     }
 
     async confirmUserObjectPlacement(asset, transform) {
-        if (this.placeInstance(asset, transform))
-            await fetch(`/api/levels/${this.ctx.state.project}/instances`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ asset, ...transform }),
-            });
+        const res = await fetch(`/api/levels/${this.ctx.state.project}/instances`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ asset, ...transform }),
+        });
+
+        if (!res.ok) {
+            alert("Failed to place instance");
+            return;
+        }
+
+        const createdInstance = await res.json();
+        this.placeInstance(createdInstance.asset || asset, createdInstance);
+    }
+
+    findInstanceObjectById(id) {
+        let found = null;
+        this.scene.traverse((object) => {
+            if (found) return;
+            if (object?.isInstance && object?.instanceId === id) found = object;
+        });
+        return found;
+    }
+
+    async deleteUserObjectInstance(id) {
+        if (!id) return;
+
+        const res = await fetch(`/api/levels/${this.ctx.state.project}/instances/${id}`, {
+            method: "DELETE",
+        });
+
+        if (!res.ok) {
+            if (res.status === 403) {
+                alert("You are not allowed to delete this instance");
+                return;
+            }
+            alert("Failed to delete instance");
+            return;
+        }
+
+        const object = this.findInstanceObjectById(id);
+        if (object?.parent) object.parent.remove(object);
+        this.ctx.events.emit("object:deselected");
     }
 };
 

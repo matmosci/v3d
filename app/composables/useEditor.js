@@ -57,6 +57,13 @@ export default function useEditor() {
         return selectedInstance;
     }
 
+    function deleteSelectedInstance() {
+        if (!engine) return;
+        const id = selectedInstance.value?.id;
+        if (!id) return;
+        engine.context.events.emit("object:delete", { id });
+    }
+
     return {
         init,
         getInstance,
@@ -65,5 +72,6 @@ export default function useEditor() {
         toggleMode,
         getMode,
         getSelectedInstance,
+        deleteSelectedInstance,
     };
 }
