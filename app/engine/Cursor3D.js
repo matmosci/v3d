@@ -234,9 +234,21 @@ export default class Cursor3D {
         window.addEventListener("mousemove", this.onMouseMove);
         window.addEventListener("mouseup", this.onMouseUp);
 
+        this.onTransformSnapKeyDown = (event) => {
+            if (event.code !== "ControlLeft" && event.code !== "ControlRight") return;
+            this.updateTransformControlSnap();
+        };
+        this.onTransformSnapKeyUp = (event) => {
+            if (event.code !== "ControlLeft" && event.code !== "ControlRight") return;
+            this.updateTransformControlSnap();
+        };
+        this.ctx.input.subscribeKeyDown(this.onTransformSnapKeyDown);
+        this.ctx.input.subscribeKeyUp(this.onTransformSnapKeyUp);
+
         this.transformControls = new TransformControls(this.camera, this.ctx.renderer.domElement);
         this.transformControls.enabled = false;
         this.transformControls.setMode("translate");
+        this.updateTransformControlSnap();
         this.transformControlsHelper = this.transformControls.getHelper();
         this.transformControlsHelper.visible = false;
         this.scene.add(this.transformControlsHelper);
@@ -399,6 +411,7 @@ export default class Cursor3D {
         this.transformControlsHelper.visible = true;
         this.transformControls.enabled = true;
         this.transformControls.attach(object);
+        this.updateTransformControlSnap();
         this.orbitControls.enabled = true;
         object.getWorldPosition(this.worldPosition);
         this.orbitControls.target.copy(this.worldPosition);
@@ -409,6 +422,8 @@ export default class Cursor3D {
         this.orbitControls.enabled = false;
         this.transformControls.detach();
         this.transformControls.enabled = false;
+        this.transformControls.setTranslationSnap(null);
+        this.transformControls.setRotationSnap(null);
         this.transformControlsHelper.visible = false;
         this.isTransformDragging = false;
     }
@@ -521,6 +536,37 @@ export default class Cursor3D {
         const currentIndex = modes.indexOf(currentMode);
         const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % modes.length;
         this.transformControls.setMode(modes[nextIndex]);
+        this.updateTransformControlSnap();
+    }
+
+    updateTransformControlSnap() {
+        const isCtrlHeld = this.ctx.input.isAnyPressed(["ControlLeft", "ControlRight"]);
+        const mode = this.transformControls.getMode();
+
+        if (!isCtrlHeld || !this.selectedObject) {
+            this.transformControls.setTranslationSnap(null);
+            this.transformControls.setRotationSnap(null);
+            return;
+        }
+
+        const translationStep = Number(this.ctx.state.placementSnap?.step) || 1;
+        const rotationStepDeg = Number(this.ctx.state.placementRotationStepDeg) || 15;
+        const rotationStepRad = (rotationStepDeg * Math.PI) / 180;
+
+        if (mode === "translate") {
+            this.transformControls.setTranslationSnap(translationStep);
+            this.transformControls.setRotationSnap(null);
+            return;
+        }
+
+        if (mode === "rotate") {
+            this.transformControls.setTranslationSnap(null);
+            this.transformControls.setRotationSnap(rotationStepRad);
+            return;
+        }
+
+        this.transformControls.setTranslationSnap(null);
+        this.transformControls.setRotationSnap(null);
     }
 
     startPlacement(object) {
