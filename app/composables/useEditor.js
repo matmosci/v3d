@@ -90,6 +90,11 @@ export default function useEditor() {
         });
     }
 
+    function deselectSelectedInstance() {
+        if (!engine) return;
+        engine.context.events.emit("object:deselected");
+    }
+
     return {
         init,
         getInstance,
@@ -101,5 +106,6 @@ export default function useEditor() {
         deleteSelectedInstance,
         freeTransformSelectedInstance,
         updateSelectedTransform,
+        deselectSelectedInstance,
     };
 }

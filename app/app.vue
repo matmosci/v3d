@@ -40,6 +40,10 @@ const onUpdateSelectedTransform = (transform) => {
   editor.updateSelectedTransform(transform);
 };
 
+const onDeselectSelectedInstance = () => {
+  editor.deselectSelectedInstance();
+};
+
 </script>
 <template>
   <UApp>
@@ -50,6 +54,7 @@ const onUpdateSelectedTransform = (transform) => {
       @delete="onDeleteSelectedInstance"
       @free-transform="onFreeTransformSelectedInstance"
       @update-transform="onUpdateSelectedTransform"
+      @deselect="onDeselectSelectedInstance"
     />
     <Viewport class="absolute top-0 bottom-0 left-0 right-0 -z-1" />
   </UApp>

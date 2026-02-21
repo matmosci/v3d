@@ -6,7 +6,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(["delete", "free-transform", "update-transform"]);
+const emit = defineEmits(["delete", "free-transform", "update-transform", "deselect"]);
 
 const transform = reactive({
     px: 0,
@@ -64,7 +64,16 @@ const confirmDelete = () => {
 <template>
     <aside
         class="absolute top-0 left-0 h-full w-80 bg-black/45 backdrop-blur-sm border-r border-white/10 p-4 flex flex-col">
-        <h3 class="text-sm font-semibold text-white/90 mb-3">Context Menu</h3>
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-white/90">Context Menu</h3>
+            <UButton
+                size="xs"
+                variant="ghost"
+                color="neutral"
+                icon="i-lucide-x"
+                @click="$emit('deselect')"
+            />
+        </div>
         <div class="space-y-2 text-sm text-white/80 flex-1 overflow-y-auto">
             <div>
                 <span class="text-white/60">Instance:</span>
