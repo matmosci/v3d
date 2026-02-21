@@ -70,25 +70,25 @@ const emitTransformUpdate = () => {
             <div class="pt-2">
                 <span class="text-white/60">Position</span>
                 <div class="grid grid-cols-3 gap-2 mt-1">
-                    <input v-model.number="transform.px" type="number" step="0.1" class="w-full rounded bg-black/40 border border-white/10 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.py" type="number" step="0.1" class="w-full rounded bg-black/40 border border-white/10 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.pz" type="number" step="0.1" class="w-full rounded bg-black/40 border border-white/10 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.px" type="number" step="0.1" class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.py" type="number" step="0.1" class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.pz" type="number" step="0.1" class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                 </div>
             </div>
             <div>
                 <span class="text-white/60">Rotation</span>
                 <div class="grid grid-cols-3 gap-2 mt-1">
-                    <input v-model.number="transform.rx" type="number" step="15" class="w-full rounded bg-black/40 border border-white/10 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.ry" type="number" step="15" class="w-full rounded bg-black/40 border border-white/10 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.rz" type="number" step="15" class="w-full rounded bg-black/40 border border-white/10 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.rx" type="number" step="15" class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.ry" type="number" step="15" class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.rz" type="number" step="15" class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                 </div>
             </div>
             <div>
                 <span class="text-white/60">Scale</span>
                 <div class="grid grid-cols-3 gap-2 mt-1">
-                    <input v-model.number="transform.sx" type="number" step="0.1" class="w-full rounded bg-black/40 border border-white/10 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.sy" type="number" step="0.1" class="w-full rounded bg-black/40 border border-white/10 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.sz" type="number" step="0.1" class="w-full rounded bg-black/40 border border-white/10 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.sx" type="number" step="0.1" class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.sy" type="number" step="0.1" class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.sz" type="number" step="0.1" class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                 </div>
             </div>
             <UButton size="sm" @click="$emit('delete')">Delete</UButton>
