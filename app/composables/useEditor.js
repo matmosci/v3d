@@ -19,6 +19,14 @@ export default function useEditor() {
             engine.context.events.on("object:selected", (payload) => {
                 selectedInstance.value = payload;
             });
+            engine.context.events.on("object:transform:update", (payload) => {
+                if (!selectedInstance.value) return;
+                if (selectedInstance.value.id !== payload.id) return;
+                selectedInstance.value = {
+                    ...selectedInstance.value,
+                    ...payload,
+                };
+            });
             engine.context.events.on("object:deselected", () => {
                 selectedInstance.value = null;
             });
@@ -72,6 +80,16 @@ export default function useEditor() {
         engine.context.events.emit("object:free-transform", { id });
     }
 
+    function updateSelectedTransform(transform) {
+        if (!engine) return;
+        const id = selectedInstance.value?.id;
+        if (!id) return;
+        engine.context.events.emit("object:transform:set", {
+            id,
+            ...transform,
+        });
+    }
+
     return {
         init,
         getInstance,
@@ -82,5 +100,6 @@ export default function useEditor() {
         getSelectedInstance,
         deleteSelectedInstance,
         freeTransformSelectedInstance,
+        updateSelectedTransform,
     };
 }

@@ -36,6 +36,10 @@ const onFreeTransformSelectedInstance = () => {
   editor.freeTransformSelectedInstance();
 };
 
+const onUpdateSelectedTransform = (transform) => {
+  editor.updateSelectedTransform(transform);
+};
+
 </script>
 <template>
   <UApp>
@@ -45,6 +49,7 @@ const onFreeTransformSelectedInstance = () => {
       :selected="selectedInstance"
       @delete="onDeleteSelectedInstance"
       @free-transform="onFreeTransformSelectedInstance"
+      @update-transform="onUpdateSelectedTransform"
     />
     <Viewport class="absolute top-0 bottom-0 left-0 right-0 -z-1" />
   </UApp>

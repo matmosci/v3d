@@ -310,6 +310,10 @@ export default class Cursor3D {
             }
             this.orbitControls.enabled = !!this.selectedObject;
         });
+        this.transformControls.addEventListener("change", () => {
+            if (!this.selectedObject || this.freeTransformObject) return;
+            this.emitTransformUpdate(this.selectedObject);
+        });
 
         this.light = new SpotLight(0xffffff, 20, 0, Math.PI / 6, 0.2);
         this.light.visible = true;
@@ -332,6 +336,9 @@ export default class Cursor3D {
         });
         this.ctx.events.on("object:free-transform", ({ id }) => {
             this.startFreeTransformById(id);
+        });
+        this.ctx.events.on("object:transform:set", (payload) => {
+            this.applyTransformFromUi(payload);
         });
         this.ctx.events.on("mode:disable", () => {
             this.cancelPlacement();
@@ -378,11 +385,7 @@ export default class Cursor3D {
 
             this.applySelectedObjectHighlight(selected);
             this.attachObjectControls(selected);
-
-            this.ctx.events.emit("object:selected", {
-                id: selected.instanceId || selected.uuid,
-                asset: selected.name,
-            });
+            this.emitObjectSelected(selected);
         };
 
         this.onSceneContextMenu = (event) => {
@@ -622,6 +625,7 @@ export default class Cursor3D {
             }
 
             this.freeTransformObject.updateMatrixWorld(true);
+            this.emitTransformUpdate(this.freeTransformObject);
         }
     }
 
@@ -759,6 +763,75 @@ export default class Cursor3D {
             quaternion: object.quaternion.toArray(),
             scale: object.scale.toArray(),
         };
+    }
+
+    getObjectTransformForUi(object) {
+        this.tempEuler.setFromQuaternion(object.quaternion, "YXZ");
+        return {
+            position: object.position.toArray(),
+            rotation: [
+                this.tempEuler.x * (180 / Math.PI),
+                this.tempEuler.y * (180 / Math.PI),
+                this.tempEuler.z * (180 / Math.PI),
+            ],
+            scale: object.scale.toArray(),
+        };
+    }
+
+    emitObjectSelected(object) {
+        this.ctx.events.emit("object:selected", {
+            id: object.instanceId || object.uuid,
+            asset: object.name,
+            ...this.getObjectTransformForUi(object),
+        });
+    }
+
+    emitTransformUpdate(object) {
+        this.ctx.events.emit("object:transform:update", {
+            id: object.instanceId || object.uuid,
+            ...this.getObjectTransformForUi(object),
+        });
+    }
+
+    applyTransformFromUi(payload = {}) {
+        const id = payload.id;
+        if (!id) return;
+
+        const selectedId = this.selectedObject?.instanceId || this.selectedObject?.uuid;
+        const target = selectedId === id ? this.selectedObject : this.findInstanceById(id);
+        if (!target) return;
+
+        if (Array.isArray(payload.position) && payload.position.length === 3) {
+            target.position.fromArray(payload.position);
+        }
+
+        if (Array.isArray(payload.rotation) && payload.rotation.length === 3) {
+            this.tempEuler.set(
+                (Number(payload.rotation[0]) || 0) * (Math.PI / 180),
+                (Number(payload.rotation[1]) || 0) * (Math.PI / 180),
+                (Number(payload.rotation[2]) || 0) * (Math.PI / 180),
+                "YXZ"
+            );
+            target.quaternion.setFromEuler(this.tempEuler);
+        }
+
+        if (Array.isArray(payload.scale) && payload.scale.length === 3) {
+            target.scale.fromArray(payload.scale);
+        }
+
+        target.updateMatrixWorld(true);
+
+        if (target === this.selectedObject) {
+            target.getWorldPosition(this.worldPosition);
+            this.orbitControls.target.copy(this.worldPosition);
+            this.orbitControls.update();
+        }
+
+        this.emitTransformUpdate(target);
+        this.ctx.events.emit("object:transform:end", {
+            id: target.instanceId || target.uuid,
+            ...this.getObjectTransform(target),
+        });
     }
 
     getYawFromQuaternion(quaternion) {
