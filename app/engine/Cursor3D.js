@@ -280,6 +280,7 @@ export default class Cursor3D {
         });
         this.ctx.events.on("mode:disable", () => {
             this.cancelPlacement();
+            this.ctx.events.emit("object:deselected");
         });
         this.ctx.events.on("camera:lock", () => {
             this.update();

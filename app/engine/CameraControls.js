@@ -58,7 +58,7 @@ export default class CameraController {
       this.controls.unlock();
     });
     this.ctx.events.on("object:deselected", () => {
-      if (!this.ctx.state.enabled) return;
+      if (this.state === CameraState.Disabled) return;
       this.controls.lock();
     });
     this.controls.addEventListener("lock", () => {
