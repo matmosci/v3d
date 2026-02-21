@@ -53,12 +53,19 @@ const emitTransformUpdate = () => {
         scale: [Number(transform.sx) || 1, Number(transform.sy) || 1, Number(transform.sz) || 1],
     });
 };
+
+const confirmDelete = () => {
+    if (!props.selected?.id) return;
+    if (!window.confirm("Delete this instance?")) return;
+    emit("delete");
+};
 </script>
 
 <template>
-    <aside class="absolute top-0 left-0 h-full w-80 bg-black/45 backdrop-blur-sm border-r border-white/10 p-4">
+    <aside
+        class="absolute top-0 left-0 h-full w-80 bg-black/45 backdrop-blur-sm border-r border-white/10 p-4 flex flex-col">
         <h3 class="text-sm font-semibold text-white/90 mb-3">Context Menu</h3>
-        <div class="space-y-2 text-sm text-white/80">
+        <div class="space-y-2 text-sm text-white/80 flex-1 overflow-y-auto">
             <div>
                 <span class="text-white/60">Instance:</span>
                 <div class="break-all">{{ selected?.id }}</div>
@@ -70,29 +77,51 @@ const emitTransformUpdate = () => {
             <div class="pt-2">
                 <span class="text-white/60">Position</span>
                 <div class="grid grid-cols-3 gap-2 mt-1">
-                    <input v-model.number="transform.px" type="number" step="0.1" class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.py" type="number" step="0.1" class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.pz" type="number" step="0.1" class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.px" type="number" step="0.1"
+                        class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1"
+                        @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.py" type="number" step="0.1"
+                        class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1"
+                        @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.pz" type="number" step="0.1"
+                        class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1"
+                        @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                 </div>
             </div>
             <div>
                 <span class="text-white/60">Rotation</span>
                 <div class="grid grid-cols-3 gap-2 mt-1">
-                    <input v-model.number="transform.rx" type="number" step="15" class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.ry" type="number" step="15" class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.rz" type="number" step="15" class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.rx" type="number" step="15"
+                        class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1"
+                        @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.ry" type="number" step="15"
+                        class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1"
+                        @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.rz" type="number" step="15"
+                        class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1"
+                        @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                 </div>
             </div>
             <div>
                 <span class="text-white/60">Scale</span>
                 <div class="grid grid-cols-3 gap-2 mt-1">
-                    <input v-model.number="transform.sx" type="number" step="0.1" class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.sy" type="number" step="0.1" class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
-                    <input v-model.number="transform.sz" type="number" step="0.1" class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1" @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.sx" type="number" step="0.1"
+                        class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1"
+                        @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.sy" type="number" step="0.1"
+                        class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1"
+                        @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <input v-model.number="transform.sz" type="number" step="0.1"
+                        class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1"
+                        @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                 </div>
             </div>
-            <UButton size="sm" @click="$emit('delete')">Delete</UButton>
-            <UButton size="sm" @click="$emit('free-transform')">Free Transform</UButton>
+            <UButton size="sm" icon="i-lucide-scan-eye" @click="$emit('free-transform')">Free Transform</UButton>
+        </div>
+        <div class="w-fit">
+            <UButton size="sm" color="error" icon="i-lucide-trash" @click="confirmDelete">
+                Delete
+            </UButton>
         </div>
     </aside>
 </template>
