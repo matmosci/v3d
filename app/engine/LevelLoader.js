@@ -1,4 +1,14 @@
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import {
+    BoxGeometry,
+    ConeGeometry,
+    Group,
+    Mesh,
+    MeshBasicMaterial,
+    PointLight,
+    SphereGeometry,
+    SpotLight,
+} from "three";
 
 export default class LevelLoader {
     constructor(ctx) {
@@ -6,11 +16,11 @@ export default class LevelLoader {
         this.scene = this.ctx.scene;
         this.camera = this.ctx.camera;
 
-        this.ctx.events.on("object:placement:start", ({ asset }) => {
-            this.startUserObjectPlacement(asset);
+        this.ctx.events.on("object:placement:start", (payload = {}) => {
+            this.startUserObjectPlacement(payload);
         });
-        this.ctx.events.on("object:placement:confirm", ({ asset, position, quaternion, scale }) => {
-            this.confirmUserObjectPlacement(asset, { position, quaternion, scale });
+        this.ctx.events.on("object:placement:confirm", ({ sourceType, sourceId, asset, position, quaternion, scale }) => {
+            this.confirmUserObjectPlacement({ sourceType, sourceId, asset }, { position, quaternion, scale });
         });
         this.ctx.events.on("object:transform:end", ({ id, position, quaternion, scale }) => {
             this.confirmUserObjectTransform(id, { position, quaternion, scale });
@@ -31,7 +41,7 @@ export default class LevelLoader {
             await this.getAssets();
 
             for (const instance of this.instancesData) {
-                this.placeInstance(instance.asset, instance);
+                await this.placeInstance(instance, instance);
             };
 
             this.applyTransform(this.camera, this.metaData.camera);
@@ -43,7 +53,12 @@ export default class LevelLoader {
     }
 
     async getAssets() {
-        const assetsSet = new Set(this.instancesData.map((instance) => instance.asset));
+        const assetsSet = new Set(
+            this.instancesData
+                .map((instance) => this.normalizeInstanceSource(instance))
+                .filter((source) => source && source.sourceType === "asset")
+                .map((source) => source.sourceId)
+        );
         await Promise.all(
             Array.from(assetsSet).map(async (asset) => {
                 if (!this.ctx.assets.has(asset)) await this.cacheAsset(asset);
@@ -58,15 +73,41 @@ export default class LevelLoader {
         this.ctx.assets.set(asset, object);
     }
 
-    placeInstance(asset, transform) {
-        const object = this.ctx.assets.get(asset)?.clone();
+    async resolvePlacementObject(source) {
+        if (!source?.sourceType || !source?.sourceId) return null;
+
+        if (source.sourceType === "asset") {
+            if (!this.ctx.assets.has(source.sourceId)) await this.cacheAsset(source.sourceId);
+            return this.ctx.assets.get(source.sourceId)?.clone() || null;
+        }
+
+        return createBuiltInObject(source.sourceId);
+    }
+
+    normalizeInstanceSource(payload = {}) {
+        const sourceType = typeof payload.sourceType === "string" ? payload.sourceType : "asset";
+        const sourceId = typeof payload.sourceId === "string" && payload.sourceId
+            ? payload.sourceId
+            : (typeof payload.asset === "string" ? payload.asset : null);
+
+        if (!sourceId) return null;
+        return { sourceType, sourceId };
+    }
+
+    async placeInstance(instance, transform) {
+        const source = this.normalizeInstanceSource(instance);
+        const object = await this.resolvePlacementObject(source);
         if (!object) {
-            console.error(`Asset ${asset} not found`);
+            console.error(`Instance source not found`, source);
             return;
         }
+
+        object.name = source.sourceId;
         this.applyTransform(object, transform);
         object.isInstance = true;
         object.instanceId = transform?._id || object.uuid;
+        object.instanceSourceType = source.sourceType;
+        object.instanceSourceId = source.sourceId;
         this.ctx.scene.add(object);
         return object;
     }
@@ -82,22 +123,39 @@ export default class LevelLoader {
         object.updateMatrixWorld(true);
     }
 
-    async startUserObjectPlacement(asset) {
-        if (this.ctx.assets.get(asset)) this.ctx.events.emit("object:placement:update", { object: this.ctx.assets.get(asset).clone() });
-        else {
-            const gltf = await loadGltf(`/api/assets/${asset}/data`);
-            const object = gltf.scene;
-            object.name = asset;
-            this.ctx.assets.set(asset, object);
-            this.ctx.events.emit("object:placement:update", { object: object.clone() });
-        };
+    async startUserObjectPlacement(payload = {}) {
+        const source = this.normalizeInstanceSource(payload);
+        if (!source) {
+            alert("Invalid placement source");
+            return;
+        }
+
+        const object = await this.resolvePlacementObject(source);
+        if (!object) {
+            alert("Failed to load placement source");
+            return;
+        }
+
+        object.name = source.sourceId;
+        this.ctx.events.emit("object:placement:update", { object, source });
     }
 
-    async confirmUserObjectPlacement(asset, transform) {
+    async confirmUserObjectPlacement(sourcePayload, transform) {
+        const source = this.normalizeInstanceSource(sourcePayload);
+        if (!source) {
+            alert("Invalid placement source");
+            return;
+        }
+
         const res = await fetch(`/api/levels/${this.ctx.state.project}/instances`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ asset, ...transform }),
+            body: JSON.stringify({
+                sourceType: source.sourceType,
+                sourceId: source.sourceId,
+                asset: source.sourceType === "asset" ? source.sourceId : undefined,
+                ...transform,
+            }),
         });
 
         if (!res.ok) {
@@ -106,7 +164,7 @@ export default class LevelLoader {
         }
 
         const createdInstance = await res.json();
-        this.placeInstance(createdInstance.asset || asset, createdInstance);
+        await this.placeInstance(createdInstance, createdInstance);
     }
 
     findInstanceObjectById(id) {
@@ -164,6 +222,68 @@ export default class LevelLoader {
 };
 
 const gltf = new GLTFLoader();
+
+function createBuiltInObject(sourceId) {
+    switch (sourceId) {
+        case "primitive:box": {
+            const object = new Mesh(
+                new BoxGeometry(1, 1, 1),
+                new MeshBasicMaterial({ color: 0x2dd4bf })
+            );
+            object.name = sourceId;
+            return object;
+        }
+        case "primitive:sphere": {
+            const object = new Mesh(
+                new SphereGeometry(0.5, 24, 16),
+                new MeshBasicMaterial({ color: 0x60a5fa })
+            );
+            object.name = sourceId;
+            return object;
+        }
+        case "light:point": {
+            const group = new Group();
+            group.name = sourceId;
+
+            const marker = new Mesh(
+                new SphereGeometry(0.2, 16, 12),
+                new MeshBasicMaterial({ color: 0xfacc15 })
+            );
+            const light = new PointLight(0xffffff, 3, 20);
+
+            group.add(marker);
+            group.add(light);
+            return group;
+        }
+        case "light:spot": {
+            const group = new Group();
+            group.name = sourceId;
+
+            const marker = new Mesh(
+                new ConeGeometry(0.25, 0.6, 16),
+                new MeshBasicMaterial({ color: 0xf59e0b, wireframe: true })
+            );
+            marker.rotation.x = Math.PI / 2;    
+
+            const light = new SpotLight(0xffffff, 4, 30, Math.PI / 5, 0.2);
+            light.position.set(0, 0, 0);
+            light.target.position.set(0, 0, 2);
+
+            group.add(marker);
+            group.add(light);
+            group.add(light.target);
+            return group;
+        }
+        default: {
+            const object = new Mesh(
+                new BoxGeometry(1, 1, 1),
+                new MeshBasicMaterial({ color: 0xff00ff, wireframe: true })
+            );
+            object.name = sourceId || "builtin:unknown";
+            return object;
+        }
+    }
+}
 
 function loadGltf(gltfUrl) {
     return new Promise((resolve, reject) => {

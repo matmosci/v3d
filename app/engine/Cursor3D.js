@@ -68,15 +68,20 @@ class GhostObject extends Object3D {
         this.unsubscribePlacementWheel = null;
         this.clear();
         this.ctx.state.pickedAsset = null;
+        this.ctx.state.pickedPlacementSource = null;
     }
 
-    setObject(object) {
+    setObject(object, source = null) {
         this.clearObject();
 
         if (object) {
             this.resetPlacementRotation();
             const pickedObjectMaterialCache = new Map();
-            this.ctx.state.pickedAsset = object.name;
+            this.ctx.state.pickedPlacementSource = source || {
+                sourceType: "asset",
+                sourceId: object.name,
+            };
+            this.ctx.state.pickedAsset = this.ctx.state.pickedPlacementSource.sourceId;
             this.finishPlacementBound = this.finishPlacement.bind(this);
             this.rotatePlacementBound = this.rotatePlacement.bind(this);
             this.unsubscribeFinishPlacementClick = this.ctx.input.subscribeClick(
@@ -109,10 +114,13 @@ class GhostObject extends Object3D {
 
         this.unsubscribeFinishPlacementClick?.();
         this.unsubscribeFinishPlacementClick = null;
-        if (!this.ctx.state.pickedAsset) return;
+        const source = this.ctx.state.pickedPlacementSource;
+        if (!source?.sourceId) return;
         if (event.button === 0) {
             this.ctx.events.emit("object:placement:confirm", {
-                asset: this.ctx.state.pickedAsset,
+                sourceType: source.sourceType,
+                sourceId: source.sourceId,
+                asset: source.sourceType === "asset" ? source.sourceId : undefined,
                 ...this.getPlacementTransform(event.ctrlKey),
             });
         }
@@ -340,8 +348,8 @@ export default class Cursor3D {
         };
         this.ctx.keybindings.onActionDown("cycleTransformMode", this.onCycleTransformModeKeyDown);
 
-        this.ctx.events.on("object:placement:update", ({ object }) => {
-            this.startPlacement(object);
+        this.ctx.events.on("object:placement:update", ({ object, source }) => {
+            this.startPlacement(object, source || null);
         });
         this.ctx.events.on("object:free-transform", ({ id }) => {
             this.startFreeTransformById(id);
@@ -673,8 +681,8 @@ export default class Cursor3D {
         this.transformControls.setRotationSnap(null);
     }
 
-    startPlacement(object) {
-        this.indicator.ghostObject.setObject(object);
+    startPlacement(object, source = null) {
+        this.indicator.ghostObject.setObject(object, source);
     }
 
     cancelPlacement() {
@@ -779,6 +787,8 @@ export default class Cursor3D {
         this.ctx.events.emit("object:selected", {
             id: object.instanceId || object.uuid,
             asset: object.name,
+            sourceType: object.instanceSourceType || "asset",
+            sourceId: object.instanceSourceId || object.name,
             ...this.getObjectTransformForUi(object),
         });
     }

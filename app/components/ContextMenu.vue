@@ -80,8 +80,8 @@ const confirmDelete = () => {
                 <div class="break-all">{{ selected?.id }}</div>
             </div>
             <div>
-                <span class="text-white/60">Asset:</span>
-                <div class="break-all">{{ selected?.asset }}</div>
+                <span class="text-white/60">Source:</span>
+                <div class="break-all">{{ selected?.sourceType || 'asset' }} / {{ selected?.sourceId || selected?.asset }}</div>
             </div>
             <div class="pt-2">
                 <span class="text-white/60">Position</span>

@@ -18,6 +18,7 @@ export default class EngineContext {
     state = {
         enabled: false,
         pickedAsset: null,
+        pickedPlacementSource: null,
         placementSnap: {
             step: 1,
             axes: {
