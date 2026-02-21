@@ -274,6 +274,11 @@ export default class Cursor3D {
             this.light.visible = !this.light.visible;
         };
         this.ctx.keybindings.onActionDown("toggleCursorLight", this.onToggleLightKeyDown);
+        this.onCycleTransformModeKeyDown = (event) => {
+            if (event.repeat) return;
+            this.cycleTransformMode();
+        };
+        this.ctx.keybindings.onActionDown("cycleTransformMode", this.onCycleTransformModeKeyDown);
 
         this.ctx.events.on("object:placement:update", ({ object }) => {
             this.startPlacement(object);
@@ -508,6 +513,14 @@ export default class Cursor3D {
         if (object.isInstance) return object;
         if (!object.parent) return null;
         return this.findInstanceRoot(object.parent);
+    }
+
+    cycleTransformMode() {
+        const modes = ["translate", "rotate", "scale"];
+        const currentMode = this.transformControls.getMode();
+        const currentIndex = modes.indexOf(currentMode);
+        const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % modes.length;
+        this.transformControls.setMode(modes[nextIndex]);
     }
 
     startPlacement(object) {
