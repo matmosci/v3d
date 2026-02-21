@@ -227,16 +227,16 @@ function createBuiltInObject(sourceId) {
     switch (sourceId) {
         case "primitive:box": {
             const object = new Mesh(
-                new BoxGeometry(1, 1, 1),
-                new MeshBasicMaterial({ color: 0x2dd4bf })
+                new BoxGeometry(1, 1, 1).translate(0, 0.5, 0),
+                new MeshStandardMaterial({ color: 0xcccccc })
             );
             object.name = sourceId;
             return object;
         }
         case "primitive:sphere": {
             const object = new Mesh(
-                new SphereGeometry(0.5, 24, 16),
-                new MeshBasicMaterial({ color: 0x60a5fa })
+                new SphereGeometry(0.5, 24, 16).translate(0, 0.5, 0),
+                new MeshStandardMaterial({ color: 0xcccccc })
             );
             object.name = sourceId;
             return object;
@@ -246,8 +246,8 @@ function createBuiltInObject(sourceId) {
             group.name = sourceId;
 
             const marker = new Mesh(
-                new SphereGeometry(0.2, 16, 12),
-                new MeshBasicMaterial({ color: 0xfacc15 })
+                new SphereGeometry(0.05, 8, 6),
+                new MeshBasicMaterial({ color: 0xf59e0b, wireframe: true })
             );
             const light = new PointLight(0xffffff, 3, 20);
 
@@ -260,7 +260,7 @@ function createBuiltInObject(sourceId) {
             group.name = sourceId;
 
             const marker = new Mesh(
-                new ConeGeometry(0.25, 0.6, 16),
+                new ConeGeometry(0.125, 0.2, 8).rotateX(Math.PI).translate(0, 0.1, 0),
                 new MeshBasicMaterial({ color: 0xf59e0b, wireframe: true })
             );
             marker.rotation.x = Math.PI / 2;    
@@ -277,7 +277,7 @@ function createBuiltInObject(sourceId) {
         default: {
             const object = new Mesh(
                 new BoxGeometry(1, 1, 1),
-                new MeshBasicMaterial({ color: 0xff00ff, wireframe: true })
+                new MeshBasicMaterial({ color: 0xff00ff })
             );
             object.name = sourceId || "builtin:unknown";
             return object;
