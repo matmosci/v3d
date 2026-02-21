@@ -3,6 +3,7 @@ import {
     BoxGeometry,
     ConeGeometry,
     CylinderGeometry,
+    GridHelper,
     Group,
     Mesh,
     MeshBasicMaterial,
@@ -18,6 +19,11 @@ export default class LevelLoader {
         this.scene = this.ctx.scene;
         this.camera = this.ctx.camera;
         this.markersVisible = true;
+        
+        // Create grid helper
+        this.gridHelper = new GridHelper(50, 50, 0x444444, 0x222222);
+        this.gridHelper.name = 'gridHelper';
+        this.scene.add(this.gridHelper);
 
         this.ctx.events.on("object:placement:start", (payload = {}) => {
             this.startUserObjectPlacement(payload);
@@ -37,6 +43,12 @@ export default class LevelLoader {
             this.toggleMarkerMeshesVisibility();
         };
         this.ctx.keybindings.onActionDown("toggleMarkersVisibility", this.onToggleMarkersKeyDown);
+        
+        this.onToggleGridKeyDown = (event) => {
+            if (event.repeat) return;
+            this.toggleGridHelper();
+        };
+        this.ctx.keybindings.onActionDown("toggleGridHelper", this.onToggleGridKeyDown);
     }
 
     async load() {
@@ -129,6 +141,10 @@ export default class LevelLoader {
             if (!object?.userData?.isMarkerMesh) return;
             object.visible = this.markersVisible;
         });
+    }
+
+    toggleGridHelper() {
+        this.gridHelper.visible = !this.gridHelper.visible;
     }
 
     applyMarkerVisibilityToObject(object) {

@@ -62,6 +62,7 @@ export default class Engine {
         this.context.keybindings.bindAction("toggleCursorLight", ["KeyF"]);
         this.context.keybindings.bindAction("cycleTransformMode", ["KeyT"]);
         this.context.keybindings.bindAction("toggleMarkersVisibility", ["KeyM"]);
+        this.context.keybindings.bindAction("toggleGridHelper", ["KeyH"]);
     }
 
     registerEvents() {
@@ -106,11 +107,6 @@ export default class Engine {
         const bgColor = 0x0f172b;
         this.context.scene.background = new THREE.Color(bgColor);
         this.context.scene.fog = new THREE.FogExp2(bgColor, 0.01);
-
-        const gridHelper = new THREE.GridHelper(1000, 1000, 0x444444, 0x222222);
-        gridHelper.layers.set(1);
-        gridHelper.position.set(0, 0.001, 0);
-        this.context.scene.add(gridHelper);
 
         this.systems.level.load();
     }
