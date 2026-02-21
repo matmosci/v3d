@@ -5,6 +5,7 @@ import {
     Group,
     Mesh,
     MeshBasicMaterial,
+    MeshStandardMaterial,
     PointLight,
     SphereGeometry,
     SpotLight,
@@ -15,6 +16,7 @@ export default class LevelLoader {
         this.ctx = ctx;
         this.scene = this.ctx.scene;
         this.camera = this.ctx.camera;
+        this.markersVisible = true;
 
         this.ctx.events.on("object:placement:start", (payload = {}) => {
             this.startUserObjectPlacement(payload);
@@ -28,6 +30,12 @@ export default class LevelLoader {
         this.ctx.events.on("object:delete", ({ id }) => {
             this.deleteUserObjectInstance(id);
         });
+
+        this.onToggleMarkersKeyDown = (event) => {
+            if (event.repeat) return;
+            this.toggleMarkerMeshesVisibility();
+        };
+        this.ctx.keybindings.onActionDown("toggleMarkersVisibility", this.onToggleMarkersKeyDown);
     }
 
     async load() {
@@ -108,8 +116,27 @@ export default class LevelLoader {
         object.instanceId = transform?._id || object.uuid;
         object.instanceSourceType = source.sourceType;
         object.instanceSourceId = source.sourceId;
+        this.applyMarkerVisibilityToObject(object);
         this.ctx.scene.add(object);
         return object;
+    }
+
+    toggleMarkerMeshesVisibility() {
+        this.markersVisible = !this.markersVisible;
+        this.scene.traverse((object) => {
+            if (!object?.isMesh) return;
+            if (!object?.userData?.isMarkerMesh) return;
+            object.visible = this.markersVisible;
+        });
+    }
+
+    applyMarkerVisibilityToObject(object) {
+        if (!object) return;
+        object.traverse((child) => {
+            if (!child?.isMesh) return;
+            if (!child?.userData?.isMarkerMesh) return;
+            child.visible = this.markersVisible;
+        });
     }
 
     applyTransform(object, transform = {}) {
@@ -249,6 +276,7 @@ function createBuiltInObject(sourceId) {
                 new SphereGeometry(0.05, 8, 6),
                 new MeshBasicMaterial({ color: 0xf59e0b, wireframe: true })
             );
+            marker.userData.isMarkerMesh = true;
             const light = new PointLight(0xffffff, 3, 20);
 
             group.add(marker);
@@ -263,6 +291,7 @@ function createBuiltInObject(sourceId) {
                 new ConeGeometry(0.125, 0.2, 8).rotateX(Math.PI).translate(0, 0.1, 0),
                 new MeshBasicMaterial({ color: 0xf59e0b, wireframe: true })
             );
+            marker.userData.isMarkerMesh = true;
             marker.rotation.x = Math.PI / 2;    
 
             const light = new SpotLight(0xffffff, 4, 30, Math.PI / 5, 0.2);
