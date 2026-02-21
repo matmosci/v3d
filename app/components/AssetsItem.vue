@@ -1,13 +1,13 @@
 <template>
     <div @click="selectAsset"
         class="border border-default duration-150 rounded-lg bg-default hover:bg-elevated/25 cursor-pointer px-2 pb-1 h-48 flex flex-col select-none">
-        <div class="h-24 w-full mt-1 mb-2 rounded-md bg-black/30 overflow-hidden grid place-items-center">
+        <div class="h-full w-full mt-1 rounded-md bg-black/30 overflow-hidden grid place-items-center">
             <img v-if="asset.thumbnail" :src="asset.thumbnail" alt="thumbnail" class="h-full w-full object-cover">
             <UIcon v-else name="i-lucide-image" class="text-white/30" />
         </div>
         <div class="font-medium">{{ asset.originalname }}</div>
-        <div class="text-sm text-gray-400">{{ (asset.size / 1024).toFixed(2) }} KB</div>
-        <div class="mt-auto text-end">
+        <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-400">{{ (asset.size / 1024).toFixed(2) }} KB</div>
             <NuxtLink :to="`/assets/${asset._id}`" @click.stop>
                 <UButton icon="i-lucide-eye" variant="link" class="cursor-pointer"></UButton>
             </NuxtLink>
