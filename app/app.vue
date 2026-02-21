@@ -31,8 +31,8 @@ const selectedInstance = editor.getSelectedInstance();
 </script>
 <template>
   <UApp>
-    <Menu v-show="mode === 'overlay'" />
     <ContextMenu v-show="selectedInstance" :selected="selectedInstance" />
+    <Menu v-show="mode === 'overlay'" />
     <Viewport class="absolute top-0 bottom-0 left-0 right-0 -z-1" />
   </UApp>
 </template>
