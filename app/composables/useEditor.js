@@ -95,6 +95,21 @@ export default function useEditor() {
         engine.context.events.emit("object:deselected");
     }
 
+    function loadLevel(levelId) {
+        if (!engine) return;
+        return engine.loadLevel(levelId);
+    }
+
+    function loadAsset(assetId) {
+        if (!engine) return;
+        return engine.loadAsset(assetId);
+    }
+
+    function clearScene() {
+        if (!engine) return;
+        engine.clearScene();
+    }
+
     return {
         init,
         getInstance,
@@ -107,5 +122,8 @@ export default function useEditor() {
         freeTransformSelectedInstance,
         updateSelectedTransform,
         deselectSelectedInstance,
+        loadLevel,
+        loadAsset,
+        clearScene,
     };
 }

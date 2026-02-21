@@ -7,13 +7,10 @@ import Dust from "./Dust";
 import InputHandler from "./InputHandler";
 import Keybindings from "./Keybindings";
 
-export let test_level = "7f4cde04-c4b2-42d1-9ec3-140aaaf35806";
-
 export default class Engine {
-    constructor(container, project = test_level) {
+    constructor(container) {
         this.container = container;
         this.context = new EngineContext();
-        this.context.state.project = project;
         this.systems = {};
         this.context.scene = new THREE.Scene();
         this.context.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -107,8 +104,43 @@ export default class Engine {
         const bgColor = 0x0f172b;
         this.context.scene.background = new THREE.Color(bgColor);
         this.context.scene.fog = new THREE.FogExp2(bgColor, 0.01);
+    }
 
-        this.systems.level.load();
+    async loadLevel(levelId) {
+        this.context.state.project = levelId;
+        return await this.systems.level.load();
+    }
+
+    async loadAsset(assetId) {
+        // Clear the scene of any existing content
+        this.clearScene();
+        
+        // Load and display the asset
+        try {
+            await this.systems.level.cacheAsset(assetId);
+            const asset = this.systems.level.ctx.assets.get(assetId);
+            if (asset) {
+                const assetClone = asset.clone();
+                this.context.scene.add(assetClone);
+                return assetClone;
+            }
+        } catch (error) {
+            console.error('Failed to load asset:', error);
+            throw error;
+        }
+    }
+
+    clearScene() {
+        // Remove all user-added objects but keep lights and camera
+        const objectsToRemove = [];
+        this.context.scene.traverse((object) => {
+            if (object !== this.context.camera && 
+                !object.isLight && 
+                object.parent === this.context.scene) {
+                objectsToRemove.push(object);
+            }
+        });
+        objectsToRemove.forEach(object => this.context.scene.remove(object));
     }
 
     enable() {
