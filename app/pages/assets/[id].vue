@@ -49,6 +49,18 @@ const goBack = () => {
   router.push("/assets");
 };
 
+const enforceBackfaceCulling = (object) => {
+  object.traverse((node) => {
+    if (!node.isMesh || !node.material) return;
+
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of materials) {
+      material.side = THREE.FrontSide;
+      material.needsUpdate = true;
+    }
+  });
+};
+
 const fitCameraToObject = (object) => {
   const box = new THREE.Box3().setFromObject(object);
   const size = box.getSize(new THREE.Vector3());
@@ -113,6 +125,7 @@ const setup = async () => {
     });
 
     const object = gltf.scene;
+    enforceBackfaceCulling(object);
     scene.add(object);
     fitCameraToObject(object);
 
