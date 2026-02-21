@@ -6,10 +6,12 @@ export default class InputHandler {
 		this.keyUpSubscribers = new Set();
 		this.clickSubscribers = new Set();
 		this.wheelSubscribers = new Set();
+		this.contextMenuSubscribers = new Set();
 
 		this.target.addEventListener("keydown", this.onKeyDown);
 		this.target.addEventListener("keyup", this.onKeyUp);
 		this.target.addEventListener("click", this.onClick);
+		this.target.addEventListener("contextmenu", this.onContextMenu);
 		this.target.addEventListener("wheel", this.onWheel, { passive: false });
 		this.target.addEventListener("blur", this.onBlur);
 	}
@@ -26,6 +28,10 @@ export default class InputHandler {
 
 	onClick = (event) => {
 		for (const callback of Array.from(this.clickSubscribers)) callback(event);
+	};
+
+	onContextMenu = (event) => {
+		for (const callback of Array.from(this.contextMenuSubscribers)) callback(event);
 	};
 
 	onWheel = (event) => {
@@ -85,10 +91,18 @@ export default class InputHandler {
 		};
 	}
 
+	subscribeContextMenu(callback) {
+		this.contextMenuSubscribers.add(callback);
+		return () => {
+			this.contextMenuSubscribers.delete(callback);
+		};
+	}
+
 	dispose() {
 		this.target.removeEventListener("keydown", this.onKeyDown);
 		this.target.removeEventListener("keyup", this.onKeyUp);
 		this.target.removeEventListener("click", this.onClick);
+		this.target.removeEventListener("contextmenu", this.onContextMenu);
 		this.target.removeEventListener("wheel", this.onWheel);
 		this.target.removeEventListener("blur", this.onBlur);
 		this.keys.clear();
@@ -96,5 +110,6 @@ export default class InputHandler {
 		this.keyUpSubscribers.clear();
 		this.clickSubscribers.clear();
 		this.wheelSubscribers.clear();
+		this.contextMenuSubscribers.clear();
 	}
 }

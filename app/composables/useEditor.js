@@ -1,17 +1,28 @@
 import Engine from "../engine/Engine";
 
 const mode = ref("overlay");
+const selectedInstance = ref(null);
 let engine = null;
+let isEventsBound = false;
 
 export default function useEditor() {
     function init(container) {
         if (!engine) engine = new Engine(container);
-        engine.context.events.on("mode:disable", () => {
-            mode.value = "overlay";
-        });
-        engine.context.events.on("mode:enable", () => {
-            mode.value = "navigation";
-        });
+        if (!isEventsBound) {
+            isEventsBound = true;
+            engine.context.events.on("mode:disable", () => {
+                mode.value = "overlay";
+            });
+            engine.context.events.on("mode:enable", () => {
+                mode.value = "navigation";
+            });
+            engine.context.events.on("object:selected", (payload) => {
+                selectedInstance.value = payload;
+            });
+            engine.context.events.on("object:deselected", () => {
+                selectedInstance.value = null;
+            });
+        }
     }
 
     function getInstance() {
@@ -42,6 +53,10 @@ export default function useEditor() {
         return mode.value;
     }
 
+    function getSelectedInstance() {
+        return selectedInstance;
+    }
+
     return {
         init,
         getInstance,
@@ -49,5 +64,6 @@ export default function useEditor() {
         setMode,
         toggleMode,
         getMode,
+        getSelectedInstance,
     };
 }

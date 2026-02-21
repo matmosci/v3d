@@ -60,6 +60,7 @@ export default class LevelLoader {
         }
         this.applyTransform(object, transform);
         object.isInstance = true;
+        object.instanceId = transform?._id || object.uuid;
         this.ctx.scene.add(object);
         return object;
     }

@@ -206,6 +206,50 @@ export default class Cursor3D {
         this.ctx.events.on("camera:move", () => {
             this.update();
         });
+
+        this.onSceneClick = (event) => {
+            if (this.ctx.state.pickedAsset) return;
+            if (!this.isCanvasClick(event)) return;
+            if (event.button !== 0) return;
+
+            this.raycaster.setFromCamera(this.pointer, this.camera);
+            const intersects = this.raycaster.intersectObjects(this.scene.children);
+            if (!intersects[0]) {
+                this.ctx.events.emit("object:deselected");
+                return;
+            }
+
+            const selected = this.findInstanceRoot(intersects[0].object);
+            if (!selected) {
+                this.ctx.events.emit("object:deselected");
+                return;
+            }
+
+            this.ctx.events.emit("object:selected", {
+                id: selected.instanceId || selected.uuid,
+                asset: selected.name,
+            });
+        };
+
+        this.onSceneContextMenu = (event) => {
+            if (!this.isCanvasClick(event)) return;
+            event.preventDefault();
+            this.ctx.events.emit("object:deselected");
+        };
+
+        this.ctx.input.subscribeClick(this.onSceneClick);
+        this.ctx.input.subscribeContextMenu(this.onSceneContextMenu);
+    }
+
+    isCanvasClick(event) {
+        const canvas = this.ctx.renderer?.domElement;
+        if (!canvas) return false;
+        if (event.target === canvas) return true;
+        if (typeof event.composedPath === "function") {
+            const path = event.composedPath();
+            if (Array.isArray(path) && path.includes(canvas)) return true;
+        }
+        return false;
     }
 
     update() {
