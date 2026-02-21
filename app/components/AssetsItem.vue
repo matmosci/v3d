@@ -4,7 +4,9 @@
         <div class="font-medium">{{ asset.originalname }}</div>
         <div class="text-sm text-gray-400">{{ (asset.size / 1024).toFixed(2) }} KB</div>
         <div class="mt-auto text-end">
-            <UButton icon="i-lucide-eye" variant="link" class="cursor-pointer"></UButton>
+            <NuxtLink :to="`/assets/${asset._id}`" @click.stop>
+                <UButton icon="i-lucide-eye" variant="link" class="cursor-pointer"></UButton>
+            </NuxtLink>
         </div>
     </div>
 </template>
