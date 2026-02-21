@@ -10,6 +10,8 @@ import {
     CylinderGeometry,
     SpotLight,
 } from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
 
 class Cursor3DIndicator extends Object3D {
     constructor(ctx) {
@@ -178,12 +180,89 @@ export default class Cursor3D {
         this.raycaster = new Raycaster(new Vector3(), new Vector3(), 0, 100);
 
         this.pointer = new Vector2(0, 0);
+        this.selectionPointer = new Vector2(0, 0);
         this.direction = new Vector3();
+        this.worldPosition = new Vector3();
         this.selectedObject = null;
         this.selectedObjectMaterialCache = new Map();
         this.selectedObjectMaterial = new MeshBasicMaterial({ color: 0xff8800, opacity: 0.75, transparent: true });
         this.selectedObjectMaterial.depthWrite = true;
         this.selectedObjectMaterial.depthTest = true;
+
+        this.orbitControls = new OrbitControls(this.camera, this.ctx.renderer.domElement);
+        this.orbitControls.enabled = false;
+        this.orbitControls.enableDamping = false;
+        this.isOrbitInteracting = false;
+        this.suppressSelectionUntil = 0;
+        this.rightClickState = {
+            isDown: false,
+            startX: 0,
+            startY: 0,
+            dragged: false,
+        };
+
+        this.orbitControls.addEventListener("start", () => {
+            this.isOrbitInteracting = true;
+        });
+        this.orbitControls.addEventListener("end", () => {
+            this.isOrbitInteracting = false;
+            this.suppressSelectionUntil = performance.now() + 120;
+        });
+
+        this.onMouseDown = (event) => {
+            if (event.button !== 2) return;
+            if (!this.isCanvasClick(event)) return;
+            this.rightClickState.isDown = true;
+            this.rightClickState.startX = event.clientX;
+            this.rightClickState.startY = event.clientY;
+            this.rightClickState.dragged = false;
+        };
+
+        this.onMouseMove = (event) => {
+            if (!this.rightClickState.isDown) return;
+            const dx = event.clientX - this.rightClickState.startX;
+            const dy = event.clientY - this.rightClickState.startY;
+            if ((dx * dx) + (dy * dy) > 16) this.rightClickState.dragged = true;
+        };
+
+        this.onMouseUp = (event) => {
+            if (event.button !== 2) return;
+            this.rightClickState.isDown = false;
+        };
+
+        this.ctx.renderer.domElement.addEventListener("mousedown", this.onMouseDown);
+        window.addEventListener("mousemove", this.onMouseMove);
+        window.addEventListener("mouseup", this.onMouseUp);
+
+        this.transformControls = new TransformControls(this.camera, this.ctx.renderer.domElement);
+        this.transformControls.enabled = false;
+        this.transformControls.setMode("translate");
+        this.transformControlsHelper = this.transformControls.getHelper();
+        this.transformControlsHelper.visible = false;
+        this.scene.add(this.transformControlsHelper);
+
+        this.isTransformDragging = false;
+        this.transformControls.addEventListener("dragging-changed", ({ value }) => {
+            this.isTransformDragging = value;
+            this.orbitControls.enabled = !value && !!this.selectedObject;
+
+            if (!value && this.selectedObject) {
+                this.selectedObject.getWorldPosition(this.worldPosition);
+                this.orbitControls.target.copy(this.worldPosition);
+                this.orbitControls.update();
+            }
+        });
+        this.transformControls.addEventListener("mouseDown", () => {
+            this.orbitControls.enabled = false;
+        });
+        this.transformControls.addEventListener("mouseUp", () => {
+            if (this.selectedObject) {
+                this.selectedObject.getWorldPosition(this.worldPosition);
+                this.orbitControls.target.copy(this.worldPosition);
+                this.orbitControls.update();
+            }
+            this.orbitControls.enabled = !!this.selectedObject;
+        });
 
         this.light = new SpotLight(0xffffff, 20, 0, Math.PI / 6, 0.2);
         this.light.visible = true;
@@ -211,13 +290,19 @@ export default class Cursor3D {
         this.ctx.events.on("camera:move", () => {
             this.update();
         });
+        this.ctx.events.on("object:deselected", () => {
+            this.clearSelectedObjectHighlight();
+        });
 
         this.onSceneClick = (event) => {
             if (this.ctx.state.pickedAsset) return;
             if (!this.isCanvasClick(event)) return;
             if (event.button !== 0) return;
+            if (this.isTransformDragging) return;
+            if (this.isOrbitInteracting) return;
+            if (performance.now() < this.suppressSelectionUntil) return;
 
-            this.raycaster.setFromCamera(this.pointer, this.camera);
+            this.raycaster.setFromCamera(this.getPointerForSelection(event), this.camera);
             const intersects = this.raycaster.intersectObjects(this.scene.children);
             if (!intersects[0]) {
                 this.clearSelectedObjectHighlight();
@@ -225,7 +310,7 @@ export default class Cursor3D {
                 return;
             }
 
-            const selected = this.findInstanceRoot(intersects[0].object);
+            const selected = this.findFirstInstanceFromIntersects(intersects);
             if (!selected) {
                 this.clearSelectedObjectHighlight();
                 this.ctx.events.emit("object:deselected");
@@ -233,6 +318,7 @@ export default class Cursor3D {
             }
 
             this.applySelectedObjectHighlight(selected);
+            this.attachObjectControls(selected);
 
             this.ctx.events.emit("object:selected", {
                 id: selected.instanceId || selected.uuid,
@@ -243,6 +329,11 @@ export default class Cursor3D {
         this.onSceneContextMenu = (event) => {
             if (!this.isCanvasClick(event)) return;
             event.preventDefault();
+
+            const shouldDeselect = !this.rightClickState.dragged;
+            this.rightClickState.isDown = false;
+
+            if (!shouldDeselect) return;
             this.clearSelectedObjectHighlight();
             this.ctx.events.emit("object:deselected");
         };
@@ -295,6 +386,25 @@ export default class Cursor3D {
 
         this.selectedObjectMaterialCache.clear();
         this.selectedObject = null;
+        this.detachObjectControls();
+    }
+
+    attachObjectControls(object) {
+        this.transformControlsHelper.visible = true;
+        this.transformControls.enabled = true;
+        this.transformControls.attach(object);
+        this.orbitControls.enabled = true;
+        object.getWorldPosition(this.worldPosition);
+        this.orbitControls.target.copy(this.worldPosition);
+        this.orbitControls.update();
+    }
+
+    detachObjectControls() {
+        this.orbitControls.enabled = false;
+        this.transformControls.detach();
+        this.transformControls.enabled = false;
+        this.transformControlsHelper.visible = false;
+        this.isTransformDragging = false;
     }
 
     isCanvasClick(event) {
@@ -308,20 +418,77 @@ export default class Cursor3D {
         return false;
     }
 
+    getPointerFromEvent(event) {
+        const canvas = this.ctx.renderer?.domElement;
+        if (!canvas) return this.selectionPointer.set(0, 0);
+
+        const rect = canvas.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        return this.selectionPointer.set(x, y);
+    }
+
+    getPointerForSelection(event) {
+        const canvas = this.ctx.renderer?.domElement;
+        if (canvas && document.pointerLockElement === canvas) {
+            return this.pointer;
+        }
+
+        return this.getPointerFromEvent(event);
+    }
+
+    findFirstInstanceFromIntersects(intersects) {
+        for (const hit of intersects) {
+            if (this.isIgnoredRaycastObject(hit.object)) continue;
+            const instance = this.findInstanceRoot(hit.object);
+            if (instance) return instance;
+        }
+        return null;
+    }
+
+    findFirstSurfaceIntersect(intersects) {
+        for (const hit of intersects) {
+            if (!hit?.face) continue;
+            if (this.isIgnoredRaycastObject(hit.object)) continue;
+            return hit;
+        }
+        return null;
+    }
+
+    isIgnoredRaycastObject(object) {
+        if (!object) return true;
+        if (this.isDescendantOf(object, this.indicator)) return true;
+        if (this.transformControlsHelper && this.isDescendantOf(object, this.transformControlsHelper)) return true;
+        return false;
+    }
+
+    isDescendantOf(object, ancestor) {
+        if (!object || !ancestor) return false;
+        let current = object;
+        while (current) {
+            if (current === ancestor) return true;
+            current = current.parent;
+        }
+        return false;
+    }
+
     update() {
+        if (this.orbitControls.enabled) this.orbitControls.update();
+
         this.raycaster.setFromCamera(this.pointer, this.camera);
         const intersects = this.raycaster.intersectObjects(this.scene.children);
-        if (!intersects[0] || !intersects[0].face) {
+        const hit = this.findFirstSurfaceIntersect(intersects);
+        if (!hit) {
             this.indicator.rotation.x = -Math.PI / 2;
             return;
         }
         this.indicator.position.set(0, 0, 0);
-        this.direction.copy(intersects[0].face.normal);
-        const instanceObject = this.findInstanceRoot(intersects[0].object);
+        this.direction.copy(hit.face.normal);
+        const instanceObject = this.findInstanceRoot(hit.object);
         if (instanceObject) this.direction.applyQuaternion(instanceObject.quaternion);
-        else this.direction.applyQuaternion(intersects[0].object.quaternion);
+        else this.direction.applyQuaternion(hit.object.quaternion);
         this.indicator.lookAt(this.direction);
-        this.indicator.position.copy(intersects[0].point);
+        this.indicator.position.copy(hit.point);
 
         const isCtrlHeld = this.ctx.input.isAnyPressed(["ControlLeft", "ControlRight"]);
 
