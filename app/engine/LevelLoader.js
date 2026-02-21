@@ -2,6 +2,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
     BoxGeometry,
     ConeGeometry,
+    CylinderGeometry,
     Group,
     Mesh,
     MeshBasicMaterial,
@@ -263,6 +264,14 @@ function createBuiltInObject(sourceId) {
         case "primitive:sphere": {
             const object = new Mesh(
                 new SphereGeometry(0.5, 24, 16).translate(0, 0.5, 0),
+                new MeshStandardMaterial({ color: 0xcccccc })
+            );
+            object.name = sourceId;
+            return object;
+        }
+        case "primitive:cylinder": {
+            const object = new Mesh(
+                new CylinderGeometry(0.5, 0.5, 1, 24).translate(0, 0.5, 0),
                 new MeshStandardMaterial({ color: 0xcccccc })
             );
             object.name = sourceId;

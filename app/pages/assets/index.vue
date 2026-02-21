@@ -23,6 +23,7 @@ const assets = ref([]);
 const builtInItems = [
     { sourceId: 'primitive:box', title: 'Box', icon: 'i-lucide-box' },
     { sourceId: 'primitive:sphere', title: 'Sphere', icon: 'i-lucide-circle' },
+    { sourceId: 'primitive:cylinder', title: 'Cylinder', icon: 'i-lucide-cylinder' },
     { sourceId: 'light:point', title: 'Point Light', icon: 'i-lucide-lightbulb' },
     { sourceId: 'light:spot', title: 'Spot Light', icon: 'i-lucide-cone' },
 ];
