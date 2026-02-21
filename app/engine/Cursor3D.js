@@ -314,6 +314,13 @@ export default class Cursor3D {
                 this.selectedObject.getWorldPosition(this.worldPosition);
                 this.orbitControls.target.copy(this.worldPosition);
                 this.orbitControls.update();
+
+                if (!this.freeTransformObject) {
+                    this.ctx.events.emit("object:transform:end", {
+                        id: this.selectedObject.instanceId || this.selectedObject.uuid,
+                        ...this.getObjectTransform(this.selectedObject),
+                    });
+                }
             }
         });
         this.transformControls.addEventListener("mouseDown", () => {
