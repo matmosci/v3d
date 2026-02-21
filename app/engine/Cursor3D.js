@@ -47,13 +47,18 @@ class GhostObject extends Object3D {
     constructor(ctx) {
         super();
         this.ctx = ctx;
+        this.basePlacementRotationX = Math.PI / 2;
         this.unsubscribeFinishPlacementClick = null;
         this.unsubscribePlacementWheel = null;
         this.pickedAssetMaterial = new MeshBasicMaterial({ color: 0x0088ff, opacity: 0.5, transparent: true });
         this.pickedAssetMaterial.depthWrite = true;
         this.pickedAssetMaterial.depthTest = true;
         this.layers.set(1);
-        this.rotation.x = Math.PI / 2;
+        this.resetPlacementRotation();
+    }
+
+    resetPlacementRotation() {
+        this.rotation.set(this.basePlacementRotationX, 0, 0);
     }
 
     clearObject() {
@@ -69,6 +74,7 @@ class GhostObject extends Object3D {
         this.clearObject();
 
         if (object) {
+            this.resetPlacementRotation();
             const pickedObjectMaterialCache = new Map();
             this.ctx.state.pickedAsset = object.name;
             this.finishPlacementBound = this.finishPlacement.bind(this);
@@ -117,8 +123,10 @@ class GhostObject extends Object3D {
         const position = new Vector3();
         const quaternion = new Quaternion();
         const scale = new Vector3();
+        const placementTarget = this.children[0] || this;
 
-        this.matrixWorld.decompose(position, quaternion, scale);
+        this.updateMatrixWorld(true);
+        placementTarget.matrixWorld.decompose(position, quaternion, scale);
 
         if (!shouldSnap) {
             return {
@@ -183,6 +191,8 @@ export default class Cursor3D {
         this.pointer = new Vector2(0, 0);
         this.selectionPointer = new Vector2(0, 0);
         this.direction = new Vector3();
+        this.indicatorForwardAxis = new Vector3(0, 0, 1);
+        this.worldUpAxis = new Vector3(0, 1, 0);
         this.worldPosition = new Vector3();
         this.tempQuaternionA = new Quaternion();
         this.tempQuaternionB = new Quaternion();
@@ -194,7 +204,6 @@ export default class Cursor3D {
         this.freeTransformInitialTransform = null;
         this.freeTransformRotationOffset = null;
         this.freeTransformUserRotationY = 0;
-        this.freeTransformBaseRotationY = 0;
         this.unsubscribeFreeTransformClick = null;
         this.selectedObjectMaterialCache = new Map();
         this.selectedObjectMaterial = new MeshBasicMaterial({ color: 0xff8800, opacity: 0.75, transparent: true });
@@ -561,21 +570,16 @@ export default class Cursor3D {
             return;
         }
         this.indicator.position.set(0, 0, 0);
-        const preventSnapToNormal = this.ctx.input.isAnyPressed(["ShiftLeft", "ShiftRight"]);
-        const shouldAlignToFaceNormal = !(preventSnapToNormal && (this.ctx.state.pickedAsset || this.freeTransformObject));
+        const isShiftHeld = this.ctx.input.isAnyPressed(["ShiftLeft", "ShiftRight"]);
 
-        if (shouldAlignToFaceNormal) {
-            this.direction.copy(hit.face.normal);
-            const instanceObject = this.findInstanceRoot(hit.object);
-            if (instanceObject) this.direction.applyQuaternion(instanceObject.quaternion);
-            else this.direction.applyQuaternion(hit.object.quaternion);
-            this.indicator.lookAt(this.direction);
+        if (isShiftHeld) {
+            this.direction.copy(this.worldUpAxis);
+        } else {
+            this.direction.copy(hit.face.normal).transformDirection(hit.object.matrixWorld).normalize();
         }
 
-        if (preventSnapToNormal && (this.ctx.state.pickedAsset || this.freeTransformObject)) {
-            const indicatorYaw = this.getYawFromQuaternion(this.indicator.quaternion);
-            this.setYawOnlyQuaternion(this.indicator.quaternion, indicatorYaw);
-        }
+        this.tempQuaternionD.setFromUnitVectors(this.indicatorForwardAxis, this.direction);
+        this.indicator.quaternion.copy(this.tempQuaternionD);
 
         this.indicator.position.copy(hit.point);
 
@@ -593,35 +597,30 @@ export default class Cursor3D {
 
         if (this.freeTransformObject) {
             this.freeTransformObject.position.copy(this.indicator.position);
-            if (preventSnapToNormal && this.freeTransformInitialTransform) {
-                const yaw = this.freeTransformBaseRotationY + this.freeTransformUserRotationY;
-                this.setYawOnlyQuaternion(this.freeTransformObject.quaternion, yaw);
-            } else if (shouldAlignToFaceNormal) {
-                const targetWorldQuaternion = this.indicator.getWorldQuaternion(this.tempQuaternionA);
+            const targetWorldQuaternion = this.indicator.getWorldQuaternion(this.tempQuaternionA);
 
-                if (!this.freeTransformRotationOffset) {
-                    const objectWorldQuaternion = this.freeTransformObject.getWorldQuaternion(this.tempQuaternionB);
-                    this.freeTransformRotationOffset = this.tempQuaternionC
-                        .copy(targetWorldQuaternion)
-                        .invert()
-                        .multiply(objectWorldQuaternion)
-                        .clone();
-                }
+            if (!this.freeTransformRotationOffset) {
+                const objectWorldQuaternion = this.freeTransformObject.getWorldQuaternion(this.tempQuaternionB);
+                this.freeTransformRotationOffset = this.tempQuaternionC
+                    .copy(targetWorldQuaternion)
+                    .invert()
+                    .multiply(objectWorldQuaternion)
+                    .clone();
+            }
 
-                if (this.freeTransformRotationOffset) targetWorldQuaternion.multiply(this.freeTransformRotationOffset);
-                if (this.freeTransformUserRotationY) {
-                    this.tempQuaternionD.setFromAxisAngle(this.direction.set(0, 1, 0), this.freeTransformUserRotationY);
-                    targetWorldQuaternion.multiply(this.tempQuaternionD);
-                }
+            if (this.freeTransformRotationOffset) targetWorldQuaternion.multiply(this.freeTransformRotationOffset);
+            if (this.freeTransformUserRotationY) {
+                this.tempQuaternionD.setFromAxisAngle(this.direction.set(0, 1, 0), this.freeTransformUserRotationY);
+                targetWorldQuaternion.multiply(this.tempQuaternionD);
+            }
 
-                if (this.freeTransformObject.parent) {
-                    const parentWorldQuaternion = this.freeTransformObject.parent.getWorldQuaternion(this.tempQuaternionB);
-                    parentWorldQuaternion.invert();
-                    this.tempQuaternionC.copy(parentWorldQuaternion).multiply(targetWorldQuaternion);
-                    this.freeTransformObject.quaternion.copy(this.tempQuaternionC);
-                } else {
-                    this.freeTransformObject.quaternion.copy(targetWorldQuaternion);
-                }
+            if (this.freeTransformObject.parent) {
+                const parentWorldQuaternion = this.freeTransformObject.parent.getWorldQuaternion(this.tempQuaternionB);
+                parentWorldQuaternion.invert();
+                this.tempQuaternionC.copy(parentWorldQuaternion).multiply(targetWorldQuaternion);
+                this.freeTransformObject.quaternion.copy(this.tempQuaternionC);
+            } else {
+                this.freeTransformObject.quaternion.copy(targetWorldQuaternion);
             }
 
             this.freeTransformObject.updateMatrixWorld(true);
@@ -700,7 +699,6 @@ export default class Cursor3D {
         this.freeTransformInitialTransform = this.getObjectTransform(object);
         this.freeTransformRotationOffset = null;
         this.freeTransformUserRotationY = 0;
-        this.freeTransformBaseRotationY = this.getYawFromQuaternion(object.quaternion);
         this.suppressSelectionUntil = performance.now() + 120;
 
         this.unsubscribeFreeTransformClick = this.ctx.input.subscribeClick((event) => {
@@ -736,7 +734,6 @@ export default class Cursor3D {
         this.freeTransformInitialTransform = null;
         this.freeTransformRotationOffset = null;
         this.freeTransformUserRotationY = 0;
-        this.freeTransformBaseRotationY = 0;
 
         if (shouldDeselect) {
             this.ctx.events.emit("object:deselected");
@@ -853,13 +850,4 @@ export default class Cursor3D {
         return values.map((value) => this.roundValue(value, precision));
     }
 
-    getYawFromQuaternion(quaternion) {
-        this.tempEuler.setFromQuaternion(quaternion, "YXZ");
-        return this.tempEuler.y;
-    }
-
-    setYawOnlyQuaternion(targetQuaternion, yaw) {
-        this.tempEuler.set(0, yaw, 0, "YXZ");
-        targetQuaternion.setFromEuler(this.tempEuler);
-    }
 }
