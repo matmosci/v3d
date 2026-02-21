@@ -20,21 +20,26 @@ const transform = reactive({
     sz: 1,
 });
 
+const roundValue = (value, precision = 4) => {
+    const factor = 10 ** precision;
+    return Math.round((Number(value) || 0) * factor) / factor;
+};
+
 const applySelectedToForm = () => {
     const selected = props.selected || {};
     const position = Array.isArray(selected.position) ? selected.position : [0, 0, 0];
     const rotation = Array.isArray(selected.rotation) ? selected.rotation : [0, 0, 0];
     const scale = Array.isArray(selected.scale) ? selected.scale : [1, 1, 1];
 
-    transform.px = Number(position[0]) || 0;
-    transform.py = Number(position[1]) || 0;
-    transform.pz = Number(position[2]) || 0;
-    transform.rx = Number(rotation[0]) || 0;
-    transform.ry = Number(rotation[1]) || 0;
-    transform.rz = Number(rotation[2]) || 0;
-    transform.sx = Number(scale[0]) || 1;
-    transform.sy = Number(scale[1]) || 1;
-    transform.sz = Number(scale[2]) || 1;
+    transform.px = roundValue(position[0], 4);
+    transform.py = roundValue(position[1], 4);
+    transform.pz = roundValue(position[2], 4);
+    transform.rx = roundValue(rotation[0], 3);
+    transform.ry = roundValue(rotation[1], 3);
+    transform.rz = roundValue(rotation[2], 3);
+    transform.sx = roundValue(scale[0], 4) || 1;
+    transform.sy = roundValue(scale[1], 4) || 1;
+    transform.sz = roundValue(scale[2], 4) || 1;
 };
 
 watch(() => props.selected, applySelectedToForm, { immediate: true, deep: true });

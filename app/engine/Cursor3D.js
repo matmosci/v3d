@@ -768,13 +768,13 @@ export default class Cursor3D {
     getObjectTransformForUi(object) {
         this.tempEuler.setFromQuaternion(object.quaternion, "YXZ");
         return {
-            position: object.position.toArray(),
+            position: this.toRoundedArray(object.position.toArray(), 4),
             rotation: [
-                this.tempEuler.x * (180 / Math.PI),
-                this.tempEuler.y * (180 / Math.PI),
-                this.tempEuler.z * (180 / Math.PI),
+                this.roundValue(this.tempEuler.x * (180 / Math.PI), 3),
+                this.roundValue(this.tempEuler.y * (180 / Math.PI), 3),
+                this.roundValue(this.tempEuler.z * (180 / Math.PI), 3),
             ],
-            scale: object.scale.toArray(),
+            scale: this.toRoundedArray(object.scale.toArray(), 4),
         };
     }
 
@@ -801,23 +801,28 @@ export default class Cursor3D {
         const target = selectedId === id ? this.selectedObject : this.findInstanceById(id);
         if (!target) return;
 
-        if (Array.isArray(payload.position) && payload.position.length === 3) {
-            target.position.fromArray(payload.position);
-        }
+        const current = this.getObjectTransformForUi(target);
+        const nextPosition = Array.isArray(payload.position) && payload.position.length === 3
+            ? payload.position.map((value) => Number(value) || 0)
+            : current.position;
+        const nextRotation = Array.isArray(payload.rotation) && payload.rotation.length === 3
+            ? payload.rotation.map((value) => Number(value) || 0)
+            : current.rotation;
+        const nextScale = Array.isArray(payload.scale) && payload.scale.length === 3
+            ? payload.scale.map((value) => Number(value) || 1)
+            : current.scale;
 
-        if (Array.isArray(payload.rotation) && payload.rotation.length === 3) {
-            this.tempEuler.set(
-                (Number(payload.rotation[0]) || 0) * (Math.PI / 180),
-                (Number(payload.rotation[1]) || 0) * (Math.PI / 180),
-                (Number(payload.rotation[2]) || 0) * (Math.PI / 180),
-                "YXZ"
-            );
-            target.quaternion.setFromEuler(this.tempEuler);
-        }
+        target.position.fromArray(nextPosition);
 
-        if (Array.isArray(payload.scale) && payload.scale.length === 3) {
-            target.scale.fromArray(payload.scale);
-        }
+        this.tempEuler.set(
+            nextRotation[0] * (Math.PI / 180),
+            nextRotation[1] * (Math.PI / 180),
+            nextRotation[2] * (Math.PI / 180),
+            "YXZ"
+        );
+        target.quaternion.setFromEuler(this.tempEuler);
+
+        target.scale.fromArray(nextScale);
 
         target.updateMatrixWorld(true);
 
@@ -827,11 +832,25 @@ export default class Cursor3D {
             this.orbitControls.update();
         }
 
-        this.emitTransformUpdate(target);
+        this.ctx.events.emit("object:transform:update", {
+            id: target.instanceId || target.uuid,
+            position: this.toRoundedArray(nextPosition, 4),
+            rotation: this.toRoundedArray(nextRotation, 3),
+            scale: this.toRoundedArray(nextScale, 4),
+        });
         this.ctx.events.emit("object:transform:end", {
             id: target.instanceId || target.uuid,
             ...this.getObjectTransform(target),
         });
+    }
+
+    roundValue(value, precision = 4) {
+        const factor = 10 ** precision;
+        return Math.round((Number(value) || 0) * factor) / factor;
+    }
+
+    toRoundedArray(values = [], precision = 4) {
+        return values.map((value) => this.roundValue(value, precision));
     }
 
     getYawFromQuaternion(quaternion) {
