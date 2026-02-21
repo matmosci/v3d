@@ -6,6 +6,12 @@
       <UButton size="sm" icon="i-lucide-arrow-left" @click="goBack">Back</UButton>
     </div>
 
+    <div class="absolute top-3 right-3 z-10 flex items-center gap-2">
+      <UButton size="sm" icon="i-lucide-image-up" :loading="savingThumbnail" @click="createThumbnail">
+        Create Thumbnail
+      </UButton>
+    </div>
+
     <div v-if="loading" class="absolute inset-0 z-20 grid place-items-center text-white/80 text-sm">
       Loading asset...
     </div>
@@ -30,6 +36,7 @@ const router = useRouter();
 const viewport = ref(null);
 const loading = ref(true);
 const error = ref("");
+const savingThumbnail = ref(false);
 
 let renderer = null;
 let scene = null;
@@ -124,6 +131,43 @@ const setup = async () => {
     error.value = "Failed to load asset preview";
   } finally {
     loading.value = false;
+  }
+};
+
+const createThumbnail = async () => {
+  if (!renderer || !camera || !scene) return;
+  const canvas = renderer.domElement;
+  if (!canvas) return;
+
+  try {
+    savingThumbnail.value = true;
+
+    renderer.render(scene, camera);
+
+    const sourceWidth = canvas.width;
+    const sourceHeight = canvas.height;
+    const targetWidth = 192;
+    const targetHeight = Math.max(100, Math.round((sourceHeight / sourceWidth) * targetWidth));
+
+    const thumbCanvas = document.createElement("canvas");
+    thumbCanvas.width = targetWidth;
+    thumbCanvas.height = targetHeight;
+
+    const ctx = thumbCanvas.getContext("2d");
+    if (!ctx) throw new Error("Failed to create thumbnail context");
+
+    ctx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+    const thumbnail = thumbCanvas.toDataURL("image/jpeg", 0.85);
+
+    await $fetch(`/api/assets/${route.params.id}/thumbnail`, {
+      method: "POST",
+      body: { thumbnail },
+    });
+  } catch (e) {
+    console.error(e);
+    error.value = "Failed to create thumbnail";
+  } finally {
+    savingThumbnail.value = false;
   }
 };
 
