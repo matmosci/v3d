@@ -12,6 +12,9 @@ export default class LevelLoader {
         this.ctx.events.on("object:placement:confirm", ({ asset, position, quaternion, scale }) => {
             this.confirmUserObjectPlacement(asset, { position, quaternion, scale });
         });
+        this.ctx.events.on("object:transform:end", ({ id, position, quaternion, scale }) => {
+            this.confirmUserObjectTransform(id, { position, quaternion, scale });
+        });
         this.ctx.events.on("object:delete", ({ id }) => {
             this.deleteUserObjectInstance(id);
         });
@@ -134,6 +137,29 @@ export default class LevelLoader {
         const object = this.findInstanceObjectById(id);
         if (object?.parent) object.parent.remove(object);
         this.ctx.events.emit("object:deselected");
+    }
+
+    async confirmUserObjectTransform(id, transform) {
+        if (!id) return;
+
+        const res = await fetch(`/api/levels/${this.ctx.state.project}/instances/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(transform),
+        });
+
+        if (!res.ok) {
+            if (res.status === 403) {
+                alert("You are not allowed to transform this instance");
+                return;
+            }
+            alert("Failed to update instance transform");
+            return;
+        }
+
+        const updatedInstance = await res.json();
+        const object = this.findInstanceObjectById(id);
+        if (object) this.applyTransform(object, updatedInstance);
     }
 };
 

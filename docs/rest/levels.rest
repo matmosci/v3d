@@ -22,3 +22,14 @@ Cookie: {{cookie}}
 ###
 DELETE {{api}}/7f4cde04-c4b2-42d1-9ec3-140aaaf35806/instances/INSTANCE_ID_HERE
 Cookie: {{cookie}}
+
+###
+PATCH {{api}}/7f4cde04-c4b2-42d1-9ec3-140aaaf35806/instances/INSTANCE_ID_HERE
+Content-Type: application/json
+Cookie: {{cookie}}
+
+{
+    "position": [2, 0, 0],
+    "quaternion": [0, 0, 0, 1],
+    "scale": [1, 1, 1]
+}
