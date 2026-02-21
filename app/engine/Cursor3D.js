@@ -179,6 +179,11 @@ export default class Cursor3D {
 
         this.pointer = new Vector2(0, 0);
         this.direction = new Vector3();
+        this.selectedObject = null;
+        this.selectedObjectMaterialCache = new Map();
+        this.selectedObjectMaterial = new MeshBasicMaterial({ color: 0xff8800, opacity: 0.75, transparent: true });
+        this.selectedObjectMaterial.depthWrite = true;
+        this.selectedObjectMaterial.depthTest = true;
 
         this.light = new SpotLight(0xffffff, 20, 0, Math.PI / 6, 0.2);
         this.light.visible = true;
@@ -215,15 +220,19 @@ export default class Cursor3D {
             this.raycaster.setFromCamera(this.pointer, this.camera);
             const intersects = this.raycaster.intersectObjects(this.scene.children);
             if (!intersects[0]) {
+                this.clearSelectedObjectHighlight();
                 this.ctx.events.emit("object:deselected");
                 return;
             }
 
             const selected = this.findInstanceRoot(intersects[0].object);
             if (!selected) {
+                this.clearSelectedObjectHighlight();
                 this.ctx.events.emit("object:deselected");
                 return;
             }
+
+            this.applySelectedObjectHighlight(selected);
 
             this.ctx.events.emit("object:selected", {
                 id: selected.instanceId || selected.uuid,
@@ -234,11 +243,58 @@ export default class Cursor3D {
         this.onSceneContextMenu = (event) => {
             if (!this.isCanvasClick(event)) return;
             event.preventDefault();
+            this.clearSelectedObjectHighlight();
             this.ctx.events.emit("object:deselected");
         };
 
         this.ctx.input.subscribeClick(this.onSceneClick);
         this.ctx.input.subscribeContextMenu(this.onSceneContextMenu);
+    }
+
+    applySelectedObjectHighlight(object) {
+        if (this.selectedObject === object) return;
+
+        this.clearSelectedObjectHighlight();
+        this.selectedObject = object;
+
+        this.selectedObject.traverse((child) => {
+            if (!child.isMesh) return;
+
+            this.selectedObjectMaterialCache.set(child.uuid, child.material);
+
+            if (Array.isArray(child.material)) {
+                child.material = child.material.map((material) => {
+                    const highlightMaterial = this.selectedObjectMaterial.clone();
+                    highlightMaterial.map = material?.map || null;
+                    return highlightMaterial;
+                });
+                return;
+            }
+
+            const highlightMaterial = this.selectedObjectMaterial.clone();
+            highlightMaterial.map = child.material?.map || null;
+            child.material = highlightMaterial;
+        });
+    }
+
+    clearSelectedObjectHighlight() {
+        if (!this.selectedObject) return;
+
+        this.selectedObject.traverse((child) => {
+            if (!child.isMesh) return;
+
+            if (Array.isArray(child.material)) {
+                child.material.forEach((material) => material?.dispose?.());
+            } else {
+                child.material?.dispose?.();
+            }
+
+            const originalMaterial = this.selectedObjectMaterialCache.get(child.uuid);
+            if (originalMaterial) child.material = originalMaterial;
+        });
+
+        this.selectedObjectMaterialCache.clear();
+        this.selectedObject = null;
     }
 
     isCanvasClick(event) {
