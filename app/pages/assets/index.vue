@@ -58,7 +58,8 @@ function selectEntity(entity) {
             sourceType: "entity",
             sourceId: entity._id
         });
-        return;
+    } else {
+        location.href = `/${entity._id}`;
     }
 }
 
