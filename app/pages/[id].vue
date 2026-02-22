@@ -1,6 +1,8 @@
 <template>
-    <h1 class="text-2xl">{{ levelData.name }}</h1>
-    <p class="text-gray-500">{{ levelData.description }}</p>
+    <div v-if="levelData">
+        <h1 class="text-2xl">{{ levelData.name }}</h1>
+        <p class="text-gray-500">{{ levelData.description }}</p>
+    </div>
 </template>
 
 <script setup>
