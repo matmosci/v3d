@@ -25,7 +25,7 @@ export default class EntityLoader {
         this.entityCache = new Map();
         
         // Create grid helper
-        this.gridHelper = new GridHelper(50, 50, 0x444444, 0x222222);
+        this.gridHelper = new GridHelper(50, 50, 0x444444, 0x222222).translateY(0.01);
         this.gridHelper.name = 'gridHelper';
         this.scene.add(this.gridHelper);
 
