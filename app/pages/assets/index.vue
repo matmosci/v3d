@@ -1,4 +1,5 @@
 <template>
+    <h2 class="text-xl font-bold mb-4">Built-In Items</h2>
     <div class="grid gap-4 mb-4 grid-cols-3 md:grid-cols-5 lg:grid-cols-7 2xl:grid-cols-12">
         <BuiltInItem
             v-for="item in builtInItems"
@@ -8,6 +9,7 @@
             :icon="item.icon"
         />
     </div>
+    <h2 class="text-xl font-bold mb-4">Assets</h2>
     <div class="grid gap-4" :class="assets.length ? 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12' : 'grid-cols-1'">
         <AssetsFileInput @uploaded="fetchAssets" />
         <AssetsItem v-for="asset in assets" :key="asset._id" :asset="asset" />
