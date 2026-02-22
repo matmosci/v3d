@@ -8,14 +8,21 @@ const editor = useEditor();
 
 onMounted(async () => {
     // Wait for editor initialization from Viewport component
-    await new Promise((resolve) => {
+    await new Promise((resolve, reject) => {
         const checkEditor = () => {
             if (editor.getInstance()) {
                 resolve();
+            } else if (elapsed >= maxWait) {
+                reject(new Error('Editor initialization timeout'));
             } else {
-                setTimeout(checkEditor, 50);
+                setTimeout(() => {
+                    elapsed += 50;
+                    checkEditor();
+                }, 50);
             }
         };
+        let elapsed = 0;
+        const maxWait = 10000; // 10 second timeout
         checkEditor();
     });
     // Load the level specified in the route
