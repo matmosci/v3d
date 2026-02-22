@@ -1,10 +1,12 @@
 <template>
-    {{ route.params.id }}
+    <h1 class="text-2xl">{{ levelData.name }}</h1>
+    <p class="text-gray-500">{{ levelData.description }}</p>
 </template>
 
 <script setup>
 const route = useRoute();
 const editor = useEditor();
+const levelData = ref(null);
 
 onMounted(async () => {
     // Wait for editor initialization from Viewport component
@@ -29,7 +31,7 @@ onMounted(async () => {
     const levelId = route.params.id;
 
     try {
-        await editor.loadLevel(levelId);
+        levelData.value = await editor.loadLevel(levelId);
 
         // Fire level:loaded event
         if (editor.getContext()) {
