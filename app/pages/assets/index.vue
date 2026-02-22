@@ -1,35 +1,18 @@
 <template>
-    <h2 class="text-xl font-bold mb-4">Built-In Items</h2>
-    <div class="grid gap-4 mb-4 grid-cols-3 md:grid-cols-5 lg:grid-cols-7 2xl:grid-cols-12">
-        <BuiltInItem
-            v-for="item in builtInItems"
-            :key="item.sourceId"
-            :source-id="item.sourceId"
-            :title="item.title"
-            :icon="item.icon"
-        />
+    <h2 class="text-xl font-bold mb-2">Built-In Items</h2>
+    <div class="grid gap-4 grid-cols-3 md:grid-cols-5 lg:grid-cols-7 2xl:grid-cols-12">
+        <BuiltInItem v-for="item in builtInItems" :key="item.sourceId" :source-id="item.sourceId" :title="item.title"
+            :icon="item.icon" />
     </div>
-    <h2 class="text-xl font-bold mb-4">Assets</h2>
-    <div class="grid gap-4" :class="assets.length ? 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12' : 'grid-cols-1'">
+    <h2 class="text-xl font-bold mt-4 mb-2">Assets</h2>
+    <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
         <AssetsFileInput @uploaded="fetchAssets" />
         <AssetsItem v-for="asset in assets" :key="asset._id" :asset="asset" />
     </div>
-    <div v-if="entities.length" class="mt-8">
-        <h2 class="text-xl font-bold mb-4">Entities</h2>
-        <div class="grid gap-4" :class="entities.length ? 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12' : 'grid-cols-1'">
-            <div
-                v-for="entity in entities"
-                :key="entity._id"
-                @click="selectEntity(entity)"
-                class="border border-default duration-150 rounded-lg bg-default hover:bg-elevated/25 cursor-pointer px-1 pb-1 h-48 flex flex-col select-none"
-            >
-                <div class="h-full w-full mt-1 rounded-md bg-black/30 overflow-hidden grid place-items-center">
-                    <UIcon name="i-lucide-box" class="text-white/30 w-12 h-12" />
-                </div>
-                <div class="font-medium mx-1 mt-1 overflow-x-clip text-ellipsis">{{ entity.name }}</div>
-                <div class="text-sm text-gray-400 mx-1">Entity</div>
-            </div>
-        </div>
+    <h2 class="text-xl font-bold mt-4 mb-2">Entities</h2>
+    <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
+        <AssetsNewEntity @created="fetchEntities" />
+        <AssetsEntityItem v-for="entity in entities" :key="entity._id" :entity="entity" />
     </div>
 </template>
 
@@ -71,9 +54,9 @@ function selectEntity(entity) {
     const context = editor.getContext();
     if (context.entity) {
         // Already in an entity, place this entity as an instance
-        context.events.emit("object:placement:start", { 
+        context.events.emit("object:placement:start", {
             sourceType: "entity",
-            sourceId: entity._id 
+            sourceId: entity._id
         });
         return;
     }
