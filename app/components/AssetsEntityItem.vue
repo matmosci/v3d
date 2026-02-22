@@ -5,9 +5,10 @@
                 <UIcon name="i-lucide-rotate-3d" class="text-white/30 w-6 h-6" />
             </div>
             <div class="font-medium mx-1 mt-1 overflow-x-clip text-ellipsis">{{ entity.name }}</div>
-            <div class="text-sm text-gray-400 mx-1 mt-1 flex items-center gap-1">
+            <div class="text-sm text-gray-400 mx-1 flex items-center gap-1">
               <UIcon name="i-lucide-calendar" class="w-4 h-4" />
               {{ formatDate(entity.createdAt) }}
+              <UButton icon="i-lucide-file-pen" variant="link" class="cursor-pointer ms-auto" :to="`/${entity._id}`" @click.stop></UButton>
             </div>
         </div>
 </template>
