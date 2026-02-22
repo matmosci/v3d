@@ -40,6 +40,10 @@ const onUpdateSelectedTransform = (transform) => {
   editor.updateSelectedTransform(transform);
 };
 
+const onUngroupSelectedInstance = (payload) => {
+  editor.ungroupSelectedInstance(payload);
+};
+
 const onDeselectSelectedInstance = () => {
   editor.deselectSelectedInstance();
 };
@@ -54,6 +58,7 @@ const onDeselectSelectedInstance = () => {
       @delete="onDeleteSelectedInstance"
       @free-transform="onFreeTransformSelectedInstance"
       @update-transform="onUpdateSelectedTransform"
+      @ungroup="onUngroupSelectedInstance"
       @deselect="onDeselectSelectedInstance"
     />
     <Viewport class="absolute top-0 bottom-0 left-0 right-0 -z-1" />

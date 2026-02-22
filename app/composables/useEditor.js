@@ -90,6 +90,16 @@ export default function useEditor() {
         });
     }
 
+    function ungroupSelectedInstance(options = {}) {
+        if (!engine) return;
+        const id = selectedInstance.value?.id;
+        if (!id) return;
+        engine.context.events.emit("object:ungroup", {
+            id,
+            recursive: !!options.recursive,
+        });
+    }
+
     function deselectSelectedInstance() {
         if (!engine) return;
         engine.context.events.emit("object:deselected");
@@ -121,6 +131,7 @@ export default function useEditor() {
         deleteSelectedInstance,
         freeTransformSelectedInstance,
         updateSelectedTransform,
+        ungroupSelectedInstance,
         deselectSelectedInstance,
         loadEntity,
         loadAsset,

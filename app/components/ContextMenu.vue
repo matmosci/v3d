@@ -6,7 +6,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(["delete", "free-transform", "update-transform", "deselect"]);
+const emit = defineEmits(["delete", "free-transform", "update-transform", "deselect", "ungroup"]);
 
 const transform = reactive({
     px: 0,
@@ -55,6 +55,7 @@ const emitTransformUpdate = () => {
 };
 
 const showConfirmation = ref(false);
+const recursiveUngroup = ref(false);
 
 const confirmDelete = () => {
     if (!props.selected?.id) return;
@@ -136,6 +137,19 @@ const cancelDelete = () => {
                 </div>
             </div>
             <UButton size="sm" icon="i-lucide-scan-eye" @click="$emit('free-transform')">Free Transform</UButton>
+            <div v-if="selected?.sourceType === 'entity'" class="pt-3 space-y-2">
+                <label class="flex items-center gap-2 text-xs text-white/70">
+                    <input v-model="recursiveUngroup" type="checkbox" class="accent-emerald-500" />
+                    Recursive
+                </label>
+                <UButton
+                    size="sm"
+                    icon="i-lucide-split-square-vertical"
+                    @click="emit('ungroup', { recursive: recursiveUngroup })"
+                >
+                    Ungroup Entity
+                </UButton>
+            </div>
         </div>
         <div class="w-fit">
             <div v-if="!showConfirmation">

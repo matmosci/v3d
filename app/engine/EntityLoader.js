@@ -5,12 +5,15 @@ import {
     CylinderGeometry,
     GridHelper,
     Group,
+    Matrix4,
     Mesh,
     MeshBasicMaterial,
     MeshStandardMaterial,
     PointLight,
+    Quaternion,
     SphereGeometry,
     SpotLight,
+    Vector3,
 } from "three";
 
 export default class EntityLoader {
@@ -37,6 +40,9 @@ export default class EntityLoader {
         });
         this.ctx.events.on("object:delete", ({ id }) => {
             this.deleteUserObjectInstance(id);
+        });
+        this.ctx.events.on("object:ungroup", ({ id, recursive }) => {
+            this.ungroupEntityInstance(id, !!recursive);
         });
 
         this.onToggleMarkersKeyDown = (event) => {
@@ -274,6 +280,133 @@ export default class EntityLoader {
         if (!object) return null;
         this.applyTransform(object, instance);
         return object;
+    }
+
+    async ungroupEntityInstance(id, recursive = false) {
+        if (!id) return;
+        const object = this.findInstanceObjectById(id);
+        if (!object) return;
+        if (object.instanceSourceType !== "entity") return;
+
+        const entityId = object.instanceSourceId;
+        if (!entityId) return;
+
+        const parentMatrix = this.composeMatrixFromTransform(this.getObjectTransform(object));
+        const visited = new Set();
+        if (this.ctx?.entity) visited.add(this.ctx.entity);
+
+        const placements = await this.expandEntityInstances(entityId, parentMatrix, { recursive }, visited);
+        if (!placements.length) return;
+
+        await Promise.all(placements.map((payload) => this.createInstanceFromPayload(payload)));
+        await this.deleteUserObjectInstance(id);
+    }
+
+    async expandEntityInstances(entityId, parentMatrix, options = {}, visited = new Set()) {
+        if (!entityId) return [];
+        if (visited.has(entityId)) return [];
+
+        const nextVisited = new Set(visited);
+        nextVisited.add(entityId);
+
+        try {
+            const instancesRes = await fetch(`/api/entities/${entityId}/instances`);
+            if (!instancesRes.ok) return [];
+
+            const instances = await instancesRes.json();
+            await this.cacheAssetsForInstances(instances);
+
+            const placements = [];
+            for (const instance of instances) {
+                const source = this.normalizeInstanceSource(instance);
+                if (!source) continue;
+
+                const combinedMatrix = this.combineMatrices(parentMatrix, this.composeMatrixFromTransform(instance));
+                const decomposed = this.decomposeMatrix(combinedMatrix);
+
+                if (source.sourceType === "entity" && options.recursive) {
+                    const nested = await this.expandEntityInstances(
+                        source.sourceId,
+                        combinedMatrix,
+                        options,
+                        new Set(nextVisited)
+                    );
+                    placements.push(...nested);
+                    continue;
+                }
+
+                placements.push({
+                    sourceType: source.sourceType,
+                    sourceId: source.sourceId,
+                    asset: source.sourceType === "asset" ? source.sourceId : undefined,
+                    position: decomposed.position,
+                    quaternion: decomposed.quaternion,
+                    scale: decomposed.scale,
+                });
+            }
+
+            return placements;
+        } catch (error) {
+            console.error(`Failed to ungroup entity ${entityId}`, error);
+            return [];
+        }
+    }
+
+    async createInstanceFromPayload(payload) {
+        if (!payload?.sourceType || !payload?.sourceId) return null;
+
+        const res = await fetch(`/api/entities/${this.ctx.entity}/instances`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+            console.error("Failed to create instance from ungroup");
+            return null;
+        }
+
+        const createdInstance = await res.json();
+        await this.placeInstance(createdInstance, createdInstance);
+        return createdInstance;
+    }
+
+    getObjectTransform(object) {
+        return {
+            position: object.position.toArray(),
+            quaternion: object.quaternion.toArray(),
+            scale: object.scale.toArray(),
+        };
+    }
+
+    composeMatrixFromTransform(transform = {}) {
+        const position = Array.isArray(transform.position) ? transform.position : [0, 0, 0];
+        const quaternion = Array.isArray(transform.quaternion) ? transform.quaternion : [0, 0, 0, 1];
+        const scale = Array.isArray(transform.scale) ? transform.scale : [1, 1, 1];
+
+        const matrix = new Matrix4();
+        matrix.compose(
+            new Vector3(position[0], position[1], position[2]),
+            new Quaternion(quaternion[0], quaternion[1], quaternion[2], quaternion[3]),
+            new Vector3(scale[0], scale[1], scale[2])
+        );
+        return matrix;
+    }
+
+    combineMatrices(parentMatrix, childMatrix) {
+        return new Matrix4().multiplyMatrices(parentMatrix, childMatrix);
+    }
+
+    decomposeMatrix(matrix) {
+        const position = new Vector3();
+        const quaternion = new Quaternion();
+        const scale = new Vector3();
+        matrix.decompose(position, quaternion, scale);
+        return {
+            position: position.toArray(),
+            quaternion: quaternion.toArray(),
+            scale: scale.toArray(),
+        };
     }
 
     findInstanceObjectById(id) {
