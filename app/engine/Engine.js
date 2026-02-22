@@ -107,8 +107,8 @@ export default class Engine {
     }
 
     async loadLevel(levelId) {
-        this.context.state.project = levelId;
-        return await this.systems.level.load();
+        this.context.level = levelId;
+        return await this.systems.level.load(levelId);
     }
 
     async loadAsset(assetId) {

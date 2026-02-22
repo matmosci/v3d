@@ -17,6 +17,7 @@
 
 <script setup>
 const editor = useEditor();
+const { push } = useRouter();
 
 const props = defineProps({
     asset: {
@@ -26,6 +27,12 @@ const props = defineProps({
 });
 
 function selectAsset() {
-    editor.getContext().events.emit("object:placement:start", { asset: props.asset._id });
+    const context = editor.getContext();
+    if (context.level) {
+        // Already in a level, just start placement
+        context.events.emit("object:placement:start", { asset: props.asset._id });
+        return;
+    }
+    push(`/assets/${props.asset._id}`);
 }
 </script>

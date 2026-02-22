@@ -1,16 +1,20 @@
 <script setup>
-const test_level = "7f4cde04-c4b2-42d1-9ec3-140aaaf35806";
 
 const editor = useEditor();
 const container = ref(null);
 
 onMounted(async () => {
-    editor.init(container.value);    
-    // Load the default level
-    try {
-        await editor.loadLevel(test_level);
-    } catch (error) {
-        console.error('Failed to load level:', error);
+    editor.init(container.value);
+    
+    // Listen for level:loaded event to attach instance to container
+    const context = editor.getContext();
+    if (context) {
+        context.events.on("level:loaded", () => {
+            // Attach/reattach engine to container if needed
+            if (editor.getInstance()) {
+                editor.getInstance().attach(container.value);
+            }
+        });
     }
 
     window?.addEventListener("keydown", (event) => {

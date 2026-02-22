@@ -51,9 +51,8 @@ export default class LevelLoader {
         this.ctx.keybindings.onActionDown("toggleGridHelper", this.onToggleGridKeyDown);
     }
 
-    async load() {
+    async load(id) {
         try {
-            const id = this.ctx.state.project;
             const resMeta = await fetch(`/api/levels/${id}`);
             this.metaData = await resMeta.json();
             const resInstances = await fetch(`/api/levels/${id}/instances`);
@@ -191,7 +190,7 @@ export default class LevelLoader {
             return;
         }
 
-        const res = await fetch(`/api/levels/${this.ctx.state.project}/instances`, {
+        const res = await fetch(`/api/levels/${this.ctx.level}/instances`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -223,7 +222,7 @@ export default class LevelLoader {
     async deleteUserObjectInstance(id) {
         if (!id) return;
 
-        const res = await fetch(`/api/levels/${this.ctx.state.project}/instances/${id}`, {
+        const res = await fetch(`/api/levels/${this.ctx.level}/instances/${id}`, {
             method: "DELETE",
         });
 
@@ -244,7 +243,7 @@ export default class LevelLoader {
     async confirmUserObjectTransform(id, transform) {
         if (!id) return;
 
-        const res = await fetch(`/api/levels/${this.ctx.state.project}/instances/${id}`, {
+        const res = await fetch(`/api/levels/${this.ctx.level}/instances/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(transform),
