@@ -153,7 +153,7 @@ const cancelDelete = () => {
         </div>
         <div class="w-fit">
             <div v-if="!showConfirmation">
-                <UButton size="sm" color="error" icon="i-lucide-trash" @click="confirmDelete">
+                <UButton size="sm" color="error" icon="i-lucide-trash-2" @click="confirmDelete">
                     Delete
                 </UButton>
             </div>
