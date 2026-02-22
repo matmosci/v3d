@@ -6,7 +6,7 @@ export const InstanceModel = defineMongooseModel({
   schema: {
     _id: { type: String, default: () => crypto.randomUUID() },
     user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
-    level: { type: String, required: true, ref: 'Level' },
+    entity: { type: String, required: true, ref: 'Entity' },
     sourceType: {
       type: String,
       enum: ["asset", "builtin", "custom"],

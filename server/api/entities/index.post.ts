@@ -6,12 +6,12 @@ export default defineEventHandler(async (event) => {
     if (!body.name || !body.name.trim()) {
         return createError({
             statusCode: 400,
-            statusMessage: "Level name is required",
+            statusMessage: "Entity name is required",
         });
     }
 
-    // Create new level
-    const level = await LevelModel.create({
+    // Create new entity
+    const entity = await EntityModel.create({
         user: user.id,
         name: body.name.trim(),
         description: body.description || '',
@@ -22,5 +22,5 @@ export default defineEventHandler(async (event) => {
         }
     });
 
-    return level;
+    return entity;
 });

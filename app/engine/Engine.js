@@ -2,7 +2,7 @@ import * as THREE from "three";
 import EngineContext from "./EngineContext";
 import CameraControls from "./CameraControls";
 import Cursor3D from "./Cursor3D";
-import LevelLoader from "./LevelLoader";
+import EntityLoader from "./EntityLoader";
 import Dust from "./Dust";
 import InputHandler from "./InputHandler";
 import Keybindings from "./Keybindings";
@@ -45,7 +45,7 @@ export default class Engine {
         this.systems.dust = new Dust(this.context);
         this.systems.cameraControls = new CameraControls(this.context);
         this.systems.cursor = new Cursor3D(this.context);
-        this.systems.level = new LevelLoader(this.context);
+        this.systems.entity = new EntityLoader(this.context);
     }
 
     registerKeybindings() {
@@ -106,9 +106,9 @@ export default class Engine {
         this.context.scene.fog = new THREE.FogExp2(bgColor, 0.01);
     }
 
-    async loadLevel(levelId) {
-        this.context.level = levelId;
-        return await this.systems.level.load(levelId);
+    async loadEntity(entityId) {
+        this.context.entity = entityId;
+        return await this.systems.entity.load(entityId);
     }
 
     async loadAsset(assetId) {
@@ -117,8 +117,8 @@ export default class Engine {
         
         // Load and display the asset
         try {
-            await this.systems.level.cacheAsset(assetId);
-            const asset = this.systems.level.ctx.assets.get(assetId);
+            await this.systems.entity.cacheAsset(assetId);
+            const asset = this.systems.entity.ctx.assets.get(assetId);
             if (asset) {
                 const assetClone = asset.clone();
                 this.context.scene.add(assetClone);

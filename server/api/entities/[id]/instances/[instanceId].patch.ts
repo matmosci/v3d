@@ -11,15 +11,15 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const level = await LevelModel.findById(id);
-  if (!level) {
+  const entity = await EntityModel.findById(id);
+  if (!entity) {
     return createError({
       statusCode: 404,
-      statusMessage: "Level not found",
+      statusMessage: "Entity not found",
     });
   }
 
-  const instance = await InstanceModel.findOne({ _id: instanceId, level: id });
+  const instance = await InstanceModel.findOne({ _id: instanceId, entity: id });
   if (!instance) {
     return createError({
       statusCode: 404,
@@ -57,7 +57,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const updated = await InstanceModel.findOneAndUpdate(
-    { _id: instanceId, level: id },
+    { _id: instanceId, entity: id },
     { $set: update },
     { new: true }
   ).select("-__v");

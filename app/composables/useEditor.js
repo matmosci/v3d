@@ -95,9 +95,9 @@ export default function useEditor() {
         engine.context.events.emit("object:deselected");
     }
 
-    function loadLevel(levelId) {
+    function loadEntity(entityId) {
         if (!engine) return;
-        return engine.loadLevel(levelId);
+        return engine.loadEntity(entityId);
     }
 
     function loadAsset(assetId) {
@@ -122,7 +122,7 @@ export default function useEditor() {
         freeTransformSelectedInstance,
         updateSelectedTransform,
         deselectSelectedInstance,
-        loadLevel,
+        loadEntity,
         loadAsset,
         clearScene,
     };

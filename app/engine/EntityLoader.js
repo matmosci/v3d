@@ -13,7 +13,7 @@ import {
     SpotLight,
 } from "three";
 
-export default class LevelLoader {
+export default class EntityLoader {
     constructor(ctx) {
         this.ctx = ctx;
         this.scene = this.ctx.scene;
@@ -53,9 +53,9 @@ export default class LevelLoader {
 
     async load(id) {
         try {
-            const resMeta = await fetch(`/api/levels/${id}`);
+            const resMeta = await fetch(`/api/entities/${id}`);
             this.metaData = await resMeta.json();
-            const resInstances = await fetch(`/api/levels/${id}/instances`);
+            const resInstances = await fetch(`/api/entities/${id}/instances`);
             this.instancesData = await resInstances.json();
 
             await this.getAssets();
@@ -67,8 +67,8 @@ export default class LevelLoader {
             this.applyTransform(this.camera, this.metaData.camera);
             return this.metaData;
         } catch (error) {
-            alert(`Failed to load level ${id}`);
-            console.error(`Failed to load level ${id}`, error);
+            alert(`Failed to load entity ${id}`);
+            console.error(`Failed to load entity ${id}`, error);
         }
     }
 
@@ -190,7 +190,7 @@ export default class LevelLoader {
             return;
         }
 
-        const res = await fetch(`/api/levels/${this.ctx.level}/instances`, {
+        const res = await fetch(`/api/entities/${this.ctx.entity}/instances`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -222,7 +222,7 @@ export default class LevelLoader {
     async deleteUserObjectInstance(id) {
         if (!id) return;
 
-        const res = await fetch(`/api/levels/${this.ctx.level}/instances/${id}`, {
+        const res = await fetch(`/api/entities/${this.ctx.entity}/instances/${id}`, {
             method: "DELETE",
         });
 
@@ -243,7 +243,7 @@ export default class LevelLoader {
     async confirmUserObjectTransform(id, transform) {
         if (!id) return;
 
-        const res = await fetch(`/api/levels/${this.ctx.level}/instances/${id}`, {
+        const res = await fetch(`/api/entities/${this.ctx.entity}/instances/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(transform),
@@ -278,7 +278,15 @@ function createBuiltInObject(sourceId) {
         }
         case "primitive:sphere": {
             const object = new Mesh(
-                new SphereGeometry(0.5, 24, 16).translate(0, 0.5, 0),
+                new SphereGeometry(0.5, 16, 16),
+                new MeshStandardMaterial({ color: 0xcccccc })
+            );
+            object.name = sourceId;
+            return object;
+        }
+        case "primitive:cone": {
+            const object = new Mesh(
+                new ConeGeometry(0.5, 1, 8).translate(0, 0.5, 0),
                 new MeshStandardMaterial({ color: 0xcccccc })
             );
             object.name = sourceId;
@@ -286,65 +294,29 @@ function createBuiltInObject(sourceId) {
         }
         case "primitive:cylinder": {
             const object = new Mesh(
-                new CylinderGeometry(0.5, 0.5, 1, 24).translate(0, 0.5, 0),
+                new CylinderGeometry(0.5, 0.5, 1, 8).translate(0, 0.5, 0),
                 new MeshStandardMaterial({ color: 0xcccccc })
             );
             object.name = sourceId;
             return object;
         }
-        case "light:point": {
-            const group = new Group();
-            group.name = sourceId;
-
-            const marker = new Mesh(
-                new SphereGeometry(0.05, 8, 6),
-                new MeshBasicMaterial({ color: 0xf59e0b, wireframe: true })
-            );
-            marker.userData.isMarkerMesh = true;
-            const light = new PointLight(0xffffff, 3, 20);
-
-            group.add(marker);
-            group.add(light);
-            return group;
-        }
-        case "light:spot": {
-            const group = new Group();
-            group.name = sourceId;
-
-            const marker = new Mesh(
-                new ConeGeometry(0.125, 0.2, 8).rotateX(Math.PI).translate(0, 0.1, 0),
-                new MeshBasicMaterial({ color: 0xf59e0b, wireframe: true })
-            );
-            marker.userData.isMarkerMesh = true;
-            marker.rotation.x = Math.PI / 2;    
-
-            const light = new SpotLight(0xffffff, 4, 30, Math.PI / 5, 0.2);
-            light.position.set(0, 0, 0);
-            light.target.position.set(0, 0, 2);
-
-            group.add(marker);
-            group.add(light);
-            group.add(light.target);
-            return group;
-        }
-        default: {
-            const object = new Mesh(
-                new BoxGeometry(1, 1, 1),
-                new MeshBasicMaterial({ color: 0xff00ff })
-            );
-            object.name = sourceId || "builtin:unknown";
+        case "primitive:point-light": {
+            const object = new PointLight(0xffffff, 1, 100);
+            object.name = sourceId;
             return object;
         }
+        case "primitive:spot-light": {
+            const object = new SpotLight(0xffffff, 1, 100, Math.PI / 4, 0.5, 2);
+            object.name = sourceId;
+            return object;
+        }
+        default:
+            return null;
     }
 }
 
-function loadGltf(gltfUrl) {
+async function loadGltf(url) {
     return new Promise((resolve, reject) => {
-        gltf.load(
-            gltfUrl,
-            resolve,
-            (xhr) => console.log(/*'Gltf ' + (xhr.loaded / xhr.total * 100) + '% loaded'*/),
-            (error) => reject(error)
-        );
+        gltf.load(url, (gltf) => resolve(gltf), undefined, (error) => reject(error));
     });
-};
+}

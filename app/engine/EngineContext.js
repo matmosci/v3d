@@ -14,7 +14,7 @@ export default class EngineContext {
 
     instances = [];
     assets = new Map();
-    level = null;
+    entity = null;
 
     state = {
         enabled: false,

@@ -6,10 +6,10 @@ const container = ref(null);
 onMounted(async () => {
     editor.init(container.value);
     
-    // Listen for level:loaded event to attach instance to container
+    // Listen for entity:loaded event to attach instance to container
     const context = editor.getContext();
     if (context) {
-        context.events.on("level:loaded", () => {
+        context.events.on("entity:loaded", () => {
             // Attach/reattach engine to container if needed
             if (editor.getInstance()) {
                 editor.getInstance().attach(container.value);

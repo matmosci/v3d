@@ -17,16 +17,16 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const level = await LevelModel.findById(id);
-  if (!level) {
+  const entity = await EntityModel.findById(id);
+  if (!entity) {
     return createError({
       statusCode: 404,
-      statusMessage: "Level not found",
+      statusMessage: "Entity not found",
     });
   };
 
   const instance = await InstanceModel.create({
-    level: id,
+    entity: id,
     sourceType,
     sourceId,
     asset: sourceType === "asset" ? sourceId : undefined,

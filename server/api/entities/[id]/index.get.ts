@@ -1,11 +1,11 @@
 export default defineEventHandler(async (event) => {
   const { id } = event.context.params;
-  const level = await LevelModel.findById(id).select('-__v').lean();
-  if (!level) {
+  const entity = await EntityModel.findById(id).select('-__v').lean();
+  if (!entity) {
     return createError({
       statusCode: 404,
-      statusMessage: "Level not found",
+      statusMessage: "Entity not found",
     });
   }
-  return level;
+  return entity;
 });

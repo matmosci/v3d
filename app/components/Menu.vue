@@ -3,7 +3,7 @@
     <div class="flex justify-between items-center py-3">
       <NuxtLink to="/" class="text-lg font-bold">V3D</NuxtLink>
       <div class="flex gap-4">
-        <NuxtLink v-if="loggedIn" to="/levels" class="hover:text-gray-300 transition-colors">Levels</NuxtLink>
+        <NuxtLink v-if="loggedIn" to="/entities" class="hover:text-gray-300 transition-colors">Entities</NuxtLink>
         <NuxtLink v-if="loggedIn" to="/assets" class="hover:text-gray-300 transition-colors">Assets</NuxtLink>
       </div>
       <User />

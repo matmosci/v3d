@@ -28,8 +28,8 @@ const props = defineProps({
 
 function selectAsset() {
     const context = editor.getContext();
-    if (context.level) {
-        // Already in a level, just start placement
+    if (context.entity) {
+        // Already in an entity, just start placement
         context.events.emit("object:placement:start", { asset: props.asset._id });
         return;
     }

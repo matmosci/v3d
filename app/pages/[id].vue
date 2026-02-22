@@ -1,14 +1,14 @@
 <template>
-    <div v-if="levelData">
-        <h1 class="text-2xl">{{ levelData.name }}</h1>
-        <p class="text-gray-500">{{ levelData.description }}</p>
+    <div v-if="entityData">
+        <h1 class="text-2xl">{{ entityData.name }}</h1>
+        <p class="text-gray-500">{{ entityData.description }}</p>
     </div>
 </template>
 
 <script setup>
 const route = useRoute();
 const editor = useEditor();
-const levelData = ref(null);
+const entityData = ref(null);
 
 onMounted(async () => {
     // Wait for editor initialization from Viewport component
@@ -29,33 +29,33 @@ onMounted(async () => {
         const maxWait = 10000; // 10 second timeout
         checkEditor();
     });
-    // Load the level specified in the route
-    const levelId = route.params.id;
+    // Load the entity specified in the route
+    const entityId = route.params.id;
 
     try {
-        levelData.value = await editor.loadLevel(levelId);
+        entityData.value = await editor.loadEntity(entityId);
 
-        // Fire level:loaded event
+        // Fire entity:loaded event
         if (editor.getContext()) {
-            editor.getContext().events.emit("level:loaded", { levelId });
+            editor.getContext().events.emit("entity:loaded", { entityId });
         }
     } catch (error) {
-        console.error('Failed to load level:', error);
+        console.error('Failed to load entity:', error);
     }
 });
 
-// Watch for route changes to load different levels
+// Watch for route changes to load different entities
 watch(() => route.params.id, async (newId, oldId) => {
     if (newId && newId !== oldId) {
         try {
-            await editor.loadLevel(newId);
+            await editor.loadEntity(newId);
 
-            // Fire level:loaded event
+            // Fire entity:loaded event
             if (editor.getContext()) {
-                editor.getContext().events.emit("level:loaded", { levelId: newId });
+                editor.getContext().events.emit("entity:loaded", { entityId: newId });
             }
         } catch (error) {
-            console.error('Failed to load level:', error);
+            console.error('Failed to load entity:', error);
         }
     }
 });

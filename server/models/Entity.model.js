@@ -1,8 +1,8 @@
 import { defineMongooseModel } from '#nuxt/mongoose';
 import mongoose from 'mongoose';
 
-export const LevelModel = defineMongooseModel({
-  name: "Level",
+export const EntityModel = defineMongooseModel({
+  name: "Entity",
   schema: {
     _id: { type: String, default: () => crypto.randomUUID() },
     user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
