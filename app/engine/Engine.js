@@ -57,7 +57,7 @@ export default class Engine {
         this.context.keybindings.bindAction("moveDown", ["KeyQ"]);
         this.context.keybindings.bindAction("sprint", ["ShiftLeft", "ShiftRight"]);
         this.context.keybindings.bindAction("toggleCursorLight", ["KeyF"]);
-        this.context.keybindings.bindAction("cycleTransformMode", ["KeyT"]);
+        this.context.keybindings.bindAction("cycleTransformMode", ["KeyR"]);
         this.context.keybindings.bindAction("toggleMarkersVisibility", ["KeyM"]);
         this.context.keybindings.bindAction("toggleGridHelper", ["KeyH"]);
     }
