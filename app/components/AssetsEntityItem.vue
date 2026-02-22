@@ -8,7 +8,7 @@
             <div class="text-sm text-gray-400 mx-1 flex items-center gap-1">
               <UIcon name="i-lucide-calendar" class="w-4 h-4" />
               {{ formatDate(entity.createdAt) }}
-              <UButton icon="i-lucide-file-pen" variant="link" class="cursor-pointer ms-auto" :to="`/${entity._id}`" @click.stop></UButton>
+              <UButton icon="i-lucide-file-pen" variant="link" class="cursor-pointer ms-auto" @click.stop="openEntity"></UButton>
             </div>
         </div>
 </template>
@@ -20,6 +20,11 @@ const props = defineProps({
         required: true
     }
 });
+
+function openEntity() {
+    if (!props.entity?._id) return;
+    location.href = `/${props.entity._id}`;
+}
 
 function formatDate(dateString) {
     const date = new Date(dateString);

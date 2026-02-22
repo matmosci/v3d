@@ -12,7 +12,7 @@
     <h2 class="text-xl font-bold mt-4 mb-2">Entities</h2>
     <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
         <AssetsNewEntity @created="fetchEntities" />
-        <AssetsEntityItem v-for="entity in entities" :key="entity._id" :entity="entity" />
+        <AssetsEntityItem v-for="entity in entities" :key="entity._id" :entity="entity" @click="selectEntity(entity)" />
     </div>
 </template>
 
