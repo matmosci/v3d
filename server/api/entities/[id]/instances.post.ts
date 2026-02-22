@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const { id } = event.context.params;
 
-  const allowedSourceTypes = new Set(["asset", "builtin", "custom"]);
+  const allowedSourceTypes = new Set(["asset", "builtin", "custom", "entity"]);
   const requestedSourceType = typeof body?.sourceType === "string" ? body.sourceType : "asset";
   const sourceType = allowedSourceTypes.has(requestedSourceType) ? requestedSourceType : "asset";
   const sourceId = typeof body?.sourceId === "string" && body.sourceId

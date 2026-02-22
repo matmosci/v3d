@@ -19,6 +19,7 @@ export default class EntityLoader {
         this.scene = this.ctx.scene;
         this.camera = this.ctx.camera;
         this.markersVisible = true;
+        this.entityCache = new Map();
         
         // Create grid helper
         this.gridHelper = new GridHelper(50, 50, 0x444444, 0x222222);
@@ -73,8 +74,12 @@ export default class EntityLoader {
     }
 
     async getAssets() {
+        await this.cacheAssetsForInstances(this.instancesData);
+    }
+
+    async cacheAssetsForInstances(instances = []) {
         const assetsSet = new Set(
-            this.instancesData
+            instances
                 .map((instance) => this.normalizeInstanceSource(instance))
                 .filter((source) => source && source.sourceType === "asset")
                 .map((source) => source.sourceId)
@@ -93,12 +98,16 @@ export default class EntityLoader {
         this.ctx.assets.set(asset, object);
     }
 
-    async resolvePlacementObject(source) {
+    async resolvePlacementObject(source, visited = new Set()) {
         if (!source?.sourceType || !source?.sourceId) return null;
 
         if (source.sourceType === "asset") {
             if (!this.ctx.assets.has(source.sourceId)) await this.cacheAsset(source.sourceId);
             return this.ctx.assets.get(source.sourceId)?.clone() || null;
+        }
+
+        if (source.sourceType === "entity") {
+            return await this.buildEntityObject(source.sourceId, visited);
         }
 
         return createBuiltInObject(source.sourceId);
@@ -116,7 +125,11 @@ export default class EntityLoader {
 
     async placeInstance(instance, transform) {
         const source = this.normalizeInstanceSource(instance);
-        const object = await this.resolvePlacementObject(source);
+        const visited = new Set();
+        if (source?.sourceType === "entity" && this.ctx?.entity) {
+            visited.add(this.ctx.entity);
+        }
+        const object = await this.resolvePlacementObject(source, visited);
         if (!object) {
             console.error(`Instance source not found`, source);
             return;
@@ -173,7 +186,11 @@ export default class EntityLoader {
             return;
         }
 
-        const object = await this.resolvePlacementObject(source);
+        const visited = new Set();
+        if (source?.sourceType === "entity" && this.ctx?.entity) {
+            visited.add(this.ctx.entity);
+        }
+        const object = await this.resolvePlacementObject(source, visited);
         if (!object) {
             alert("Failed to load placement source");
             return;
@@ -208,6 +225,55 @@ export default class EntityLoader {
 
         const createdInstance = await res.json();
         await this.placeInstance(createdInstance, createdInstance);
+    }
+
+    async buildEntityObject(entityId, visited = new Set()) {
+        if (!entityId) return null;
+        if (visited.has(entityId)) {
+            return createEntityCyclePlaceholder(entityId);
+        }
+
+        const cached = this.entityCache.get(entityId);
+        if (cached) return cached.clone(true);
+
+        const nextVisited = new Set(visited);
+        nextVisited.add(entityId);
+
+        try {
+            const [metaRes, instancesRes] = await Promise.all([
+                fetch(`/api/entities/${entityId}`),
+                fetch(`/api/entities/${entityId}/instances`),
+            ]);
+
+            if (!metaRes.ok || !instancesRes.ok) {
+                return createEntityCyclePlaceholder(entityId);
+            }
+
+            const instances = await instancesRes.json();
+            await this.cacheAssetsForInstances(instances);
+
+            const group = new Group();
+            group.name = entityId;
+
+            for (const instance of instances) {
+                const child = await this.buildInstanceObject(instance, nextVisited);
+                if (child) group.add(child);
+            }
+
+            this.entityCache.set(entityId, group);
+            return group.clone(true);
+        } catch (error) {
+            console.error(`Failed to load entity contents ${entityId}`, error);
+            return createEntityCyclePlaceholder(entityId);
+        }
+    }
+
+    async buildInstanceObject(instance, visited) {
+        const source = this.normalizeInstanceSource(instance);
+        const object = await this.resolvePlacementObject(source, visited);
+        if (!object) return null;
+        this.applyTransform(object, instance);
+        return object;
     }
 
     findInstanceObjectById(id) {
@@ -319,4 +385,21 @@ async function loadGltf(url) {
     return new Promise((resolve, reject) => {
         gltf.load(url, (gltf) => resolve(gltf), undefined, (error) => reject(error));
     });
+}
+
+function createEntityCyclePlaceholder(entityId) {
+    const group = new Group();
+    group.name = entityId;
+    const placeholder = new Mesh(
+        new BoxGeometry(1, 1, 1),
+        new MeshBasicMaterial({
+            color: 0xef4444,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.6,
+        })
+    );
+    placeholder.userData.isEntityPlaceholder = true;
+    group.add(placeholder);
+    return group;
 }

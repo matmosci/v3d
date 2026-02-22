@@ -9,7 +9,7 @@ export const InstanceModel = defineMongooseModel({
     entity: { type: String, required: true, ref: 'Entity' },
     sourceType: {
       type: String,
-      enum: ["asset", "builtin", "custom"],
+      enum: ["asset", "builtin", "custom", "entity"],
       default: "asset",
       required: true,
     },
