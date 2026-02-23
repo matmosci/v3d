@@ -6,7 +6,7 @@
 		>
 			<div class="flex flex-col items-center justify-center py-8">
 				<UIcon name="i-lucide-rotate-3d" class="size-6 text-gray-500 mb-2" />
-				<p class="font-bold">New Entity</p>
+				<p class="font-semibold">New Entity</p>
 			</div>
 		</div>
 
