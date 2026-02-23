@@ -9,6 +9,7 @@ import {
     Mesh,
     MeshBasicMaterial,
     MeshStandardMaterial,
+    Object3D,
     PointLight,
     Quaternion,
     SphereGeometry,
@@ -109,14 +110,18 @@ export default class EntityLoader {
 
         if (source.sourceType === "asset") {
             if (!this.ctx.assets.has(source.sourceId)) await this.cacheAsset(source.sourceId);
-            return this.ctx.assets.get(source.sourceId)?.clone() || null;
+            const cloned = this.ctx.assets.get(source.sourceId)?.clone() || null;
+            if (cloned) this.fixSpotlightTargets(cloned);
+            return cloned;
         }
 
         if (source.sourceType === "entity") {
             return await this.buildEntityObject(source.sourceId, visited);
         }
 
-        return createBuiltInObject(source.sourceId);
+        const builtIn = createBuiltInObject(source.sourceId);
+        if (builtIn) this.fixSpotlightTargets(builtIn);
+        return builtIn;
     }
 
     normalizeInstanceSource(payload = {}) {
@@ -240,7 +245,11 @@ export default class EntityLoader {
         }
 
         const cached = this.entityCache.get(entityId);
-        if (cached) return cached.clone(true);
+        if (cached) {
+            const cloned = cached.clone(true);
+            this.fixSpotlightTargets(cloned);
+            return cloned;
+        }
 
         const nextVisited = new Set(visited);
         nextVisited.add(entityId);
@@ -267,7 +276,9 @@ export default class EntityLoader {
             }
 
             this.entityCache.set(entityId, group);
-            return group.clone(true);
+            const cloned = group.clone(true);
+            this.fixSpotlightTargets(cloned);
+            return cloned;
         } catch (error) {
             console.error(`Failed to load entity contents ${entityId}`, error);
             return createEntityCyclePlaceholder(entityId);
@@ -280,6 +291,19 @@ export default class EntityLoader {
         if (!object) return null;
         this.applyTransform(object, instance);
         return object;
+    }
+
+    fixSpotlightTargets(object) {
+        // Fix spotlight targets after cloning to ensure they point to the cloned target objects
+        object.traverse((child) => {
+            if (child.isSpotLight && child.children.length > 0) {
+                // Find the target object in the light's children
+                const targetChild = child.children.find(c => c.isObject3D);
+                if (targetChild) {
+                    child.target = targetChild;
+                }
+            }
+        });
     }
 
     async ungroupEntityInstance(id, recursive = false) {
@@ -527,11 +551,15 @@ function createBuiltInObject(sourceId) {
 
             const light = new SpotLight(0xffffff, 10, 30, Math.PI / 5, 0.2);
             light.position.set(0, 0, 0);
-            light.target.position.set(0, 0, 2);
+            
+            // Create target as a child of the light so it moves together
+            const targetObject = new Object3D();
+            targetObject.position.set(0, 0, 2);
+            light.add(targetObject);
+            light.target = targetObject;
 
             group.add(marker);
             group.add(light);
-            group.add(light.target);
             return group;
         }
         default:
