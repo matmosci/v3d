@@ -91,6 +91,22 @@ class GhostObject extends Object3D {
                 this.rotatePlacementBound
             );
             this.add(object);
+            
+            // Scale ghost object to match current scene scale
+            const sceneScale = this.ctx.sceneScale || 1;
+            if (sceneScale !== 1) {
+                object.scale.setScalar(sceneScale);
+                
+                // Scale light intensities for ghost lights
+                object.traverse((child) => {
+                    if (child.isLight) {
+                        child.userData.originalIntensity = child.intensity;
+                        const intensityScale = sceneScale * sceneScale;
+                        child.intensity = child.intensity * intensityScale;
+                    }
+                });
+            }
+            
             this.traverse((child) => {
                 child.layers.set(1);
                 if (child.isMesh) {
@@ -135,6 +151,13 @@ class GhostObject extends Object3D {
 
         this.updateMatrixWorld(true);
         placementTarget.matrixWorld.decompose(position, quaternion, scale);
+        
+        // Correct scale and position if object was scaled for mini mode
+        const sceneScale = this.ctx.sceneScale || 1;
+        if (sceneScale !== 1) {
+            scale.divideScalar(sceneScale);
+            position.divideScalar(sceneScale);
+        }
 
         if (!shouldSnap) {
             return {
@@ -611,7 +634,13 @@ export default class Cursor3D {
         }
 
         if (this.freeTransformObject) {
-            this.freeTransformObject.position.copy(this.indicator.position);
+            // Convert indicator world position to contentContainer local coordinates
+            const worldPosition = this.indicator.position.clone();
+            const sceneScale = this.ctx.sceneScale || 1;
+            if (sceneScale !== 1) {
+                worldPosition.divideScalar(sceneScale);
+            }
+            this.freeTransformObject.position.copy(worldPosition);
             const targetWorldQuaternion = this.indicator.getWorldQuaternion(this.tempQuaternionA);
 
             if (!this.freeTransformRotationOffset) {

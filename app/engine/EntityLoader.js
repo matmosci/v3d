@@ -24,6 +24,15 @@ export default class EntityLoader {
         this.camera = this.ctx.camera;
         this.markersVisible = true;
         this.entityCache = new Map();
+        this.sceneScale = 1; // Track current scene scale
+        
+        // Store initial scale in context for easy access
+        this.ctx.sceneScale = this.sceneScale;
+        
+        // Create a container for all placeable content (excludes dust, camera, grid)
+        this.contentContainer = new Group();
+        this.contentContainer.name = 'contentContainer';
+        this.scene.add(this.contentContainer);
 
         // Create grid helper
         this.gridHelper = new GridHelper(50, 50, 0x444444, 0x222222).translateY(0.01);
@@ -57,6 +66,12 @@ export default class EntityLoader {
             this.toggleGridHelper();
         };
         this.ctx.keybindings.onActionDown("toggleGridHelper", this.onToggleGridKeyDown);
+
+        this.onToggleSceneScaleKeyDown = (event) => {
+            if (event.repeat) return;
+            this.toggleSceneScale();
+        };
+        this.ctx.keybindings.onActionDown("toggleSceneScale", this.onToggleSceneScaleKeyDown);
     }
 
     async load(id) {
@@ -153,13 +168,25 @@ export default class EntityLoader {
         object.instanceSourceType = source.sourceType;
         object.instanceSourceId = source.sourceId;
         this.applyMarkerVisibilityToObject(object);
-        this.ctx.scene.add(object);
+        
+        // Scale light intensities for newly placed objects in mini mode
+        if (this.sceneScale !== 1) {
+            object.traverse((child) => {
+                if (child.isLight) {
+                    child.userData.originalIntensity = child.intensity;
+                    const intensityScale = this.sceneScale * this.sceneScale;
+                    child.intensity = child.intensity * intensityScale;
+                }
+            });
+        }
+        
+        this.contentContainer.add(object);
         return object;
     }
 
     toggleMarkerMeshesVisibility() {
         this.markersVisible = !this.markersVisible;
-        this.scene.traverse((object) => {
+        this.contentContainer.traverse((object) => {
             if (!object?.isMesh) return;
             if (!object?.userData?.isMarkerMesh) return;
             object.visible = this.markersVisible;
@@ -168,6 +195,29 @@ export default class EntityLoader {
 
     toggleGridHelper() {
         this.gridHelper.visible = !this.gridHelper.visible;
+    }
+
+    toggleSceneScale() {
+        // Toggle between normal scale (1) and miniature scale (0.1)
+        this.sceneScale = this.sceneScale === 1 ? 0.1 : 1;
+        
+        // Store scale in context for easy access
+        this.ctx.sceneScale = this.sceneScale;
+        
+        this.contentContainer.scale.setScalar(this.sceneScale);
+        
+        // Scale light intensities proportionally
+        this.contentContainer.traverse((object) => {
+            if (object.isLight) {
+                // Store original intensity on first scale
+                if (object.userData.originalIntensity === undefined) {
+                    object.userData.originalIntensity = object.intensity;
+                }
+                // Scale intensity by square of scale factor to compensate for distance changes
+                const intensityScale = this.sceneScale * this.sceneScale;
+                object.intensity = object.userData.originalIntensity * intensityScale;
+            }
+        });
     }
 
     applyMarkerVisibilityToObject(object) {
@@ -435,7 +485,7 @@ export default class EntityLoader {
 
     findInstanceObjectById(id) {
         let found = null;
-        this.scene.traverse((object) => {
+        this.contentContainer.traverse((object) => {
             if (found) return;
             if (object?.isInstance && object?.instanceId === id) found = object;
         });
