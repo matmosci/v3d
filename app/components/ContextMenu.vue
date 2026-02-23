@@ -120,7 +120,7 @@ const resetAll = () => {
             <div>
                 <span class="text-white/60">Source:</span>
                 <div class="break-all">{{ selected?.sourceType || 'asset' }} / {{ selected?.sourceId || selected?.asset
-                }}</div>
+                    }}</div>
             </div>
             <div class="pt-2">
                 <span class="text-white/60">Position</span>
@@ -176,15 +176,15 @@ const resetAll = () => {
                 <UButton size="sm" icon="i-lucide-rotate-3d" variant="soft" @click="$emit('free-transform')">Free
                     Transform</UButton>
             </div>
-            <div v-if="selected?.sourceType === 'entity'" class="pt-3 space-y-2">
-                <label class="flex items-center gap-2 text-xs text-white/70">
-                    <input v-model="recursiveUngroup" type="checkbox" class="accent-emerald-500" />
-                    Recursive
-                </label>
-                <UButton size="sm" icon="i-lucide-split-square-vertical"
+            <div v-if="selected?.sourceType === 'entity'" class="pt-3 flex gap-3">
+                <UButton size="sm" icon="i-lucide-split-square-vertical" title="Ungroup entity to separate objects" variant="soft"
                     @click="emit('ungroup', { recursive: recursiveUngroup })">
                     Ungroup Entity
                 </UButton>
+                <label class="flex items-center gap-2 text-xs text-white/70" title="Ungroup all nested entities recursively">
+                    <input v-model="recursiveUngroup" type="checkbox" class="accent-emerald-500" />
+                    Recursive
+                </label>
             </div>
         </div>
         <div class="w-fit">
