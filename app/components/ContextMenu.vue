@@ -70,20 +70,47 @@ const confirmDeleteOk = () => {
 const cancelDelete = () => {
     showConfirmation.value = false;
 };
+
+const resetPosition = () => {
+    transform.px = 0;
+    transform.py = 0;
+    transform.pz = 0;
+    emitTransformUpdate();
+};
+
+const resetRotation = () => {
+    transform.rx = 0;
+    transform.ry = 0;
+    transform.rz = 0;
+    emitTransformUpdate();
+};
+
+const resetScale = () => {
+    transform.sx = 1;
+    transform.sy = 1;
+    transform.sz = 1;
+    emitTransformUpdate();
+};
+
+const resetAll = () => {
+    transform.px = 0;
+    transform.py = 0;
+    transform.pz = 0;
+    transform.rx = 0;
+    transform.ry = 0;
+    transform.rz = 0;
+    transform.sx = 1;
+    transform.sy = 1;
+    transform.sz = 1;
+    emitTransformUpdate();
+};
 </script>
 
 <template>
-    <aside
-        class="absolute top-0 left-0 h-full w-80 bg-black/45 backdrop-blur-sm border-white/10 p-4 flex flex-col">
+    <aside class="absolute top-0 left-0 h-full w-80 bg-black/45 backdrop-blur-sm border-white/10 p-4 flex flex-col">
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-sm font-semibold text-white/90">Context Menu</h3>
-            <UButton
-                size="xs"
-                variant="ghost"
-                color="neutral"
-                icon="i-lucide-x"
-                @click="$emit('deselect')"
-            />
+            <UButton size="xs" variant="ghost" color="neutral" icon="i-lucide-x" @click="$emit('deselect')" />
         </div>
         <div class="space-y-2 text-sm text-white/80 flex-1 overflow-y-auto">
             <div>
@@ -92,61 +119,70 @@ const cancelDelete = () => {
             </div>
             <div>
                 <span class="text-white/60">Source:</span>
-                <div class="break-all">{{ selected?.sourceType || 'asset' }} / {{ selected?.sourceId || selected?.asset }}</div>
+                <div class="break-all">{{ selected?.sourceType || 'asset' }} / {{ selected?.sourceId || selected?.asset
+                }}</div>
             </div>
             <div class="pt-2">
                 <span class="text-white/60">Position</span>
-                <div class="grid grid-cols-3 gap-2 mt-1">
+                <div class="grid grid-cols-7 gap-2 mt-1">
                     <input v-model.number="transform.px" type="number" step="0.1"
-                        class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1"
+                        class="w-full col-span-2 rounded bg-black/40 border border-red-500/70 px-2 py-1"
                         @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                     <input v-model.number="transform.py" type="number" step="0.1"
-                        class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1"
+                        class="w-full col-span-2 rounded bg-black/40 border border-green-500/70 px-2 py-1"
                         @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                     <input v-model.number="transform.pz" type="number" step="0.1"
-                        class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1"
+                        class="w-full col-span-2 rounded bg-black/40 border border-blue-500/70 px-2 py-1"
                         @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <UButton class="w-fit" size="sm" icon="i-carbon-reset" color="neutral" variant="soft"
+                        @click="resetPosition"></UButton>
                 </div>
             </div>
             <div>
                 <span class="text-white/60">Rotation</span>
-                <div class="grid grid-cols-3 gap-2 mt-1">
+                <div class="grid grid-cols-7 gap-2 mt-1">
                     <input v-model.number="transform.rx" type="number" step="15"
-                        class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1"
+                        class="w-full col-span-2 rounded bg-black/40 border border-red-500/70 px-2 py-1"
                         @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                     <input v-model.number="transform.ry" type="number" step="15"
-                        class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1"
+                        class="w-full col-span-2 rounded bg-black/40 border border-green-500/70 px-2 py-1"
                         @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                     <input v-model.number="transform.rz" type="number" step="15"
-                        class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1"
+                        class="w-full col-span-2 rounded bg-black/40 border border-blue-500/70 px-2 py-1"
                         @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <UButton class="w-fit" size="sm" icon="i-carbon-reset" color="neutral" variant="soft"
+                        @click="resetRotation"></UButton>
                 </div>
             </div>
             <div>
                 <span class="text-white/60">Scale</span>
-                <div class="grid grid-cols-3 gap-2 mt-1">
+                <div class="grid grid-cols-7 gap-2 mt-1">
                     <input v-model.number="transform.sx" type="number" step="0.1"
-                        class="w-full rounded bg-black/40 border border-red-500/70 px-2 py-1"
+                        class="w-full col-span-2 rounded bg-black/40 border border-red-500/70 px-2 py-1"
                         @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                     <input v-model.number="transform.sy" type="number" step="0.1"
-                        class="w-full rounded bg-black/40 border border-green-500/70 px-2 py-1"
+                        class="w-full col-span-2 rounded bg-black/40 border border-green-500/70 px-2 py-1"
                         @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
                     <input v-model.number="transform.sz" type="number" step="0.1"
-                        class="w-full rounded bg-black/40 border border-blue-500/70 px-2 py-1"
+                        class="w-full col-span-2 rounded bg-black/40 border border-blue-500/70 px-2 py-1"
                         @change="emitTransformUpdate" @keyup.enter="emitTransformUpdate">
+                    <UButton class="w-fit" size="sm" icon="i-carbon-reset" color="neutral" variant="soft"
+                        @click="resetScale"></UButton>
                 </div>
             </div>
-            <UButton size="sm" icon="i-lucide-scan-eye" @click="$emit('free-transform')">Free Transform</UButton>
+            <div class="flex justify-between">
+                <UButton size="sm" icon="i-carbon-reset" color="neutral" variant="soft" @click="resetAll">Reset
+                    Transform</UButton>
+                <UButton size="sm" icon="i-lucide-rotate-3d" variant="soft" @click="$emit('free-transform')">Free
+                    Transform</UButton>
+            </div>
             <div v-if="selected?.sourceType === 'entity'" class="pt-3 space-y-2">
                 <label class="flex items-center gap-2 text-xs text-white/70">
                     <input v-model="recursiveUngroup" type="checkbox" class="accent-emerald-500" />
                     Recursive
                 </label>
-                <UButton
-                    size="sm"
-                    icon="i-lucide-split-square-vertical"
-                    @click="emit('ungroup', { recursive: recursiveUngroup })"
-                >
+                <UButton size="sm" icon="i-lucide-split-square-vertical"
+                    @click="emit('ungroup', { recursive: recursiveUngroup })">
                     Ungroup Entity
                 </UButton>
             </div>
