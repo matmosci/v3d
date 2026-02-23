@@ -39,7 +39,7 @@ export default class Dust {
             const hue = 15 + Math.random() * 30;
             newModel.material = this.dustSpriteMaterial.clone();
             newModel.material.map = this.dustTextures[Math.floor(Math.random() * this.dustTextures.length)];
-            newModel.material.color = new Color(`hsl(${hue}, 100%, 50%)`);
+            newModel.material.color = new Color(`hsl(${hue}, 33%, 50%)`);
             newModel.layers.set(1);
             this.scene.add(newModel);
         }
