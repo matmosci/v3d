@@ -23,7 +23,7 @@ export default class EntityLoader {
         this.camera = this.ctx.camera;
         this.markersVisible = true;
         this.entityCache = new Map();
-        
+
         // Create grid helper
         this.gridHelper = new GridHelper(50, 50, 0x444444, 0x222222).translateY(0.01);
         this.gridHelper.name = 'gridHelper';
@@ -50,7 +50,7 @@ export default class EntityLoader {
             this.toggleMarkerMeshesVisibility();
         };
         this.ctx.keybindings.onActionDown("toggleMarkersVisibility", this.onToggleMarkersKeyDown);
-        
+
         this.onToggleGridKeyDown = (event) => {
             if (event.repeat) return;
             this.toggleGridHelper();
@@ -477,7 +477,7 @@ function createBuiltInObject(sourceId) {
         }
         case "primitive:sphere": {
             const object = new Mesh(
-                new SphereGeometry(0.5, 16, 16),
+                new SphereGeometry(0.5, 16, 16).translate(0, 0.5, 0),
                 new MeshStandardMaterial({ color: 0xcccccc })
             );
             object.name = sourceId;
@@ -493,21 +493,46 @@ function createBuiltInObject(sourceId) {
         }
         case "primitive:cylinder": {
             const object = new Mesh(
-                new CylinderGeometry(0.5, 0.5, 1, 8).translate(0, 0.5, 0),
+                new CylinderGeometry(0.5, 0.5, 1, 16).translate(0, 0.5, 0),
                 new MeshStandardMaterial({ color: 0xcccccc })
             );
             object.name = sourceId;
             return object;
         }
-        case "primitive:point-light": {
-            const object = new PointLight(0xffffff, 1, 100);
-            object.name = sourceId;
-            return object;
+        case "light:point": {
+            const group = new Group();
+            group.name = sourceId;
+
+            const marker = new Mesh(
+                new SphereGeometry(0.05, 8, 6),
+                new MeshBasicMaterial({ color: 0xf59e0b, wireframe: true })
+            );
+            marker.userData.isMarkerMesh = true;
+            const light = new PointLight(0xffffff, 10, 20);
+
+            group.add(marker);
+            group.add(light);
+            return group;
         }
-        case "primitive:spot-light": {
-            const object = new SpotLight(0xffffff, 1, 100, Math.PI / 4, 0.5, 2);
-            object.name = sourceId;
-            return object;
+        case "light:spot": {
+            const group = new Group();
+            group.name = sourceId;
+
+            const marker = new Mesh(
+                new ConeGeometry(0.125, 0.2, 8).rotateX(Math.PI).translate(0, 0.1, 0),
+                new MeshBasicMaterial({ color: 0xf59e0b, wireframe: true })
+            );
+            marker.userData.isMarkerMesh = true;
+            marker.rotation.x = Math.PI / 2;
+
+            const light = new SpotLight(0xffffff, 10, 30, Math.PI / 5, 0.2);
+            light.position.set(0, 0, 0);
+            light.target.position.set(0, 0, 2);
+
+            group.add(marker);
+            group.add(light);
+            group.add(light.target);
+            return group;
         }
         default:
             return null;
