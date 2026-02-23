@@ -74,7 +74,7 @@ const cancelDelete = () => {
 
 <template>
     <aside
-        class="absolute top-0 left-0 h-full w-80 bg-black/45 backdrop-blur-sm border-r border-white/10 p-4 flex flex-col">
+        class="absolute top-0 left-0 h-full w-80 bg-black/45 backdrop-blur-sm border-white/10 p-4 flex flex-col">
         <div class="flex items-center justify-between mb-3">
             <h3 class="text-sm font-semibold text-white/90">Context Menu</h3>
             <UButton
