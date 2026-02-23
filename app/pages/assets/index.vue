@@ -1,10 +1,11 @@
 <template>
+    <h1 class="text-sm mb-2">ASSETS</h1>
     <h2 class="text-xl font-bold mb-2">Built-In Items</h2>
     <div class="grid gap-4 grid-cols-3 md:grid-cols-5 lg:grid-cols-7 2xl:grid-cols-12">
         <BuiltInItem v-for="item in builtInItems" :key="item.sourceId" :source-id="item.sourceId" :title="item.title"
             :icon="item.icon" />
     </div>
-    <h2 class="text-xl font-bold mt-4 mb-2">Assets</h2>
+    <h2 class="text-xl font-bold mt-4 mb-2">Models</h2>
     <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
         <AssetsFileInput @uploaded="fetchAssets" />
         <AssetsItem v-for="asset in assets" :key="asset._id" :asset="asset" />

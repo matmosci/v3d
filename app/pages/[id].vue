@@ -1,6 +1,7 @@
 <template>
+    <h1 class="text-sm mb-2">ENTITY</h1>
     <div v-if="entityData">
-        <h1 class="text-2xl">{{ entityData.name }}</h1>
+        <h1 class="text-xl font-bold mb-2">{{ entityData.name }}</h1>
         <p class="text-gray-500">{{ entityData.description }}</p>
     </div>
 </template>
