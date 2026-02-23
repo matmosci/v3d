@@ -5,15 +5,15 @@
         <BuiltInItem v-for="item in builtInItems" :key="item.sourceId" :source-id="item.sourceId" :title="item.title"
             :icon="item.icon" />
     </div>
-    <h2 class="text-xl font-bold mt-4 mb-2">Models</h2>
-    <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
-        <AssetsFileInput @uploaded="fetchAssets" />
-        <AssetsItem v-for="asset in assets" :key="asset._id" :asset="asset" />
-    </div>
     <h2 class="text-xl font-bold mt-4 mb-2">Entities</h2>
     <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
         <AssetsNewEntity @created="fetchEntities" />
         <AssetsEntityItem v-for="entity in entities" :key="entity._id" :entity="entity" @click="selectEntity(entity)" />
+    </div>
+    <h2 class="text-xl font-bold mt-4 mb-2">Models</h2>
+    <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
+        <AssetsFileInput @uploaded="fetchAssets" />
+        <AssetsItem v-for="asset in assets" :key="asset._id" :asset="asset" />
     </div>
 </template>
 
