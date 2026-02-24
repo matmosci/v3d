@@ -4,7 +4,8 @@ export function useCameraSaveOnThumbnail(entityId) {
     const saveWithThumbnail = async (camera, thumbnailData) => {
         try {
             isSaving.value = true;
-            await $fetch(`/api/entities/${entityId}/camera`, {
+            const id = unref(entityId); // Handle both refs and plain values
+            await $fetch(`/api/entities/${id}/camera`, {
                 method: 'PUT',
                 body: { 
                     camera,
