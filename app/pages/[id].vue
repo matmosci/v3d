@@ -1,5 +1,5 @@
 <template>
-    <h1 class="text-sm mb-2">ENTITY</h1>
+    <h1 class="text-sm mb-2">ASSET</h1>
     <div v-if="entityData" class="flex items-center justify-between">
         <div>
             <h1 class="text-xl font-bold mb-2">{{ entityData.name }}</h1>
