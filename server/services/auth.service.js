@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import Mailer from "~~/server/services/mailer.service";
+import Mailer from "#server/services/mailer.service";
 
 const service = {
     createLoginToken,

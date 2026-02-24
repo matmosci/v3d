@@ -1,4 +1,4 @@
-import service from '~~/server/services/auth.service';
+import service from '#server/services/auth.service';
 import { z } from 'zod'
 
 const bodySchema = z.object({
