@@ -5,7 +5,7 @@
         <BuiltInItem v-for="item in builtInItems" :key="item.sourceId" :source-id="item.sourceId" :title="item.title"
             :icon="item.icon" />
     </div>
-    <h2 class="text-xl font-bold mt-4 mb-2">Your Models</h2>
+    <h2 class="text-xl font-bold mt-4 mb-2">Your Assets</h2>
     <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
         <AssetsNewEntity @created="fetchEntities" />
         <AssetsFileInput @uploaded="handleFileUploaded" />
