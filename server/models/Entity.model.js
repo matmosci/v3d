@@ -5,7 +5,8 @@ export const EntityModel = defineMongooseModel({
   name: "Entity",
   schema: {
     _id: { type: String, default: () => crypto.randomUUID() },
-    user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+    user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' }, // Owner
+    // Future: collaborators: [{ user: ObjectId, permissions: [String], joinedAt: Date }]
     name: { type: String, required: true },
     description: { type: String, required: false },
     thumbnail: { type: String, required: false },

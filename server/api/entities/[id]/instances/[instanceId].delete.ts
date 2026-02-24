@@ -14,6 +14,7 @@ export default defineEventHandler(async (event) => {
   const sessionUser = user as any;
   const userId = sessionUser.id || sessionUser._id;
 
+  // Find entity - publicly readable for collaborative work
   const entity = await EntityModel.findOne({ _id: id, deletedAt: null });
   if (!entity) {
     return createError({
@@ -30,6 +31,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Check ownership - future: expand to check if user has modify permissions on entity/instance
   if (String(instance.user) !== String(userId)) {
     return createError({
       statusCode: 403,

@@ -2,7 +2,7 @@ export default defineEventHandler(async (event) => {
     const { user } = await requireUserSession(event);
     const { id } = event.context.params;
 
-    // Find the asset and verify ownership
+    // Find the asset and verify ownership (future: check if user has modify permissions)
     const asset = await AssetModel.findOne({ _id: id, deletedAt: null });
     if (!asset) {
         return createError({
@@ -11,6 +11,7 @@ export default defineEventHandler(async (event) => {
         });
     }
 
+    // Check ownership - future: expand to check collaborator permissions
     if (asset.user.toString() !== user.id) {
         return createError({
             statusCode: 403,

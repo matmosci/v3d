@@ -6,7 +6,8 @@ export const AssetModel = defineMongooseModel({
     name: "Asset",
     schema: {
         _id: { type: String, default: () => crypto.randomUUID() },
-        user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+        user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' }, // Owner
+        // Future: collaborators: [{ user: ObjectId, permissions: [String], joinedAt: Date }]
         originalname: { type: String, required: true },
         thumbnail: { type: String, required: false },
         size: { type: Number, required: true },
