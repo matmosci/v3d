@@ -7,7 +7,7 @@
         </div>
         <div class="font-medium mx-1 mt-1 overflow-x-clip text-ellipsis">{{ asset.originalname }}</div>
         <div class="text-sm text-gray-400 ms-1 mb-1">{{ (asset.size / 1024).toFixed(2) }} KB</div>
-        
+
         <!-- Actions Row -->
         <div v-if="!showDeleteConfirm" class="flex items-center justify-between mx-1">
             <NuxtLink :to="`/assets/${asset._id}`" @click.stop>
@@ -15,19 +15,17 @@
                     View
                 </UButton>
             </NuxtLink>
-            <UButton icon="i-lucide-trash-2" variant="ghost" size="xs" class="text-red-500" @click.stop="showDeleteConfirm = true">
-                Delete
-            </UButton>
+            <UButton icon="i-lucide-trash-2" variant="ghost" size="xs" class="text-red-500"
+                @click.stop="showDeleteConfirm = true"></UButton>
         </div>
-        
+
         <!-- Delete Confirmation Row -->
         <div v-else class="flex items-center justify-between mx-1">
             <UButton variant="ghost" size="xs" class="text-gray-500" @click.stop="showDeleteConfirm = false">
                 Cancel
             </UButton>
-            <UButton icon="i-lucide-check" variant="ghost" size="xs" class="text-red-500" @click.stop="deleteAsset" :loading="deleting">
-                OK
-            </UButton>
+            <UButton icon="i-lucide-check" variant="ghost" size="xs" class="text-red-500" @click.stop="deleteAsset"
+                :loading="deleting"></UButton>
         </div>
     </div>
 </template>
@@ -50,7 +48,7 @@ const emit = defineEmits(['deleted']);
 
 function selectAsset() {
     if (showDeleteConfirm.value) return; // Don't select if in delete mode
-    
+
     const context = editor.getContext();
     if (context.entity) {
         // Already in an entity, just start placement
@@ -62,13 +60,13 @@ function selectAsset() {
 
 async function deleteAsset() {
     if (deleting.value) return;
-    
+
     deleting.value = true;
     try {
         await $fetch(`/api/assets/${props.asset._id}`, {
             method: 'DELETE'
         });
-        
+
         emit('deleted', props.asset._id);
     } catch (error) {
         console.error('Failed to delete asset:', error);
