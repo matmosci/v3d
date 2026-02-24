@@ -1,6 +1,6 @@
 <template>
     <h1 class="text-sm mb-2">ASSETS</h1>
-    <h2 class="text-xl font-bold mb-2">Built-In Items</h2>
+    <h2 class="text-xl font-bold mb-2">Built-In Tools</h2>
     <div class="grid gap-4 grid-cols-3 md:grid-cols-5 lg:grid-cols-7 2xl:grid-cols-12">
         <BuiltInItem v-for="item in builtInItems" :key="item.sourceId" :source-id="item.sourceId" :title="item.title"
             :icon="item.icon" />
