@@ -46,9 +46,12 @@ onMounted(async () => {
     try {
         entityData.value = await editor.loadEntity(entityId);
 
-        // Fire entity:loaded event
+        // Fire entity:loaded event with data
         if (editor.getContext()) {
-            editor.getContext().events.emit("entity:loaded", { entityId });
+            editor.getContext().events.emit("entity:loaded", { 
+                entityId, 
+                entityData: entityData.value 
+            });
             
             // Listen for thumbnail creation events (KeyT press)
             editor.getContext().events.on("thumbnail:created", async ({ thumbnail }) => {
@@ -72,11 +75,14 @@ onMounted(async () => {
 watch(() => route.params.id, async (newId, oldId) => {
     if (newId && newId !== oldId) {
         try {
-            await editor.loadEntity(newId);
+            entityData.value = await editor.loadEntity(newId);
 
-            // Fire entity:loaded event
+            // Fire entity:loaded event with data
             if (editor.getContext()) {
-                editor.getContext().events.emit("entity:loaded", { entityId: newId });
+                editor.getContext().events.emit("entity:loaded", { 
+                    entityId: newId, 
+                    entityData: entityData.value 
+                });
             }
         } catch (error) {
             console.error('Failed to load entity:', error);
