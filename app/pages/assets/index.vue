@@ -5,15 +5,11 @@
         <BuiltInItem v-for="item in builtInItems" :key="item.sourceId" :source-id="item.sourceId" :title="item.title"
             :icon="item.icon" />
     </div>
-    <h2 class="text-xl font-bold mt-4 mb-2">Entities</h2>
+    <h2 class="text-xl font-bold mt-4 mb-2">Your Models</h2>
     <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
         <AssetsNewEntity @created="fetchEntities" />
+        <AssetsFileInput @uploaded="handleFileUploaded" />
         <AssetsEntityItem v-for="entity in entities" :key="entity._id" :entity="entity" @click="selectEntity(entity)" @deleted="removeEntity" />
-    </div>
-    <h2 class="text-xl font-bold mt-4 mb-2">Models</h2>
-    <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
-        <AssetsFileInput @uploaded="fetchAssets" />
-        <AssetsItem v-for="asset in assets" :key="asset._id" :asset="asset" @deleted="removeAsset" />
     </div>
 </template>
 
@@ -23,7 +19,6 @@ definePageMeta({
 });
 
 const editor = useEditor();
-const assets = ref([]);
 const entities = ref([]);
 const builtInItems = [
     { sourceId: 'primitive:box', title: 'Box', icon: 'i-lucide-box' },
@@ -33,15 +28,6 @@ const builtInItems = [
     { sourceId: 'light:spot', title: 'Spot Light', icon: 'i-lucide-cone' },
 ];
 
-async function fetchAssets() {
-    try {
-        const data = await $fetch('/api/user/assets');
-        assets.value = data;
-    } catch (error) {
-        console.error(error);
-    }
-}
-
 async function fetchEntities() {
     try {
         const data = await $fetch('/api/user/entities');
@@ -49,6 +35,11 @@ async function fetchEntities() {
     } catch (error) {
         console.error(error);
     }
+}
+
+async function handleFileUploaded(uploadResults) {
+    // Server already created entities, just refresh the list
+    await fetchEntities();
 }
 
 function selectEntity(entity) {
@@ -64,16 +55,11 @@ function selectEntity(entity) {
     }
 }
 
-function removeAsset(assetId) {
-    assets.value = assets.value.filter(asset => asset._id !== assetId);
-}
-
 function removeEntity(entityId) {
     entities.value = entities.value.filter(entity => entity._id !== entityId);
 }
 
 onMounted(() => {
-    fetchAssets();
     fetchEntities();
     
     // Listen for thumbnail updates to refresh entity data

@@ -57,7 +57,32 @@ export default defineEventHandler(async (event) => {
 
         const filePath = path.join(directory, asset._id.toString());
         fs.writeFileSync(filePath, file.data);
-        assetIds.push(id);
+        
+        // Auto-create entity for the uploaded asset
+        const entityName = file.filename.replace(/\.[^/.]+$/, ''); // Remove file extension
+        const entity = await EntityModel.create({
+            user: user.id,
+            name: entityName,
+            description: `Generated from ${file.filename}`,
+        });
+        
+        // Create an instance linking the asset to the entity
+        await InstanceModel.create({
+            user: user.id,
+            entity: entity._id,
+            sourceType: 'asset',
+            sourceId: asset._id,
+            asset: asset._id,
+            position: [0, 0, 0],
+            quaternion: [0, 0, 0, 1],
+            scale: [1, 1, 1],
+        });
+        
+        assetIds.push({
+            assetId: id,
+            entityId: entity._id.toString(),
+            entity: entity
+        });
     }
 
     return assetIds;
