@@ -4,9 +4,11 @@
 			class="h-full w-full flex-1 bg-default border border-default flex flex-col gap-2 items-stretch justify-center rounded-lg focus-visible:outline-2 transition-[background] p-4 text-sm border-dashed data-[dragging=true]:bg-elevated/25 focus-visible:outline-primary hover:bg-elevated/25"
 			@click="openCreateModal"
 		>
-			<div class="flex flex-col items-center justify-center py-8">
-				<UIcon name="i-lucide-rotate-3d" class="size-6 text-gray-500 mb-2" />
-				<p class="font-semibold">New Entity</p>
+			<div class="flex flex-col items-center justify-center text-center px-4 py-3">
+				<div class="inline-flex items-center justify-center select-none rounded-full align-middle bg-elevated size-8 text-base shrink-0">
+					<UIcon name="i-lucide-square-dashed" class="text-muted shrink-0" />
+				</div>
+				<p class="font-medium text-default mt-2">New Asset</p>
 			</div>
 		</div>
 
