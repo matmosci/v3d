@@ -61,6 +61,7 @@ export default class Engine {
         this.context.keybindings.bindAction("toggleMarkersVisibility", ["KeyV"]);
         this.context.keybindings.bindAction("toggleGridHelper", ["KeyH"]);
         this.context.keybindings.bindAction("toggleSceneScale", ["KeyM"]);
+        this.context.keybindings.bindAction("captureScreenshot", ["KeyT"]);
     }
 
     registerEvents() {

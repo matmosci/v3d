@@ -67,5 +67,24 @@ function selectEntity(entity) {
 onMounted(() => {
     fetchAssets();
     fetchEntities();
+    
+    // Listen for thumbnail updates to refresh entity data
+    const context = editor.getContext();
+    if (context) {
+        context.events.on("thumbnail:created", ({ thumbnail }) => {
+            // Find and update the entity with the new thumbnail
+            const currentEntityId = context.entity; // The currently loaded entity
+            if (currentEntityId && entities.value) {
+                const entityIndex = entities.value.findIndex(entity => entity._id === currentEntityId);
+                if (entityIndex !== -1) {
+                    // Update the entity thumbnail in the reactive array
+                    entities.value[entityIndex] = {
+                        ...entities.value[entityIndex],
+                        thumbnail: thumbnail
+                    };
+                }
+            }
+        });
+    }
 });
 </script>

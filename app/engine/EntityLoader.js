@@ -72,6 +72,12 @@ export default class EntityLoader {
             this.toggleSceneScale();
         };
         this.ctx.keybindings.onActionDown("toggleSceneScale", this.onToggleSceneScaleKeyDown);
+        
+        this.onCaptureScreenshotKeyDown = (event) => {
+            if (event.repeat) return;
+            this.captureEntityThumbnail();
+        };
+        this.ctx.keybindings.onActionDown("captureScreenshot", this.onCaptureScreenshotKeyDown);
     }
 
     async load(id) {
@@ -218,6 +224,58 @@ export default class EntityLoader {
                 object.intensity = object.userData.originalIntensity * intensityScale;
             }
         });
+    }
+
+    async captureEntityThumbnail() {
+        if (!this.ctx.entity || !this.ctx.renderer) return;
+        
+        try {
+            const canvas = this.ctx.renderer.domElement;
+            if (!canvas) return;
+            
+            // Store original scene settings
+            const previousBackground = this.scene.background;
+            const previousClearAlpha = this.ctx.renderer.getClearAlpha();
+            const previousClearColor = this.ctx.renderer.getClearColor(new Vector3());
+            
+            // Set transparent background for thumbnail
+            this.scene.background = null;
+            this.ctx.renderer.setClearColor(previousClearColor, 0);
+            this.ctx.renderer.render(this.scene, this.ctx.camera);
+            
+            // Create thumbnail at specific size
+            const sourceWidth = canvas.width;
+            const sourceHeight = canvas.height;
+            const targetWidth = 192;
+            const targetHeight = Math.max(100, Math.round((sourceHeight / sourceWidth) * targetWidth));
+            
+            const thumbCanvas = document.createElement("canvas");
+            thumbCanvas.width = targetWidth;
+            thumbCanvas.height = targetHeight;
+            
+            const ctx = thumbCanvas.getContext("2d");
+            if (!ctx) throw new Error("Failed to create thumbnail context");
+            
+            ctx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+            const thumbnail = thumbCanvas.toDataURL("image/png");
+            
+            // Restore original scene settings
+            this.scene.background = previousBackground;
+            this.ctx.renderer.setClearColor(previousClearColor, previousClearAlpha);
+            
+            // Send thumbnail to server
+            await $fetch(`/api/entities/${this.ctx.entity}/thumbnail`, {
+                method: "POST",
+                body: { thumbnail }
+            });
+            
+            // Emit success event for toast notification
+            this.ctx.events.emit("thumbnail:created", { thumbnail });
+            
+        } catch (error) {
+            console.error("Failed to capture thumbnail:", error);
+            this.ctx.events.emit("thumbnail:error", { error: error.message });
+        }
     }
 
     applyMarkerVisibilityToObject(object) {

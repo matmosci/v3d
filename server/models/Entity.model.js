@@ -8,6 +8,7 @@ export const EntityModel = defineMongooseModel({
     user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
     name: { type: String, required: true },
     description: { type: String, required: false },
+    thumbnail: { type: String, required: false },
     camera: {
       position: {
         type: [Number],
