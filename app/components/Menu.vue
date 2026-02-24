@@ -4,6 +4,7 @@
       <NuxtLink to="/" class="text-lg font-bold">V3D</NuxtLink>
       <div class="flex gap-4">
         <NuxtLink v-if="loggedIn" to="/assets" class="hover:text-gray-300 transition-colors">Assets</NuxtLink>
+        <NuxtLink v-if="loggedIn" to="/community" class="hover:text-gray-300 transition-colors">Community</NuxtLink>
       </div>
       <User />
     </div>
