@@ -44,7 +44,7 @@
                         </button>
                     </div>
                     
-                    <NuxtLink :to="`/${entity._id}`">
+                    <NuxtLink :to="`/${entity._id}`" external>
                         <UButton size="xs" variant="ghost">Open</UButton>
                     </NuxtLink>
                 </div>
