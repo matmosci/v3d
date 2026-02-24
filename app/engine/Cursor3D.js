@@ -611,9 +611,9 @@ export default class Cursor3D {
         const isShiftHeld = this.ctx.input.isAnyPressed(["ShiftLeft", "ShiftRight"]);
 
         if (isShiftHeld) {
-            this.direction.copy(this.worldUpAxis);
-        } else {
             this.direction.copy(hit.face.normal).transformDirection(hit.object.matrixWorld).normalize();
+        } else {
+            this.direction.copy(this.worldUpAxis);
         }
 
         this.tempQuaternionD.setFromUnitVectors(this.indicatorForwardAxis, this.direction);
