@@ -1,8 +1,14 @@
 <template>
     <h1 class="text-sm mb-2">ENTITY</h1>
-    <div v-if="entityData">
-        <h1 class="text-xl font-bold mb-2">{{ entityData.name }}</h1>
-        <p class="text-gray-500">{{ entityData.description }}</p>
+    <div v-if="entityData" class="flex items-center justify-between">
+        <div>
+            <h1 class="text-xl font-bold mb-2">{{ entityData.name }}</h1>
+            <p class="text-gray-500">{{ entityData.description }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span v-if="isSaving" class="text-xs text-blue-500">Saving camera...</span>
+            <span class="text-xs text-gray-400">Press T to capture thumbnail & save camera</span>
+        </div>
     </div>
 </template>
 
@@ -10,6 +16,9 @@
 const route = useRoute();
 const editor = useEditor();
 const entityData = ref(null);
+
+// Camera save on thumbnail functionality
+const { isSaving, saveWithThumbnail } = useCameraSaveOnThumbnail(computed(() => route.params.id));
 
 onMounted(async () => {
     // Wait for editor initialization from Viewport component
@@ -30,6 +39,7 @@ onMounted(async () => {
         const maxWait = 10000; // 10 second timeout
         checkEditor();
     });
+    
     // Load the entity specified in the route
     const entityId = route.params.id;
 
@@ -39,6 +49,19 @@ onMounted(async () => {
         // Fire entity:loaded event
         if (editor.getContext()) {
             editor.getContext().events.emit("entity:loaded", { entityId });
+            
+            // Listen for thumbnail creation events (KeyT press)
+            editor.getContext().events.on("thumbnail:created", async ({ thumbnail }) => {
+                const context = editor.getContext();
+                if (context?.camera) {
+                    const cameraTransform = {
+                        position: context.camera.position?.toArray() || [0, 1.6, 5],
+                        quaternion: context.camera.quaternion?.toArray() || [0, 0, 0, 1],
+                        scale: [1, 1, 1]
+                    };
+                    await saveWithThumbnail(cameraTransform, thumbnail);
+                }
+            });
         }
     } catch (error) {
         console.error('Failed to load entity:', error);
