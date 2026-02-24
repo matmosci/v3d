@@ -10,6 +10,7 @@ export const AssetModel = defineMongooseModel({
         originalname: { type: String, required: true },
         thumbnail: { type: String, required: false },
         size: { type: Number, required: true },
+        deletedAt: { type: Date, default: null },
     },
     options: {
         timestamps: true

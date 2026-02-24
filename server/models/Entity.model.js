@@ -22,7 +22,8 @@ export const EntityModel = defineMongooseModel({
         type: [Number],
         default: [1, 1, 1]
       },
-    }
+    },
+    deletedAt: { type: Date, default: null },
   },
   options: {
     timestamps: true

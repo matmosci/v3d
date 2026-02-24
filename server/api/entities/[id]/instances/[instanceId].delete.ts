@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   const sessionUser = user as any;
   const userId = sessionUser.id || sessionUser._id;
 
-  const entity = await EntityModel.findById(id);
+  const entity = await EntityModel.findOne({ _id: id, deletedAt: null });
   if (!entity) {
     return createError({
       statusCode: 404,

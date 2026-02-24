@@ -1,6 +1,6 @@
 export default defineEventHandler(async (event) => {
   const { id } = event.context.params;
-  const entity = await EntityModel.findById(id).select('-__v').lean();
+  const entity = await EntityModel.findOne({ _id: id, deletedAt: null }).select('-__v').lean();
   if (!entity) {
     return createError({
       statusCode: 404,

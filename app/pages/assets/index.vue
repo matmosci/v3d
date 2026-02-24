@@ -8,12 +8,12 @@
     <h2 class="text-xl font-bold mt-4 mb-2">Entities</h2>
     <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
         <AssetsNewEntity @created="fetchEntities" />
-        <AssetsEntityItem v-for="entity in entities" :key="entity._id" :entity="entity" @click="selectEntity(entity)" />
+        <AssetsEntityItem v-for="entity in entities" :key="entity._id" :entity="entity" @click="selectEntity(entity)" @deleted="removeEntity" />
     </div>
     <h2 class="text-xl font-bold mt-4 mb-2">Models</h2>
     <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
         <AssetsFileInput @uploaded="fetchAssets" />
-        <AssetsItem v-for="asset in assets" :key="asset._id" :asset="asset" />
+        <AssetsItem v-for="asset in assets" :key="asset._id" :asset="asset" @deleted="removeAsset" />
     </div>
 </template>
 
@@ -62,6 +62,14 @@ function selectEntity(entity) {
     } else {
         location.href = `/${entity._id}`;
     }
+}
+
+function removeAsset(assetId) {
+    assets.value = assets.value.filter(asset => asset._id !== assetId);
+}
+
+function removeEntity(entityId) {
+    entities.value = entities.value.filter(entity => entity._id !== entityId);
 }
 
 onMounted(() => {

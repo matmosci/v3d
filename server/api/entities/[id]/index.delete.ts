@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
     const { id } = event.context.params;
 
     // Find the entity and verify ownership
-    const entity = await EntityModel.findById(id);
+    const entity = await EntityModel.findOne({ _id: id, deletedAt: null });
     if (!entity) {
         return createError({
             statusCode: 404,
@@ -18,11 +18,8 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    // Delete all instances associated with this entity
-    await InstanceModel.deleteMany({ entity: id });
-
-    // Delete the entity
-    await EntityModel.findByIdAndDelete(id);
+    // Soft delete the entity
+    await EntityModel.findByIdAndUpdate(id, { deletedAt: new Date() });
 
     return { success: true };
 });
