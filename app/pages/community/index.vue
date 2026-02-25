@@ -10,22 +10,24 @@
             <p class="text-gray-500">No entities found in the community yet.</p>
         </div>
         
-        <div v-else class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6">
+        <div v-else class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6">
             <div v-for="entity in entities" :key="entity._id" class="flex flex-col border border-default rounded-lg bg-default overflow-hidden cursor-pointer hover:bg-elevated/25 transition-colors" @click="selectEntity(entity)">
-                <div class="h-32 w-full bg-black/30 overflow-hidden">
-                    <img v-if="entity.thumbnail" :src="entity.thumbnail" :alt="entity.name" class="h-full w-full object-cover object-center">
-                    <div v-else class="h-full w-full flex items-center justify-center">
-                        <UIcon name="i-lucide-rotate-3d" class="text-white/30 w-6 h-6" />
+                <div class="p-1">
+                    <div class="h-32 w-full bg-black/30 rounded-md overflow-hidden">
+                        <img v-if="entity.thumbnail" :src="entity.thumbnail" :alt="entity.name" class="h-full w-full object-cover object-center">
+                        <div v-else class="h-full w-full flex items-center justify-center">
+                            <UIcon name="i-lucide-rotate-3d" class="text-white/30 w-6 h-6" />
+                        </div>
                     </div>
                 </div>
                 
-                <div class="p-3">
+                <div class="p-2">
                     <h3 class="font-medium text-sm mb-1 truncate">{{ entity.name }}</h3>
                     <p class="text-xs text-gray-400 mb-2" v-if="entity.description">{{ entity.description }}</p>
                     <p class="text-xs text-gray-500">by Community User</p>
                 </div>
                 
-                <div class="flex items-center justify-between p-3 pt-0 mt-auto">
+                <div class="flex items-center justify-between px-2 pt-0 py-1 mt-auto">
                     <div class="flex items-center gap-2">
                         <button 
                             @click.stop="toggleLike(entity._id)"
