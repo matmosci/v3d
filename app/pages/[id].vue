@@ -1,13 +1,70 @@
 <template>
     <h1 class="text-sm mb-2">ASSET</h1>
-    <div v-if="entityData" class="flex items-center justify-between">
+    <div v-if="entityData" class="flex justify-between">
         <div>
-            <h1 class="text-xl font-bold mb-2">{{ entityData.name }}</h1>
+            <h2 class="text-xl font-bold mb-2">{{ entityData.name }}</h2>
             <p class="text-gray-500">{{ entityData.description }}</p>
         </div>
         <div class="flex items-center gap-2">
-            <span v-if="isSaving" class="text-xs text-blue-500">Saving camera...</span>
-            <span class="text-xs text-gray-400">Press T to capture thumbnail & save camera</span>
+            <div class="flex flex-col gap-1">
+                <h2 class="text-xl font-bold mb-2">Editor</h2>
+                <div class="text-xs text-gray-400">
+                    <UKbd>F</UKbd> Toggle Cursor Light
+                </div>
+                <div class="text-xs text-gray-400">
+                    <UKbd>R</UKbd> Cycle Transform Mode
+                </div>
+                <div class="text-xs text-gray-400">
+                    <UKbd>V</UKbd> Toggle Markers Visibility
+                </div>
+                <div class="text-xs text-gray-400">
+                    <UKbd>H</UKbd> Toggle Grid Helper
+                </div>
+                <div class="text-xs text-gray-400">
+                    <UKbd>M</UKbd> Toggle Scene Scale
+                </div>
+                <div class="text-xs text-gray-400">
+                    <UKbd>T</UKbd> Capture Thumbnail
+                </div>
+
+                <h2 class="text-xl font-bold mb-2 mt-4">Transform</h2>
+                <div class="text-xs text-gray-400">
+                    <UKbd>Shift</UKbd> + <UKbd>Drag</UKbd> Snap cursor to surface
+                </div>
+                <div class="text-xs text-gray-400">
+                    <UKbd>Ctrl</UKbd> + <UKbd>Drag</UKbd> Snap to grid during translation or 15° during rotation
+                </div>
+
+
+                <h2 class="text-xl font-bold mb-2 mt-4">Movement</h2>
+                <div class="flex gap-1">
+                    <div class="text-xs text-gray-400">
+                        <UKbd>Q</UKbd>
+                    </div>
+                    <div class="text-xs text-gray-400">
+                        <UKbd>W</UKbd>
+                    </div>
+                    <div class="text-xs text-gray-400">
+                        <UKbd>E</UKbd>
+                    </div>
+                </div>
+                <div class="flex gap-1">
+                    <div class="text-xs text-gray-400">
+                        <UKbd>A</UKbd>
+                    </div>
+                    <div class="text-xs text-gray-400">
+                        <UKbd>S</UKbd>
+                    </div>
+                    <div class="text-xs text-gray-400">
+                        <UKbd>D</UKbd>
+                    </div>
+                </div>
+                <div class="text-xs text-gray-400">
+                    <UKbd>Shift</UKbd>
+                </div>
+
+                <span v-if="!isSaving" class="text-xs text-blue-500 mt-5">Saving camera...</span>
+            </div>
         </div>
     </div>
 </template>
@@ -39,7 +96,7 @@ onMounted(async () => {
         const maxWait = 10000; // 10 second timeout
         checkEditor();
     });
-    
+
     // Load the entity specified in the route
     const entityId = route.params.id;
 
@@ -48,11 +105,11 @@ onMounted(async () => {
 
         // Fire entity:loaded event with data
         if (editor.getContext()) {
-            editor.getContext().events.emit("entity:loaded", { 
-                entityId, 
-                entityData: entityData.value 
+            editor.getContext().events.emit("entity:loaded", {
+                entityId,
+                entityData: entityData.value
             });
-            
+
             // Listen for thumbnail creation events (KeyT press)
             editor.getContext().events.on("thumbnail:created", async ({ thumbnail }) => {
                 const context = editor.getContext();
@@ -79,9 +136,9 @@ watch(() => route.params.id, async (newId, oldId) => {
 
             // Fire entity:loaded event with data
             if (editor.getContext()) {
-                editor.getContext().events.emit("entity:loaded", { 
-                    entityId: newId, 
-                    entityData: entityData.value 
+                editor.getContext().events.emit("entity:loaded", {
+                    entityId: newId,
+                    entityData: entityData.value
                 });
             }
         } catch (error) {
