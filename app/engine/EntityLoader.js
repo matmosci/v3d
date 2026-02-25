@@ -234,6 +234,16 @@ export default class EntityLoader {
             const canvas = this.ctx.renderer.domElement;
             if (!canvas) return;
             
+            // Store current visibility states
+            const cursorVisible = this.ctx.cursor?.indicator?.visible ?? true;
+            const gridVisible = this.gridHelper.visible;
+            
+            // Temporarily hide cursor and grid helper
+            if (this.ctx.cursor?.indicator) {
+                this.ctx.cursor.indicator.visible = false;
+            }
+            this.gridHelper.visible = false;
+            
             // Store original scene settings
             const previousBackground = this.scene.background;
             const previousClearAlpha = this.ctx.renderer.getClearAlpha();
@@ -263,6 +273,12 @@ export default class EntityLoader {
             // Restore original scene settings
             this.scene.background = previousBackground;
             this.ctx.renderer.setClearColor(previousClearColor, previousClearAlpha);
+            
+            // Restore cursor and grid helper visibility
+            if (this.ctx.cursor?.indicator) {
+                this.ctx.cursor.indicator.visible = cursorVisible;
+            }
+            this.gridHelper.visible = gridVisible;
             
             // Send thumbnail to server
             await $fetch(`/api/entities/${this.ctx.entity}/thumbnail`, {

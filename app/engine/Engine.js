@@ -46,6 +46,9 @@ export default class Engine {
         this.systems.cameraControls = new CameraControls(this.context);
         this.systems.cursor = new Cursor3D(this.context);
         this.systems.entity = new EntityLoader(this.context);
+        
+        // Make cursor accessible through context for easier access
+        this.context.cursor = this.systems.cursor;
     }
 
     registerKeybindings() {
