@@ -25,6 +25,14 @@ export default defineEventHandler(async (event) => {
     });
   };
 
+  // Check if user is the entity owner (future: expand to check collaborator permissions)
+  if (entity.user.toString() !== user.id) {
+    return createError({
+      statusCode: 403,
+      statusMessage: "You don't have permission to add instances to this entity",
+    });
+  }
+
   const instance = await InstanceModel.create({
     entity: id,
     sourceType,
