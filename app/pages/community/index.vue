@@ -1,6 +1,6 @@
 <template>
     <div class="community-assets">
-        <h1 class="text-2xl font-bold mb-6">Community Entities</h1>
+        <UIH1>COMMUNITY ASSETS</UIH1>
         
         <div v-if="loading" class="text-center py-8">
             <p>Loading entities...</p>

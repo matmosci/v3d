@@ -1,5 +1,5 @@
 <template>
-    <h1 class="text-sm mb-2">ASSET</h1>
+    <UIH1>ASSET</UIH1>
     <div v-if="entityData" class="flex justify-between gap-5">
         <div>
             <h2 class="text-xl font-bold mb-2">{{ entityData.name }}</h2>

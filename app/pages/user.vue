@@ -11,7 +11,7 @@
                 <UButton @click="logout" trailing-icon="i-lucide-log-out" variant="soft" title="Logout">
                 </UButton>
             </div>
-            <div class="flex justify-end">[user]</div>
+            <!-- <div class="flex justify-end">[user]</div> -->
         </div>
     </template>
 </template>
