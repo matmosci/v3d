@@ -596,24 +596,42 @@ export default class EntityLoader {
     async confirmUserObjectTransform(id, transform) {
         if (!id) return;
 
-        const res = await fetch(`/api/entities/${this.ctx.entity}/instances/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(transform),
-        });
+        // Check ownership before attempting to save transform changes
+        const { isOwner } = useEntityOwnership();
+        
+        if (isOwner.value) {
+            // User owns the entity, save to server
+            const res = await fetch(`/api/entities/${this.ctx.entity}/instances/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(transform),
+            });
 
-        if (!res.ok) {
-            if (res.status === 403) {
-                alert("You are not allowed to transform this instance");
+            if (!res.ok) {
+                if (res.status === 403) {
+                    alert("You are not allowed to transform this instance");
+                    return;
+                }
+                alert("Failed to update instance transform");
                 return;
             }
-            alert("Failed to update instance transform");
-            return;
-        }
 
-        const updatedInstance = await res.json();
-        const object = this.findInstanceObjectById(id);
-        if (object) this.applyTransform(object, updatedInstance);
+            const updatedInstance = await res.json();
+            const object = this.findInstanceObjectById(id);
+            if (object) this.applyTransform(object, updatedInstance);
+        } else {
+            // User doesn't own entity - apply transform locally only (temporary)
+            const object = this.findInstanceObjectById(id);
+            if (object) {
+                // Create a temporary instance object for applyTransform
+                const tempInstance = {
+                    position: transform.position,
+                    quaternion: transform.quaternion,
+                    scale: transform.scale
+                };
+                this.applyTransform(object, tempInstance);
+            }
+        }
     }
 };
 
