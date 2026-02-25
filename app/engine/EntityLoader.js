@@ -576,19 +576,26 @@ export default class EntityLoader {
     async deleteUserObjectInstance(id) {
         if (!id) return;
 
-        const res = await fetch(`/api/entities/${this.ctx.entity}/instances/${id}`, {
-            method: "DELETE",
-        });
+        // Check ownership before attempting to delete from server
+        const { isOwner } = useEntityOwnership();
+        
+        if (isOwner.value) {
+            // User owns the entity, delete from server
+            const res = await fetch(`/api/entities/${this.ctx.entity}/instances/${id}`, {
+                method: "DELETE",
+            });
 
-        if (!res.ok) {
-            if (res.status === 403) {
-                alert("You are not allowed to delete this instance");
+            if (!res.ok) {
+                if (res.status === 403) {
+                    alert("You are not allowed to delete this instance");
+                    return;
+                }
+                alert("Failed to delete instance");
                 return;
             }
-            alert("Failed to delete instance");
-            return;
         }
-
+        
+        // Remove from scene regardless of ownership (works for both permanent and temporary instances)
         const object = this.findInstanceObjectById(id);
         if (object?.parent) object.parent.remove(object);
         this.ctx.events.emit("object:deselected");
