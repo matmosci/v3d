@@ -21,6 +21,7 @@ definePageMeta({
 const editor = useEditor();
 const entities = ref([]);
 const builtInItems = [
+    { sourceId: 'primitive:plane', title: 'Plane', icon: 'i-lucide-square' },
     { sourceId: 'primitive:box', title: 'Box', icon: 'i-lucide-box' },
     { sourceId: 'primitive:sphere', title: 'Sphere', icon: 'i-lucide-circle' },
     { sourceId: 'primitive:cylinder', title: 'Cylinder', icon: 'i-lucide-cylinder' },

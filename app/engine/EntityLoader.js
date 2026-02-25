@@ -1,5 +1,6 @@
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
+    PlaneGeometry,
     BoxGeometry,
     ConeGeometry,
     CylinderGeometry,
@@ -639,6 +640,14 @@ const gltf = new GLTFLoader();
 
 function createBuiltInObject(sourceId) {
     switch (sourceId) {
+        case "primitive:plane": {
+            const object = new Mesh(
+                new PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
+                new MeshStandardMaterial({ color: 0xcccccc })
+            );
+            object.name = sourceId;
+            return object;
+        }
         case "primitive:box": {
             const object = new Mesh(
                 new BoxGeometry(1, 1, 1).translate(0, 0.5, 0),
