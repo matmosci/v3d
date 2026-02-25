@@ -11,7 +11,7 @@
         </div>
         
         <div v-else class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6">
-            <div v-for="entity in entities" :key="entity._id" class="border border-default rounded-lg bg-default overflow-hidden cursor-pointer hover:bg-elevated/25 transition-colors" @click="selectEntity(entity)">
+            <div v-for="entity in entities" :key="entity._id" class="flex flex-col border border-default rounded-lg bg-default overflow-hidden cursor-pointer hover:bg-elevated/25 transition-colors" @click="selectEntity(entity)">
                 <div class="h-32 w-full bg-black/30 overflow-hidden">
                     <img v-if="entity.thumbnail" :src="entity.thumbnail" :alt="entity.name" class="h-full w-full object-cover object-center">
                     <div v-else class="h-full w-full flex items-center justify-center">
@@ -25,7 +25,7 @@
                     <p class="text-xs text-gray-500">by Community User</p>
                 </div>
                 
-                <div class="flex items-center justify-between p-3 pt-0">
+                <div class="flex items-center justify-between p-3 pt-0 mt-auto">
                     <div class="flex items-center gap-2">
                         <button 
                             @click.stop="toggleLike(entity._id)"
