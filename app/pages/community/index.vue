@@ -131,7 +131,7 @@ function selectEntity(entity) {
         return; // Don't navigate
     } else {
         // Not in an entity, navigate to it
-        navigateTo(`/${entity._id}`);
+        navigateTo(`/${entity._id}`, { external: true });
     }
 }
 

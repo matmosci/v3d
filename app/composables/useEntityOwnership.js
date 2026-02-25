@@ -52,7 +52,7 @@ export function useEntityOwnership() {
             }
             
             // Navigate to the new entity
-            await navigateTo(`/${newEntity._id}`);
+            await navigateTo(`/${newEntity._id}`, { external: true });
             
             return newEntity;
         } catch (error) {
