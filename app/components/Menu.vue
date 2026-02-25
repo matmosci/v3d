@@ -3,8 +3,11 @@
     <div class="flex justify-between items-center py-3">
       <NuxtLink to="/" class="text-lg font-bold">V3D</NuxtLink>
       <div class="flex gap-4">
-        <NuxtLink v-if="loggedIn && currentEntity" :to="currentEntity.path" class="hover:text-gray-300 transition-colors">{{ currentEntity.name }}</NuxtLink>
         <NuxtLink v-if="loggedIn" to="/assets" class="hover:text-gray-300 transition-colors">Assets</NuxtLink>
+        <template v-if="loggedIn && currentEntity">
+          <div class="-mx-2">/</div>
+          <NuxtLink :to="currentEntity.path" class="hover:text-gray-300 transition-colors">{{ currentEntity.name }}</NuxtLink>
+        </template>
         <NuxtLink v-if="loggedIn" to="/community" class="hover:text-gray-300 transition-colors">Community</NuxtLink>
       </div>
       <User />
