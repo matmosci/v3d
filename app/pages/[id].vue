@@ -63,7 +63,7 @@
                     <UKbd>Shift</UKbd>
                 </div>
 
-                <span v-if="!isSaving" class="text-xs text-blue-500 mt-5">Saving camera...</span>
+                <span v-if="isSaving" class="text-xs text-blue-500 mt-5">Saving camera...</span>
             </div>
         </div>
     </div>
