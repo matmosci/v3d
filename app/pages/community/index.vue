@@ -28,19 +28,23 @@
                 <div class="flex items-center justify-between p-3 pt-0">
                     <div class="flex items-center gap-2">
                         <button 
-                            @click="toggleLike(entity._id)"
-                            :class="{ 'text-blue-500': entity.liked }"
-                            class="text-xs hover:text-blue-500 transition-colors"
+                            @click.stop="toggleLike(entity._id)"
+                            :class="{ 'text-blue-500': entity.userVote === 'like' }"
+                            class="text-xs hover:text-blue-500 transition-colors flex items-center gap-1"
+                            :disabled="votingStates[entity._id]"
                         >
-                            👍 {{ entity.likes || 0 }}
+                            <UIcon name="i-lucide-thumbs-up" class="w-3 h-3" />
+                            {{ entity.likesCount || 0 }}
                         </button>
                         
                         <button 
-                            @click="toggleDislike(entity._id)"
-                            :class="{ 'text-red-500': entity.disliked }"
-                            class="text-xs hover:text-red-500 transition-colors"
+                            @click.stop="toggleDislike(entity._id)"
+                            :class="{ 'text-red-500': entity.userVote === 'dislike' }"
+                            class="text-xs hover:text-red-500 transition-colors flex items-center gap-1"
+                            :disabled="votingStates[entity._id]"
                         >
-                            👎 {{ entity.dislikes || 0 }}
+                            <UIcon name="i-lucide-thumbs-down" class="w-3 h-3" />
+                            {{ entity.dislikesCount || 0 }}
                         </button>
                     </div>
                     
@@ -54,7 +58,9 @@
 <script setup>
 const entities = ref([]);
 const loading = ref(true);
+const votingStates = ref({});
 const editor = useEditor();
+const { loggedIn, user } = useUserSession();
 
 // Fetch real entities from the community API
 async function fetchEntities() {
@@ -62,14 +68,8 @@ async function fetchEntities() {
         loading.value = true;
         const data = await $fetch('/api/entities');
         
-        // Add local interaction state to each entity
-        entities.value = data.map(entity => ({
-            ...entity,
-            likes: 0,
-            dislikes: 0,
-            liked: false,
-            disliked: false
-        }));
+        // Server now returns processed vote counts
+        entities.value = data;
     } catch (error) {
         console.error('Failed to fetch community entities:', error);
         entities.value = [];
@@ -78,35 +78,45 @@ async function fetchEntities() {
     }
 }
 
-function toggleLike(entityId) {
-    const entity = entities.value.find(e => e._id === entityId);
-    if (entity) {
-        if (entity.liked) {
-            entity.likes--;
-        } else {
-            entity.likes++;
-            if (entity.disliked) {
-                entity.disliked = false;
-                entity.dislikes--;
-            }
-        }
-        entity.liked = !entity.liked;
+async function toggleLike(entityId) {
+    if (!loggedIn.value) {
+        alert('Please log in to vote');
+        return;
     }
+    
+    await vote(entityId, 'like');
 }
 
-function toggleDislike(entityId) {
+async function toggleDislike(entityId) {
+    if (!loggedIn.value) {
+        alert('Please log in to vote');
+        return;
+    }
+    
+    await vote(entityId, 'dislike');
+}
+
+async function vote(entityId, voteType) {
     const entity = entities.value.find(e => e._id === entityId);
-    if (entity) {
-        if (entity.disliked) {
-            entity.dislikes--;
-        } else {
-            entity.dislikes++;
-            if (entity.liked) {
-                entity.liked = false;
-                entity.likes--;
-            }
-        }
-        entity.disliked = !entity.disliked;
+    if (!entity || votingStates.value[entityId]) return;
+    
+    votingStates.value[entityId] = true;
+    
+    try {
+        const response = await $fetch(`/api/entities/${entityId}/vote`, {
+            method: 'POST',
+            body: { voteType }
+        });
+        
+        // Update the entity with new vote data
+        entity.likesCount = response.likesCount;
+        entity.dislikesCount = response.dislikesCount;
+        entity.userVote = response.userVote;
+        
+    } catch (error) {
+        console.error('Failed to vote:', error);
+    } finally {
+        votingStates.value[entityId] = false;
     }
 }
 

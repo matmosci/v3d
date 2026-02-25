@@ -24,6 +24,11 @@ export const EntityModel = defineMongooseModel({
         default: [1, 1, 1]
       },
     },
+    votes: [{
+      user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+      type: { type: String, enum: ['like', 'dislike'], required: true },
+      createdAt: { type: Date, default: Date.now }
+    }],
     deletedAt: { type: Date, default: null },
   },
   options: {
