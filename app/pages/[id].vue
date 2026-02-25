@@ -4,6 +4,21 @@
         <div>
             <h2 class="text-xl font-bold mb-2">{{ entityData.name }}</h2>
             <p class="text-gray-500">{{ entityData.description }}</p>
+            <div v-if="!isOwner && loggedIn" class="mt-2 flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                <UIcon name="i-lucide-alert-triangle" class="text-orange-500 w-4 h-4 shrink-0" />
+                <div class="flex-1">
+                    <div class="text-sm text-orange-700 dark:text-orange-300 font-medium">
+                        You don't own this entity
+                    </div>
+                    <div class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                        Changes won't be saved permanently. Create your own copy to make persistent modifications.
+                    </div>
+                </div>
+                <UButton @click="createCopy" size="xs" variant="soft" color="orange" :loading="copyingEntity">
+                    <UIcon name="i-lucide-copy" class="w-3 h-3 mr-1" />
+                    Copy Asset
+                </UButton>
+            </div>
         </div>
         <div class="flex items-center gap-2">
             <div class="flex flex-col gap-1">
@@ -77,6 +92,23 @@ const entityData = ref(null);
 // Camera save on thumbnail functionality
 const { isSaving, saveWithThumbnail } = useCameraSaveOnThumbnail(computed(() => route.params.id));
 
+// Entity ownership functionality
+const { isOwner, createEntityCopy } = useEntityOwnership();
+const { loggedIn } = useUserSession();
+const copyingEntity = ref(false);
+
+const createCopy = async () => {
+    copyingEntity.value = true;
+    try {
+        await createEntityCopy();
+        // Navigation will happen in createEntityCopy
+    } catch (error) {
+        console.error('Failed to create copy:', error);
+    } finally {
+        copyingEntity.value = false;
+    }
+};
+
 onMounted(async () => {
     // Wait for editor initialization from Viewport component
     await new Promise((resolve, reject) => {
@@ -103,11 +135,13 @@ onMounted(async () => {
     try {
         entityData.value = await editor.loadEntity(entityId);
 
-        // Fire entity:loaded event with data
+        // Make entity data available in editor context for ownership checks
         if (editor.getContext()) {
-            editor.getContext().events.emit("entity:loaded", {
-                entityId,
-                entityData: entityData.value
+            editor.getContext().entityData = entityData.value;
+            
+            editor.getContext().events.emit("entity:loaded", { 
+                entityId, 
+                entityData: entityData.value 
             });
 
             // Listen for thumbnail creation events (KeyT press)
@@ -134,8 +168,10 @@ watch(() => route.params.id, async (newId, oldId) => {
         try {
             entityData.value = await editor.loadEntity(newId);
 
-            // Fire entity:loaded event with data
+            // Make entity data available in editor context for ownership checks
             if (editor.getContext()) {
+                editor.getContext().entityData = entityData.value;
+                
                 editor.getContext().events.emit("entity:loaded", {
                     entityId: newId,
                     entityData: entityData.value

@@ -326,24 +326,46 @@ export default class EntityLoader {
             return;
         }
 
-        const res = await fetch(`/api/entities/${this.ctx.entity}/instances`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+        // Check ownership before attempting to save
+        const { handleInstancePlacement } = useEntityOwnership();
+        
+        const instanceData = {
+            sourceType: source.sourceType,
+            sourceId: source.sourceId,
+            asset: source.sourceType === "asset" ? source.sourceId : undefined,
+            ...transform,
+        };
+
+        const result = await handleInstancePlacement(instanceData);
+        
+        if (result === true) {
+            // Successfully saved to server, fetch the created instance
+            const res = await fetch(`/api/entities/${this.ctx.entity}/instances`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(instanceData),
+            });
+
+            if (res.ok) {
+                const createdInstance = await res.json();
+                await this.placeInstance(createdInstance, createdInstance);
+            } else {
+                alert("Failed to place instance");
+            }
+        } else if (result === 'temporary') {
+            // Place instance temporarily (client-side only)
+            const tempInstance = {
+                _id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 sourceType: source.sourceType,
                 sourceId: source.sourceId,
                 asset: source.sourceType === "asset" ? source.sourceId : undefined,
                 ...transform,
-            }),
-        });
-
-        if (!res.ok) {
-            alert("Failed to place instance");
-            return;
+                temporary: true // Mark as temporary
+            };
+            
+            await this.placeInstance(tempInstance, tempInstance);
         }
-
-        const createdInstance = await res.json();
-        await this.placeInstance(createdInstance, createdInstance);
+        // If result is false, user chose to create a copy and navigation will happen
     }
 
     async buildEntityObject(entityId, visited = new Set()) {
