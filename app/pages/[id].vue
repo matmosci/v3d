@@ -8,16 +8,16 @@
                 <UIcon name="i-lucide-alert-triangle" class="text-orange-500 w-4 h-4 shrink-0" />
                 <div class="flex-1">
                     <div class="text-sm text-orange-700 dark:text-orange-300 font-medium">
-                        You don't own this entity
+                        You don't own this asset
                     </div>
                     <div class="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                        Changes won't be saved permanently. Create your own copy to make persistent modifications.
+                        Changes won't be saved permanently.<br>Create your own copy to make persistent modifications.
                     </div>
+                    <UButton @click="createCopy" size="xs" variant="soft" color="neutral" :loading="copyingEntity" class="mt-2">
+                        <UIcon name="i-lucide-copy" class="w-3 h-3 mr-1" />
+                        Copy Asset
+                    </UButton>
                 </div>
-                <UButton @click="createCopy" size="xs" variant="soft" color="orange" :loading="copyingEntity">
-                    <UIcon name="i-lucide-copy" class="w-3 h-3 mr-1" />
-                    Copy Asset
-                </UButton>
             </div>
         </div>
         <div class="flex items-center gap-2">
