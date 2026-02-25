@@ -11,7 +11,7 @@
         </div>
         
         <div v-else class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6">
-            <div v-for="entity in entities" :key="entity._id" class="border border-default rounded-lg bg-default overflow-hidden">
+            <div v-for="entity in entities" :key="entity._id" class="border border-default rounded-lg bg-default overflow-hidden cursor-pointer hover:bg-elevated/25 transition-colors" @click="selectEntity(entity)">
                 <div class="h-32 w-full bg-black/30 overflow-hidden">
                     <img v-if="entity.thumbnail" :src="entity.thumbnail" :alt="entity.name" class="h-full w-full object-cover object-center">
                     <div v-else class="h-full w-full flex items-center justify-center">
@@ -44,9 +44,7 @@
                         </button>
                     </div>
                     
-                    <NuxtLink :to="`/${entity._id}`" external>
-                        <UButton size="xs" variant="ghost">Open</UButton>
-                    </NuxtLink>
+                    <UButton size="xs" variant="ghost" @click.stop="openEntity(entity)">Open</UButton>
                 </div>
             </div>
         </div>
@@ -56,6 +54,7 @@
 <script setup>
 const entities = ref([]);
 const loading = ref(true);
+const editor = useEditor();
 
 // Fetch real entities from the community API
 async function fetchEntities() {
@@ -109,6 +108,26 @@ function toggleDislike(entityId) {
         }
         entity.disliked = !entity.disliked;
     }
+}
+
+function selectEntity(entity) {
+    const context = editor.getContext();
+    if (context?.entity) {
+        // Already in an entity, place this entity as an instance
+        context.events.emit("object:placement:start", {
+            sourceType: "entity",
+            sourceId: entity._id
+        });
+        return; // Don't navigate
+    } else {
+        // Not in an entity, navigate to it
+        navigateTo(`/${entity._id}`);
+    }
+}
+
+function openEntity(entity) {
+    // Always navigate to entity regardless of context
+    navigateTo(`/${entity._id}`, { external: true });
 }
 
 // Fetch entities when component mounts
