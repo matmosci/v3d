@@ -15,7 +15,7 @@
     </div>
 
     <!-- Feature cards -->
-    <div class="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="mt-16 grid gap-6 sm:grid-cols-3">
       <UCard>
         <template #header>
           <div class="flex items-center gap-3">
@@ -60,9 +60,9 @@
     </div>
 
     <!-- Footer -->
-    <div class="mt-16 text-center text-sm text-gray-500">
+    <!-- <div class="mt-16 text-center text-sm text-gray-500">
       © Community Asset Editor — Built by the community, for the community
-    </div>
+    </div> -->
   </div>
 </template>
 
