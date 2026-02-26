@@ -2,47 +2,32 @@
     <div class="flex h-screen" @click="contextMenu.show = false">
         <!-- Folder Sidebar -->
         <div class="w-64 border-r border-default bg-default flex flex-col">
-            <div class="p-4 border-b border-default">
+            <div class="p-4 pb-1 border-b border-default">
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="font-semibold">Folders</h2>
                     <UButton @click="openCreateModal" size="xs" variant="ghost" icon="i-lucide-plus">
                         New
                     </UButton>
                 </div>
-                
-                <!-- Root folder -->
-                <div 
-                    class="flex items-center gap-2 p-2 rounded cursor-pointer transition-colors"
-                    :class="{ 
-                        'bg-primary/10 text-primary': currentFolder === null, 
-                        'hover:bg-elevated/50': currentFolder !== null,
-                        'bg-green-100 border-2 border-green-300 border-dashed': isRootDragOver
-                    }"
-                    @click="selectFolder(null)"
-                    @dragover.prevent="onRootDragOver"
-                    @dragleave="onRootDragLeave"
-                    @drop.prevent="onRootDrop"
-                >
-                    <UIcon name="i-lucide-home" class="w-4 h-4" />
-                    <span class="text-sm">All Assets</span>
-                </div>
             </div>
 
+            
             <!-- Folder Tree -->
             <div class="flex-1 overflow-auto p-2">
-                <FolderTreeItem 
-                    v-for="folder in folderTree" 
-                    :key="folder._id"
-                    :folder="folder"
-                    :current-folder="currentFolder"
-                    :level="0"
-                    @select="selectFolder"
-                    @create-subfolder="createSubfolder"
-                    @rename="renameFolder"
-                    @delete="deleteFolder"
-                    @move="handleFolderMove"
-                    @drop-item="handleDropItem"
-                />
+                <!-- Root folder -->
+                <div class="flex items-center gap-2 p-2 rounded cursor-pointer transition-colors" :class="{
+                    'bg-primary/10 text-primary': currentFolder === null,
+                    'hover:bg-elevated/50': currentFolder !== null,
+                    'bg-primary/25': isRootDragOver
+                }" @click="selectFolder(null)" @dragover.prevent="onRootDragOver" @dragleave="onRootDragLeave"
+                    @drop.prevent="onRootDrop">
+                    <UIcon name="i-lucide-home" class="w-4 h-4" />
+                    <h1 class="text-sm">Assets</h1>
+                </div>
+                <FolderTreeItem v-for="folder in folderTree" :key="folder._id" :folder="folder"
+                    :current-folder="currentFolder" :level="0" @select="selectFolder"
+                    @create-subfolder="createSubfolder" @rename="renameFolder" @delete="deleteFolder"
+                    @move="handleFolderMove" @drop-item="handleDropItem" />
             </div>
         </div>
 
@@ -53,7 +38,7 @@
                 <nav class="flex items-center gap-2 text-sm">
                     <UButton @click="selectFolder(null)" variant="ghost" size="xs">
                         <UIcon name="i-lucide-home" class="w-4 h-4" />
-                        All Assets
+                        Assets
                     </UButton>
                     <template v-for="(folder, index) in currentPath" :key="folder._id">
                         <UIcon name="i-lucide-chevron-right" class="w-4 h-4 text-gray-400" />
@@ -65,60 +50,44 @@
             </div>
 
             <!-- Content Area -->
-            <div class="flex-1 overflow-auto p-4">
-                <UIH1>ASSETS</UIH1>
-                
+            <div class="flex-1 overflow-auto px-4">
                 <!-- Built-in Tools (only show in root) -->
                 <div v-if="currentFolder === null">
-                    <h2 class="text-xl font-bold mb-2">Built-In Tools</h2>
-                    <div class="grid gap-4 grid-cols-3 md:grid-cols-5 lg:grid-cols-7 2xl:grid-cols-12 mb-6">
-                        <BuiltInItem v-for="item in builtInItems" :key="item.sourceId" :source-id="item.sourceId" :title="item.title" :icon="item.icon" />
+                    <h2 class="text-xl font-bold my-2">Built-In Tools</h2>
+                    <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8 mb-6">
+                        <BuiltInItem v-for="item in builtInItems" :key="item.sourceId" :source-id="item.sourceId"
+                            :title="item.title" :icon="item.icon" />
                     </div>
                 </div>
-                
-                <div class="flex items-center justify-between mb-4">
+
+                <div class="flex items-center justify-start gap-2 my-2">
                     <h2 class="text-xl font-bold">
                         {{ currentFolder ? currentFolderName : 'Your Assets' }}
                     </h2>
-                    
-                    <div class="flex gap-2">
-                        <UButton @click="openCreateModal" size="sm" variant="outline" icon="i-lucide-folder-plus">
-                            New Folder
-                        </UButton>
-                    </div>
-                </div>
 
-                <!-- Subfolders in current directory -->
-                <div v-if="currentSubfolders.length > 0" class="mb-4">
-                    <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
-                        <div 
-                            v-for="subfolder in currentSubfolders" 
-                            :key="subfolder._id"
-                            class="border border-default rounded-lg bg-default hover:bg-elevated/25 cursor-pointer p-4 flex flex-col items-center transition-colors"
-                            @click="selectFolder(subfolder._id)"
-                            @contextmenu.prevent="showFolderContextMenu($event, subfolder)"
-                        >
-                            <UIcon name="i-lucide-folder" :style="{ color: subfolder.color }" class="w-8 h-8 mb-2" />
-                            <span class="text-sm text-center truncate w-full">{{ subfolder.name }}</span>
-                        </div>
-                    </div>
+                    <UButton @click="openCreateModal" size="sm" variant="ghost" icon="i-lucide-folder-plus">
+                        New Folder
+                    </UButton>
                 </div>
 
                 <!-- Assets Grid -->
-                <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
+                <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8">
                     <!-- Upload and Create Options -->
                     <AssetsNewEntity @created="fetchEntities" />
                     <AssetsFileInput @uploaded="handleFileUploaded" />
-                    
+
+                    <!-- Subfolders in current directory -->
+                    <div v-for="subfolder in currentSubfolders" :key="subfolder._id"
+                        class="border border-default rounded-lg bg-default hover:bg-elevated/25 cursor-pointer p-4 flex flex-col items-center justify-center transition-colors"
+                        @click="selectFolder(subfolder._id)"
+                        @contextmenu.prevent="showFolderContextMenu($event, subfolder)">
+                        <UIcon name="i-lucide-folder" :style="{ color: subfolder.color }" class="w-8 h-8 mb-2" />
+                        <span class="text-sm text-center truncate w-full">{{ subfolder.name }}</span>
+                    </div>
+
                     <!-- Entities -->
-                    <AssetsEntityItem 
-                        v-for="entity in entities" 
-                        :key="entity._id" 
-                        :entity="entity" 
-                        @click="selectEntity(entity)" 
-                        @deleted="removeEntity"
-                        @moved="handleEntityMoved"
-                    />
+                    <AssetsEntityItem v-for="entity in entities" :key="entity._id" :entity="entity"
+                        @click="selectEntity(entity)" @deleted="removeEntity" @moved="handleEntityMoved" />
                 </div>
 
                 <!-- Empty State -->
@@ -132,61 +101,52 @@
     </div>
 
     <!-- Create Folder Modal -->
-    <div v-if="showCreateFolderModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click="closeModal">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full mx-4 p-6" @click.stop>
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-semibold text-lg">Create New Folder</h3>
-                <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
-                    <UIcon name="i-lucide-x" class="w-5 h-5" />
-                </button>
-            </div>
-            
+    <div v-if="showCreateFolderModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+        @click="closeModal">
+        <UCard class="w-full max-w-md mx-4" @click.stop>
+            <template #header>
+                <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-lg">Create New Folder</h3>
+                    <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
+                        <UIcon name="i-lucide-x" class="w-5 h-5" />
+                    </button>
+                </div>
+            </template>
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium mb-1">Folder Name</label>
-                    <UInput 
-                        v-model="newFolderName" 
-                        placeholder="Enter folder name..."
-                        @keydown.enter="createFolder"
-                        autofocus
-                    />
+                    <UInput v-model="newFolderName" placeholder="Enter folder name..." @keydown.enter="createFolder"
+                        autofocus />
                 </div>
-                
+
                 <div>
                     <label class="block text-sm font-medium mb-1">Color</label>
                     <div class="flex gap-2">
-                        <button 
-                            v-for="color in folderColors" 
-                            :key="color"
+                        <button v-for="color in folderColors" :key="color"
                             class="w-8 h-8 rounded border-2 transition-all hover:scale-110"
                             :class="{ 'border-gray-400 ring-2 ring-gray-400': newFolderColor === color, 'border-transparent': newFolderColor !== color }"
-                            :style="{ backgroundColor: color }"
-                            @click="newFolderColor = color"
-                        />
+                            :style="{ backgroundColor: color }" @click="newFolderColor = color" />
                     </div>
                 </div>
             </div>
-            
-            <div class="flex justify-end gap-2 mt-6">
-                <UButton @click="closeModal" variant="ghost">Cancel</UButton>
-                <UButton @click="createFolder" :disabled="!newFolderName.trim()" :loading="creatingFolder">Create</UButton>
-            </div>
-        </div>
+            <template #footer>
+                <div class="flex justify-end gap-2">
+                    <UButton @click="closeModal" variant="ghost">Cancel</UButton>
+                    <UButton @click="createFolder" :disabled="!newFolderName.trim()" :loading="creatingFolder">Create
+                    </UButton>
+                </div>
+            </template>
+        </UCard>
+
     </div>
 
     <!-- Context Menu Component -->
-    <div v-if="contextMenu.show" 
+    <div v-if="contextMenu.show"
         class="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 py-1 min-w-32"
-        :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
-        @click.stop
-    >
-        <button 
-            v-for="item in contextMenuItems" 
-            :key="item.key"
+        :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }" @click.stop>
+        <button v-for="item in contextMenuItems" :key="item.key"
             class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-            :class="item.class || ''"
-            @click="handleContextMenuAction(item)"
-        >
+            :class="item.class || ''" @click="handleContextMenuAction(item)">
             <UIcon :name="item.icon" class="w-4 h-4" />
             <span>{{ item.label }}</span>
         </button>
@@ -297,7 +257,7 @@ function closeModal() {
 
 async function createFolder() {
     if (!newFolderName.value.trim()) return;
-    
+
     try {
         creatingFolder.value = true;
         await createFolderApi(newFolderName.value, currentFolder.value, newFolderColor.value);
@@ -323,7 +283,7 @@ function showFolderContextMenu(event, folder) {
 async function handleContextMenuAction(action) {
     const folder = contextMenu.value.folder;
     contextMenu.value.show = false;
-    
+
     if (action.key === 'rename') {
         const newName = prompt('Enter new folder name:', folder.name);
         if (newName && newName !== folder.name) {
@@ -376,10 +336,10 @@ function onRootDragLeave(event) {
 async function onRootDrop(event) {
     event.preventDefault();
     isRootDragOver.value = false;
-    
+
     try {
         const data = JSON.parse(event.dataTransfer.getData('application/json'));
-        
+
         if (data.type === 'entity') {
             await $fetch(`/api/entities/${data.id}/move`, {
                 method: 'PUT',
@@ -391,10 +351,10 @@ async function onRootDrop(event) {
                 body: { folder: null }
             });
         }
-        
+
         // Refresh the view
         await fetchEntities();
-        
+
     } catch (error) {
         console.error('Failed to move item:', error);
         alert('Failed to move item: ' + (error.data?.statusMessage || error.message));
@@ -431,22 +391,22 @@ async function renameFolder(data) {
 async function deleteFolder(folderId) {
     const folderToDelete = folders.value.find(f => f._id === folderId);
     const folderName = folderToDelete?.name || 'Unknown folder';
-    
+
     try {
         const result = await deleteFolderApi(folderId);
-        
+
         if (currentFolder.value === folderId) {
             // Navigate to parent folder or root if current folder was deleted
             currentFolder.value = folderToDelete?.parent || null;
             await fetchEntities();
         }
-        
+
         // Show success message if content was moved
         if (result.movedToRoot) {
             // Optional: Show a toast notification instead of alert for better UX
             console.log(`Folder "${folderName}" deleted. Content moved to "All Assets".`);
         }
-        
+
     } catch (error) {
         console.error('Failed to delete folder:', error);
         alert('Failed to delete folder: ' + (error.data?.statusMessage || error.message));
@@ -462,7 +422,7 @@ async function handleFolderMove(data) {
 onMounted(async () => {
     await fetchFolders();
     await fetchEntities();
-    
+
     // Listen for thumbnail updates
     const context = editor.getContext();
     if (context) {

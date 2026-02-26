@@ -10,7 +10,7 @@
             <p class="text-gray-500">No entities found in the community yet.</p>
         </div>
         
-        <div v-else class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6">
+        <div v-else class="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
             <div v-for="entity in entities" :key="entity._id" class="flex flex-col border border-default rounded-lg bg-default overflow-hidden cursor-pointer hover:bg-elevated/25 transition-colors" @click="selectEntity(entity)">
                 <div class="p-1">
                     <div class="h-32 w-full bg-black/30 rounded-md overflow-hidden">

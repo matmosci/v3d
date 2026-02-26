@@ -17,16 +17,16 @@
 			<UCard class="w-full max-w-md mx-4">
 				<template #header>
 					<div class="flex items-center justify-between">
-						<h3 class="text-lg font-semibold">Create New Entity</h3>
+						<h3 class="text-lg font-semibold">Create New Asset</h3>
 						<UButton icon="i-lucide-x" variant="ghost" size="xs" @click="closeCreateModal" />
 					</div>
 				</template>
 				<div class="space-y-4">
 					<div>
-						<label class="block text-sm font-medium mb-1">Entity Name <span class="text-red-500">*</span></label>
+						<label class="block text-sm font-medium mb-1">Asset Name <span class="text-red-500">*</span></label>
 						<UInput 
 							v-model="newEntityName" 
-							placeholder="Enter entity name"
+							placeholder="Enter asset name"
 							autofocus
 						/>
 					</div>

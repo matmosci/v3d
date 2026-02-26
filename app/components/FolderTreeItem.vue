@@ -5,7 +5,7 @@
             :class="{ 
                 'bg-primary/10 text-primary': currentFolder === folder._id, 
                 'hover:bg-elevated/50': currentFolder !== folder._id,
-                'bg-green-100 border-2 border-green-300': isDragOver
+                'bg-primary/25': isDragOver
             }"
             :style="{ paddingLeft: `${level * 12 + 8}px` }"
             @click="$emit('select', folder._id)"
@@ -32,21 +32,21 @@
             
             <!-- Actions (visible on hover) -->
             <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                <UButton 
+                <!-- <UButton 
                     @click.stop="$emit('create-subfolder', folder._id)"
                     size="2xs"
                     variant="ghost"
                     icon="i-lucide-plus"
-                    class="w-5 h-5"
                     title="New Subfolder"
-                />
+                    class="px-1 h-5"
+                /> -->
                 <UButton 
                     @click.stop="showContextMenu"
                     size="2xs"
                     variant="ghost"
                     icon="i-lucide-more-horizontal"
-                    class="w-5 h-5"
                     title="More options"
+                    class="px-1 h-5"
                 />
             </div>
         </div>
@@ -70,7 +70,7 @@
         
         <!-- Simple Context Menu -->
         <div v-if="contextMenu.show" 
-            class="context-menu fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 py-1 min-w-32"
+            class="context-menu fixed bg-white dark:bg-default border border-default rounded-lg shadow-lg z-50 py-1 min-w-32"
             :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
             @click.stop
         >
