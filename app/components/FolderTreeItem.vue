@@ -38,15 +38,16 @@
                     variant="ghost"
                     icon="i-lucide-plus"
                     class="w-5 h-5"
+                    title="New Subfolder"
                 />
-                <!-- TODO fix -->
-                <!-- <UButton 
+                <UButton 
                     @click.stop="showContextMenu"
                     size="2xs"
                     variant="ghost"
                     icon="i-lucide-more-horizontal"
                     class="w-5 h-5"
-                /> -->
+                    title="More options"
+                />
             </div>
         </div>
         
@@ -67,36 +68,34 @@
             />
         </div>
         
-        <!-- Context Menu -->
-        <ContextMenu v-if="contextMenu.show" 
-            :x="contextMenu.x" 
-            :y="contextMenu.y" 
-            @close="contextMenu.show = false"
+        <!-- Simple Context Menu -->
+        <div v-if="contextMenu.show" 
+            class="context-menu fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 py-1 min-w-32"
+            :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
+            @click.stop
         >
-            <div class="py-1">
-                <button 
-                    @click="handleRename"
-                    class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
-                >
-                    <UIcon name="i-lucide-edit-2" class="w-4 h-4" />
-                    Rename
-                </button>
-                <button 
-                    @click="$emit('create-subfolder', folder._id); contextMenu.show = false"
-                    class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
-                >
-                    <UIcon name="i-lucide-folder-plus" class="w-4 h-4" />
-                    New Subfolder
-                </button>
-                <button 
-                    @click="handleDelete"
-                    class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2 text-red-500"
-                >
-                    <UIcon name="i-lucide-trash-2" class="w-4 h-4" />
-                    Delete
-                </button>
-            </div>
-        </ContextMenu>
+            <button 
+                @click="handleRename"
+                class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+            >
+                <UIcon name="i-lucide-edit-2" class="w-4 h-4" />
+                <span>Rename</span>
+            </button>
+            <button 
+                @click="createSubfolder"
+                class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+            >
+                <UIcon name="i-lucide-folder-plus" class="w-4 h-4" />
+                <span>New Subfolder</span>
+            </button>
+            <button 
+                @click="handleDelete"
+                class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors text-red-500"
+            >
+                <UIcon name="i-lucide-trash-2" class="w-4 h-4" />
+                <span>Delete</span>
+            </button>
+        </div>
     </div>
 </template>
 
@@ -122,8 +121,23 @@ const expanded = ref(true);
 const contextMenu = ref({ show: false, x: 0, y: 0 });
 const isDragOver = ref(false);
 
+// Close context menu when clicking outside
+onMounted(() => {
+    const closeContextMenu = (event) => {
+        if (contextMenu.value.show && !event.target.closest('.context-menu')) {
+            contextMenu.value.show = false;
+        }
+    };
+    
+    document.addEventListener('click', closeContextMenu);
+    
+    onUnmounted(() => {
+        document.removeEventListener('click', closeContextMenu);
+    });
+});
+
 function showContextMenu(event) {
-    return; // TODO fix
+    event.stopPropagation();
     contextMenu.value = {
         show: true,
         x: event.clientX,
@@ -184,10 +198,15 @@ function handleRename() {
     contextMenu.value.show = false;
 }
 
+function createSubfolder() {
+    emit('create-subfolder', props.folder._id);
+    contextMenu.value.show = false;
+}
+
 function handleDelete() {
-    if (confirm(`Are you sure you want to delete "${props.folder.name}"?`)) {
+    contextMenu.value.show = false;
+    if (confirm(`Delete "${props.folder.name}"?\n\nAny content inside will be moved to "All Assets".`)) {
         emit('delete', props.folder._id);
     }
-    contextMenu.value.show = false;
 }
 </script>

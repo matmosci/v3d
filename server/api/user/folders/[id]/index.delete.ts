@@ -16,24 +16,38 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    // Check if folder has children (subfolders or assets/entities)
-    const hasChildren = await Promise.all([
-        FolderModel.countDocuments({ parent: id, deletedAt: null }),
-        AssetModel.countDocuments({ folder: id, deletedAt: null }),
-        EntityModel.countDocuments({ folder: id, deletedAt: null })
+    // Find all child folders recursively to collect all content
+    const getAllChildFolderIds = async (folderId) => {
+        const childFolders = await FolderModel.find({ parent: folderId, deletedAt: null }).select('_id');
+        let allIds = [folderId];
+        
+        for (const child of childFolders) {
+            const descendants = await getAllChildFolderIds(child._id);
+            allIds = allIds.concat(descendants);
+        }
+        
+        return allIds;
+    };
+
+    const allFolderIds = await getAllChildFolderIds(id);
+    
+    // Move all assets and entities from all these folders to root (folder: null)
+    await Promise.all([
+        AssetModel.updateMany(
+            { folder: { $in: allFolderIds }, user: user.id, deletedAt: null },
+            { folder: null }
+        ),
+        EntityModel.updateMany(
+            { folder: { $in: allFolderIds }, user: user.id, deletedAt: null },
+            { folder: null }
+        )
     ]);
 
-    const totalChildren = hasChildren.reduce((sum, count) => sum + count, 0);
-    
-    if (totalChildren > 0) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Cannot delete folder that contains items. Please move or delete contents first."
-        });
-    }
+    // Soft delete all folders in the hierarchy
+    await FolderModel.updateMany(
+        { _id: { $in: allFolderIds }, user: user.id },
+        { deletedAt: new Date() }
+    );
 
-    // Soft delete the folder
-    await FolderModel.findByIdAndUpdate(id, { deletedAt: new Date() });
-
-    return { success: true };
+    return { success: true, movedToRoot: true };
 });

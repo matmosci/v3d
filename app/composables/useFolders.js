@@ -55,11 +55,27 @@ export const useFolders = () => {
     // Delete folder
     const deleteFolder = async (folderId) => {
         try {
-            await $fetch(`/api/user/folders/${folderId}`, {
+            const result = await $fetch(`/api/user/folders/${folderId}`, {
                 method: 'DELETE'
             });
             
-            folders.value = folders.value.filter(f => f._id !== folderId);
+            // Remove the deleted folder and all its descendants from the folders array
+            const getAllDescendantIds = (parentId) => {
+                const children = folders.value.filter(f => f.parent === parentId);
+                let allIds = [parentId];
+                
+                for (const child of children) {
+                    const descendants = getAllDescendantIds(child._id);
+                    allIds = allIds.concat(descendants);
+                }
+                
+                return allIds;
+            };
+            
+            const deletedFolderIds = getAllDescendantIds(folderId);
+            folders.value = folders.value.filter(f => !deletedFolderIds.includes(f._id));
+            
+            return result;
         } catch (error) {
             console.error('Failed to delete folder:', error);
             throw error;

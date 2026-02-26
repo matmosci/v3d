@@ -334,7 +334,7 @@ async function handleContextMenuAction(action) {
             }
         }
     } else if (action.key === 'delete') {
-        if (confirm(`Are you sure you want to delete "${folder.name}"?`)) {
+        if (confirm(`Delete "${folder.name}"?\n\nAny content inside will be moved to "All Assets".`)) {
             try {
                 await deleteFolderApi(folder._id);
                 if (currentFolder.value === folder._id) {
@@ -342,7 +342,7 @@ async function handleContextMenuAction(action) {
                     await fetchEntities();
                 }
             } catch (error) {
-                alert('Failed to delete folder. Make sure it\'s empty first.');
+                alert('Failed to delete folder: ' + (error.data?.statusMessage || error.message));
             }
         }
     }
@@ -429,16 +429,27 @@ async function renameFolder(data) {
 }
 
 async function deleteFolder(folderId) {
+    const folderToDelete = folders.value.find(f => f._id === folderId);
+    const folderName = folderToDelete?.name || 'Unknown folder';
+    
     try {
-        await deleteFolderApi(folderId);
+        const result = await deleteFolderApi(folderId);
+        
         if (currentFolder.value === folderId) {
-            // Find the parent folder of the deleted folder
-            const deletedFolder = folders.value.find(f => f._id === folderId);
-            currentFolder.value = deletedFolder?.parent || null;
+            // Navigate to parent folder or root if current folder was deleted
+            currentFolder.value = folderToDelete?.parent || null;
             await fetchEntities();
         }
+        
+        // Show success message if content was moved
+        if (result.movedToRoot) {
+            // Optional: Show a toast notification instead of alert for better UX
+            console.log(`Folder "${folderName}" deleted. Content moved to "All Assets".`);
+        }
+        
     } catch (error) {
-        alert('Failed to delete folder. Make sure it\'s empty first.');
+        console.error('Failed to delete folder:', error);
+        alert('Failed to delete folder: ' + (error.data?.statusMessage || error.message));
     }
 }
 
