@@ -9,7 +9,8 @@ export const EntityModel = defineMongooseModel({
     // Future: collaborators: [{ user: ObjectId, permissions: [String], joinedAt: Date }]
     folder: { type: String, ref: 'Folder', default: null }, // Parent folder, null for root
     name: { type: String, required: true },
-    description: { type: String, required: false },
+    description: { type: String, default: '' },
+    tags: { type: [String], default: [] },
     thumbnail: { type: String, required: false },
     camera: {
       position: {

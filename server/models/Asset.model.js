@@ -10,6 +10,8 @@ export const AssetModel = defineMongooseModel({
         // Future: collaborators: [{ user: ObjectId, permissions: [String], joinedAt: Date }]
         folder: { type: String, ref: 'Folder', default: null }, // Parent folder, null for root
         originalname: { type: String, required: true },
+        description: { type: String, default: '' },
+        tags: { type: [String], default: [] },
         thumbnail: { type: String, required: false },
         size: { type: Number, required: true },
         deletedAt: { type: Date, default: null },

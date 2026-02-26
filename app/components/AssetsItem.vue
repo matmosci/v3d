@@ -9,17 +9,22 @@
             <UIcon v-else name="i-lucide-image" class="text-white/30 w-6 h-6" />
         </div>
         <div class="font-medium mx-1 mt-1 overflow-x-clip text-ellipsis">{{ asset.originalname }}</div>
-        <div class="text-sm text-gray-400 ms-1 mb-1">{{ (asset.size / 1024).toFixed(2) }} KB</div>
+        <div class="text-sm text-gray-400 ms-1 mb-1 flex items-center justify-between">
+            <span>{{ (asset.size / 1024).toFixed(2) }} KB</span>
+            <!-- Tags indicator -->
+            <span v-if="asset.tags && asset.tags.length > 0" class="text-xs bg-gray-200 dark:bg-gray-700 px-1 rounded">
+                {{ asset.tags.length }} tag{{ asset.tags.length > 1 ? 's' : '' }}
+            </span>
+        </div>
 
         <!-- Actions Row -->
         <div v-if="!showDeleteConfirm" class="flex items-center justify-between mx-1">
             <NuxtLink :to="`/assets/${asset._id}`" @click.stop>
-                <UButton icon="i-lucide-eye" variant="ghost" size="xs" class="text-blue-500">
-                    View
+                <UButton icon="i-lucide-eye" variant="ghost" size="xs" class="text-blue-500" title="View">
                 </UButton>
             </NuxtLink>
             <UButton icon="i-lucide-trash-2" variant="ghost" size="xs" class="text-red-500"
-                @click.stop="showDeleteConfirm = true"></UButton>
+                @click.stop="showDeleteConfirm = true" title="Delete"></UButton>
         </div>
 
         <!-- Delete Confirmation Row -->

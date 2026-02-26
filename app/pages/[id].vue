@@ -19,6 +19,25 @@
                     </UButton>
                 </div>
             </div>
+            <div v-else>
+                <UButton @click="showEditModal = true" size="sm" variant="outline" icon="i-lucide-edit-2" class="mt-3">
+                    Edit Info
+                </UButton>
+            </div>
+            <div class="mt-4">
+                <div v-if="entityData.tags && entityData.tags.length > 0" class="flex flex-wrap gap-1">
+                    <UBadge 
+                        v-for="tag in entityData.tags" 
+                        :key="tag"
+                        class="bg-info px-1 py-0 rounded-full"
+                    >
+                        #{{ tag }}
+                    </UBadge>
+                </div>
+                <div v-else class="text-gray-400 text-sm">
+                    No tags
+                </div>
+            </div>
         </div>
         <div class="flex items-center gap-2">
             <div class="flex flex-col gap-1">
@@ -90,12 +109,22 @@
             </div>
         </div>
     </div>
+    
+    <!-- Edit Modal -->
+    <EditItemModal 
+        :show="showEditModal" 
+        :item="entityData" 
+        item-type="entity" 
+        @close="showEditModal = false" 
+        @saved="handleEntityUpdated" 
+    />
 </template>
 
 <script setup>
 const route = useRoute();
 const editor = useEditor();
 const entityData = ref(null);
+const showEditModal = ref(false);
 
 // Camera save on thumbnail functionality
 const { isSaving, saveWithThumbnail } = useCameraSaveOnThumbnail(computed(() => route.params.id));
@@ -116,6 +145,10 @@ const createCopy = async () => {
         copyingEntity.value = false;
     }
 };
+
+function handleEntityUpdated(updatedEntity) {
+    entityData.value = updatedEntity;
+}
 
 onMounted(async () => {
     // Wait for editor initialization from Viewport component
