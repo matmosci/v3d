@@ -757,10 +757,9 @@ function createEntityCyclePlaceholder(entityId) {
     const group = new Group();
     group.name = entityId;
     const placeholder = new Mesh(
-        new BoxGeometry(1, 1, 1),
+        new BoxGeometry(1, 1, 1).translate(0, 0.5, 0),
         new MeshBasicMaterial({
-            color: 0xef4444,
-            wireframe: true,
+            color: 0xff0088,
             transparent: true,
             opacity: 0.6,
         })
