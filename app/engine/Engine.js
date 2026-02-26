@@ -6,7 +6,6 @@ import EntityLoader from "./EntityLoader";
 import Dust from "./Dust";
 import InputHandler from "./InputHandler";
 import Keybindings from "./Keybindings";
-import EnvMap from "./EnvMap";
 
 export default class Engine {
     constructor(container) {
@@ -47,7 +46,7 @@ export default class Engine {
         this.systems.cameraControls = new CameraControls(this.context);
         this.systems.cursor = new Cursor3D(this.context);
         this.systems.entity = new EntityLoader(this.context);
-        this.systems.envMap = new EnvMap(this.context);
+        
         // Make cursor accessible through context for easier access
         this.context.cursor = this.systems.cursor;
     }
