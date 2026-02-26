@@ -8,8 +8,10 @@
                 'bg-primary/25': isDragOver
             }"
             :style="{ paddingLeft: `${level * 12 + 8}px` }"
+            draggable="true"
             @click="$emit('select', folder._id)"
             @contextmenu.prevent="showContextMenu"
+            @dragstart="onDragStart"
             @dragover.prevent="onDragOver"
             @dragleave="onDragLeave"
             @drop.prevent="onDrop"
@@ -144,6 +146,14 @@ function showContextMenu(event) {
     };
 }
 
+function onDragStart(event) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('application/json', JSON.stringify({
+        type: 'folder',
+        id: props.folder._id
+    }));
+}
+
 function onDragOver(event) {
     event.preventDefault();
     isDragOver.value = true;
@@ -173,6 +183,12 @@ async function onDrop(event) {
             await $fetch(`/api/assets/${data.id}/move`, {
                 method: 'PUT',
                 body: { folder: props.folder._id }
+            });
+        } else if (data.type === 'folder') {
+            // Handle folder move
+            emit('move', {
+                folderId: data.id,
+                targetParentId: props.folder._id
             });
         }
         

@@ -358,6 +358,13 @@ async function onRootDrop(event) {
                 method: 'PUT',
                 body: { folder: null }
             });
+        } else if (data.type === 'folder') {
+            // Handle folder move to root
+            await $fetch(`/api/user/folders/${data.id}`, {
+                method: 'PUT',
+                body: { parent: null }
+            });
+            await fetchFolders();
         }
 
         // Refresh the view
@@ -407,6 +414,13 @@ async function onInlineFolderDrop(event, folderId) {
                 method: 'PUT',
                 body: { folder: folderId }
             });
+        } else if (data.type === 'folder') {
+            // Handle folder move to inline folder
+            await $fetch(`/api/user/folders/${data.id}`, {
+                method: 'PUT',
+                body: { parent: folderId }
+            });
+            await fetchFolders();
         }
         
         // Refresh the view
@@ -464,8 +478,18 @@ async function deleteFolder(folderId) {
 }
 
 async function handleFolderMove(data) {
-    console.log('Move folder:', data);
-    // Implementation for moving folders would go here
+    try {
+        await $fetch(`/api/user/folders/${data.folderId}`, {
+            method: 'PUT',
+            body: { parent: data.targetParentId }
+        });
+        
+        // Refresh the folder tree after move
+        await fetchFolders();
+    } catch (error) {
+        console.error('Failed to move folder:', error);
+        alert('Failed to move folder: ' + (error.data?.statusMessage || error.message));
+    }
 }
 
 // Initialize
