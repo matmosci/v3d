@@ -41,15 +41,23 @@
                 <div class="text-xs text-gray-400">
                     <UKbd>T</UKbd> Capture Thumbnail
                 </div>
+                <div class="text-xs text-gray-400">
+                    <UKbd>TAB</UKbd> Toggle Menu
+                </div>
 
                 <h2 class="text-xl font-bold mb-2 mt-4">Transform</h2>
                 <div class="text-xs text-gray-400">
-                    <UKbd>Shift</UKbd> + <UKbd>Drag</UKbd> Snap cursor to surface
+                    Hold <UKbd>Shift</UKbd> to snap to surface in free transform
                 </div>
                 <div class="text-xs text-gray-400">
-                    <UKbd>Ctrl</UKbd> + <UKbd>Drag</UKbd> Snap to grid during translation or 15° during rotation
+                    Hold <UKbd>Ctrl</UKbd> to snap moved object to grid
                 </div>
-
+                <div class="text-xs text-gray-400">
+                    Hold <UKbd>Ctrl</UKbd> to snap rotation to 15°
+                </div>
+                <div class="text-xs text-gray-400">
+                    <UKbd>Scroll</UKbd> to rotate in free transform
+                </div>
 
                 <h2 class="text-xl font-bold mb-2 mt-4">Movement</h2>
                 <div class="flex gap-1">
