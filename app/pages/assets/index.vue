@@ -78,9 +78,16 @@
 
                     <!-- Subfolders in current directory -->
                     <div v-for="subfolder in currentSubfolders" :key="subfolder._id"
-                        class="border border-default rounded-lg bg-default hover:bg-elevated/25 cursor-pointer p-4 flex flex-col items-center justify-center transition-colors"
+                        class="border border-default rounded-lg bg-default cursor-pointer p-4 flex flex-col items-center justify-center transition-colors"
+                        :class="{
+                            'hover:bg-elevated/25': inlineFolderDragOver !== subfolder._id,
+                            'bg-primary/25': inlineFolderDragOver === subfolder._id
+                        }"
                         @click="selectFolder(subfolder._id)"
-                        @contextmenu.prevent="showFolderContextMenu($event, subfolder)">
+                        @contextmenu.prevent="showFolderContextMenu($event, subfolder)"
+                        @dragover.prevent="onInlineFolderDragOver($event, subfolder._id)"
+                        @dragleave="onInlineFolderDragLeave($event)"
+                        @drop.prevent="onInlineFolderDrop($event, subfolder._id)">
                         <UIcon name="i-lucide-folder" :style="{ color: subfolder.color }" class="w-8 h-8 mb-2" />
                         <span class="text-sm text-center truncate w-full">{{ subfolder.name }}</span>
                     </div>
@@ -169,6 +176,7 @@ const newFolderColor = ref('#3b82f6');
 const creatingFolder = ref(false);
 const contextMenu = ref({ show: false, x: 0, y: 0, folder: null });
 const isRootDragOver = ref(false);
+const inlineFolderDragOver = ref(null); // Track which inline folder is being dragged over
 
 // Folder colors
 const folderColors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
@@ -366,6 +374,48 @@ async function handleDropItem(data) {
     console.log('Item dropped:', data);
     // Refresh the current folder view after a drop
     await fetchEntities();
+}
+
+// Handle inline folder drag and drop
+function onInlineFolderDragOver(event, folderId) {
+    event.preventDefault();
+    inlineFolderDragOver.value = folderId;
+    event.dataTransfer.dropEffect = 'move';
+}
+
+function onInlineFolderDragLeave(event) {
+    // Only hide drag over if we're actually leaving this element
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+        inlineFolderDragOver.value = null;
+    }
+}
+
+async function onInlineFolderDrop(event, folderId) {
+    event.preventDefault();
+    inlineFolderDragOver.value = null;
+    
+    try {
+        const data = JSON.parse(event.dataTransfer.getData('application/json'));
+        
+        if (data.type === 'entity') {
+            await $fetch(`/api/entities/${data.id}/move`, {
+                method: 'PUT',
+                body: { folder: folderId }
+            });
+        } else if (data.type === 'asset') {
+            await $fetch(`/api/assets/${data.id}/move`, {
+                method: 'PUT',
+                body: { folder: folderId }
+            });
+        }
+        
+        // Refresh the view
+        await fetchEntities();
+        
+    } catch (error) {
+        console.error('Failed to move item:', error);
+        alert('Failed to move item: ' + (error.data?.statusMessage || error.message));
+    }
 }
 
 // Handle folder tree events
