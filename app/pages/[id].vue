@@ -2,9 +2,14 @@
     <UIH1>ASSET</UIH1>
     <div v-if="entityData" class="flex justify-between gap-5">
         <div>
-            <h2 class="text-xl font-bold mb-2">{{ entityData.name }}</h2>
+            <h2 class="text-xl font-bold mb-2">
+                {{ entityData.name }}
+                <UButton v-if="isOwner" @click="showEditModal = true" size="sm" variant="ghost" icon="i-lucide-edit-2">
+                </UButton>
+            </h2>
             <p class="text-gray-500">{{ entityData.description }}</p>
-            <div v-if="!isOwner && loggedIn" class="mt-2 flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+            <div v-if="!isOwner && loggedIn"
+                class="mt-2 flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
                 <UIcon name="i-lucide-alert-triangle" class="text-orange-500 w-4 h-4 shrink-0" />
                 <div class="flex-1">
                     <div class="text-sm text-orange-700 dark:text-orange-300 font-medium">
@@ -13,24 +18,17 @@
                     <div class="text-xs text-orange-600 dark:text-orange-400 mt-1">
                         Changes won't be saved permanently.<br>Create your own copy to make persistent modifications.
                     </div>
-                    <UButton @click="createCopy" size="xs" variant="soft" color="neutral" :loading="copyingEntity" class="mt-2">
+                    <UButton @click="createCopy" size="xs" variant="soft" color="neutral" :loading="copyingEntity"
+                        class="mt-2">
                         <UIcon name="i-lucide-copy" class="w-3 h-3 mr-1" />
                         Copy Asset
                     </UButton>
                 </div>
             </div>
-            <div v-else>
-                <UButton @click="showEditModal = true" size="sm" variant="outline" icon="i-lucide-edit-2" class="mt-3">
-                    Edit Info
-                </UButton>
-            </div>
+
             <div class="mt-4">
                 <div v-if="entityData.tags && entityData.tags.length > 0" class="flex flex-wrap gap-1">
-                    <UBadge 
-                        v-for="tag in entityData.tags" 
-                        :key="tag"
-                        class="bg-info px-1 py-0 rounded-full"
-                    >
+                    <UBadge v-for="tag in entityData.tags" :key="tag" class="bg-info px-1 py-0 rounded-full">
                         #{{ tag }}
                     </UBadge>
                 </div>
@@ -109,15 +107,10 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Edit Modal -->
-    <EditItemModal 
-        :show="showEditModal" 
-        :item="entityData" 
-        item-type="entity" 
-        @close="showEditModal = false" 
-        @saved="handleEntityUpdated" 
-    />
+    <EditItemModal :show="showEditModal" :item="entityData" item-type="entity" @close="showEditModal = false"
+        @saved="handleEntityUpdated" />
 </template>
 
 <script setup>
@@ -179,10 +172,10 @@ onMounted(async () => {
         // Make entity data available in editor context for ownership checks
         if (editor.getContext()) {
             editor.getContext().entityData = entityData.value;
-            
-            editor.getContext().events.emit("entity:loaded", { 
-                entityId, 
-                entityData: entityData.value 
+
+            editor.getContext().events.emit("entity:loaded", {
+                entityId,
+                entityData: entityData.value
             });
 
             // Listen for thumbnail creation events (KeyT press)
@@ -212,7 +205,7 @@ watch(() => route.params.id, async (newId, oldId) => {
             // Make entity data available in editor context for ownership checks
             if (editor.getContext()) {
                 editor.getContext().entityData = entityData.value;
-                
+
                 editor.getContext().events.emit("entity:loaded", {
                     entityId: newId,
                     entityData: entityData.value
