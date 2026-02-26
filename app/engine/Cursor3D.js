@@ -132,6 +132,7 @@ class GhostObject extends Object3D {
         this.unsubscribeFinishPlacementClick = null;
         const source = this.ctx.state.pickedPlacementSource;
         if (!source?.sourceId) return;
+        
         if (event.button === 0) {
             this.ctx.events.emit("object:placement:confirm", {
                 sourceType: source.sourceType,

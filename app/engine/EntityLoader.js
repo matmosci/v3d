@@ -355,20 +355,9 @@ export default class EntityLoader {
 
         const result = await handleInstancePlacement(instanceData);
         
-        if (result === true) {
-            // Successfully saved to server, fetch the created instance
-            const res = await fetch(`/api/entities/${this.ctx.entity}/instances`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(instanceData),
-            });
-
-            if (res.ok) {
-                const createdInstance = await res.json();
-                await this.placeInstance(createdInstance, createdInstance);
-            } else {
-                alert("Failed to place instance");
-            }
+        if (result && typeof result === 'object' && result._id) {
+            // Instance was saved to server, use the returned instance with proper ID
+            await this.placeInstance(result, result);
         } else if (result === 'temporary') {
             // Place instance temporarily (client-side only)
             const tempInstance = {
@@ -387,12 +376,16 @@ export default class EntityLoader {
 
     async buildEntityObject(entityId, visited = new Set()) {
         if (!entityId) return null;
+        
+        // Check for cycles BEFORE checking cache
         if (visited.has(entityId)) {
             return createEntityCyclePlaceholder(entityId);
         }
 
+        // Only use cache if we're at the root level (not nested in another entity)
+        // This prevents using cached entities that might contain cycle placeholders
         const cached = this.entityCache.get(entityId);
-        if (cached) {
+        if (cached && visited.size === 0) {
             const cloned = cached.clone(true);
             this.fixSpotlightTargets(cloned);
             return cloned;
@@ -422,7 +415,11 @@ export default class EntityLoader {
                 if (child) group.add(child);
             }
 
-            this.entityCache.set(entityId, group);
+            // Only cache if we're at the root level to avoid caching entities with placeholders
+            if (visited.size === 0) {
+                this.entityCache.set(entityId, group);
+            }
+            
             const cloned = group.clone(true);
             this.fixSpotlightTargets(cloned);
             return cloned;

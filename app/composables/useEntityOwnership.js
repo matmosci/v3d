@@ -70,18 +70,18 @@ export function useEntityOwnership() {
                 
                 if (!entityId) {
                     console.error('No entity loaded');
-                    return false;
+                    return null;
                 }
                 
-                await $fetch(`/api/entities/${entityId}/instances`, {
+                const createdInstance = await $fetch(`/api/entities/${entityId}/instances`, {
                     method: 'POST',
                     body: instanceData
                 });
                 
-                return true;
+                return createdInstance; // Return the created instance with its ID
             } catch (error) {
                 console.error('Failed to save instance:', error);
-                return false;
+                return null;
             }
         } else {
             // User doesn't own entity, allow temporary placement without popups
