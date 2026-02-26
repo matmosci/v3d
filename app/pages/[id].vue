@@ -8,14 +8,26 @@
                 </UButton>
             </h2>
             <p class="text-gray-500">{{ entityData.description }}</p>
+
+            <div class="mt-2">
+                <div v-if="entityData.tags && entityData.tags.length > 0" class="flex flex-wrap gap-1">
+                    <UBadge v-for="tag in entityData.tags" :key="tag" class="bg-warning px-1 py-0 rounded-full">
+                        #{{ tag }}
+                    </UBadge>
+                </div>
+                <div v-else class="text-gray-400 text-sm">
+                    No tags
+                </div>
+            </div>
+
             <div v-if="!isOwner && loggedIn"
-                class="mt-2 flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-                <UIcon name="i-lucide-alert-triangle" class="text-orange-500 w-4 h-4 shrink-0" />
+                class="mt-4 flex items-center gap-3 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
+                <UIcon name="i-lucide-alert-triangle" class="text-warning-500 w-4 h-4 shrink-0" />
                 <div class="flex-1">
-                    <div class="text-sm text-orange-700 dark:text-orange-300 font-medium">
+                    <div class="text-sm text-warning-700 dark:text-warning-300 font-medium">
                         You don't own this asset
                     </div>
-                    <div class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                    <div class="text-xs text-warning-600 dark:text-warning-400 mt-1">
                         Changes won't be saved permanently.<br>Create your own copy to make persistent modifications.
                     </div>
                     <UButton @click="createCopy" size="xs" variant="soft" color="neutral" :loading="copyingEntity"
@@ -26,14 +38,16 @@
                 </div>
             </div>
 
-            <div class="mt-4">
-                <div v-if="entityData.tags && entityData.tags.length > 0" class="flex flex-wrap gap-1">
-                    <UBadge v-for="tag in entityData.tags" :key="tag" class="bg-info px-1 py-0 rounded-full">
-                        #{{ tag }}
-                    </UBadge>
-                </div>
-                <div v-else class="text-gray-400 text-sm">
-                    No tags
+            <div v-if="!loggedIn"
+                class="mt-4 flex items-center gap-3 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
+                <UIcon name="i-lucide-alert-triangle" class="text-warning-500 w-4 h-4 shrink-0" />
+                <div class="flex-1">
+                    <div class="text-sm text-warning-700 dark:text-warning-300 font-medium">
+                        You are not logged in
+                    </div>
+                    <div class="text-xs text-warning-600 dark:text-warning-400 mt-1">
+                        Changes won't be saved permanently.<br>Create an account and log in to make your own assets.
+                    </div>
                 </div>
             </div>
         </div>
