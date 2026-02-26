@@ -2,6 +2,11 @@
 export default defineNuxtConfig({
     compatibilityDate: "2025-07-15",
     devtools: { enabled: true },
+    nitro: {
+        externals: {
+            traceOptions: { base: process.cwd() } // mydevil.net
+        }
+    },
     modules: ["@nuxt/ui", "@nuxt/icon", "nuxt-auth-utils", "nuxt-mongoose"],
     runtimeConfig: {
         session: {
