@@ -1,10 +1,11 @@
 import fs from "fs";
 import path from "path";
 
-const directory = "./uploads";
 const acceptedExtensions = [".glb"];
 
 export default defineEventHandler(async (event) => {
+    const config = useRuntimeConfig();
+    const directory = config.uploads.path || "./uploads";
     const { user } = await requireUserSession(event);
 
     const files = await readMultipartFormData(event);
@@ -16,7 +17,7 @@ export default defineEventHandler(async (event) => {
     }
 
     if (!fs.existsSync(directory)) {
-        fs.mkdirSync(directory);
+        fs.mkdirSync(directory, { recursive: true });
     }
 
     const assetIds = [];

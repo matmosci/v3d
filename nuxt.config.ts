@@ -12,6 +12,9 @@ export default defineNuxtConfig({
         session: {
             password: process.env.NUXT_SESSION_PASSWORD!,
         },
+        uploads: {
+            path: process.env.UPLOADS_PATH,
+        },
         LOGIN_TOKEN_EXPIRATION: 1000 * 60 * 10, // 10 minutes
         mailer: {
             host: process.env.MAILER_HOST,
