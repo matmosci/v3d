@@ -21,7 +21,7 @@
             </div>
 
             <div v-if="!isOwner && loggedIn"
-                class="mt-4 flex items-center gap-3 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
+                class="mt-24 flex items-center gap-3 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
                 <UIcon name="i-lucide-alert-triangle" class="text-warning-500 w-4 h-4 shrink-0" />
                 <div class="flex-1">
                     <div class="text-sm text-warning-700 dark:text-warning-300 font-medium">
@@ -39,7 +39,7 @@
             </div>
 
             <div v-if="!loggedIn"
-                class="mt-4 flex items-center gap-3 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
+                class="mt-24 flex items-center gap-3 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
                 <UIcon name="i-lucide-alert-triangle" class="text-warning-500 w-4 h-4 shrink-0" />
                 <div class="flex-1">
                     <div class="text-sm text-warning-700 dark:text-warning-300 font-medium">
