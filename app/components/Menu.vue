@@ -2,7 +2,7 @@
   <div class="absolute top-0 bottom-0 left-0 right-0 bg-black/25 backdrop-blur-sm flex flex-col px-10">
     <div class="flex justify-between items-center py-3">
       <div class="flex items-center gap-2">
-        <NuxtLink to="/" class="text-lg font-bold">V3D</NuxtLink>
+        <NuxtLink to="/" class="text-lg font-bold">V<span class="text-primary">3D</span></NuxtLink>
         <template v-if="loggedIn && currentEntity">
           /
           <NuxtLink :to="currentEntity.path" :class="$route.path === currentEntity.path ? 'border-b' : ''" class="hover:text-gray-300 transition-colors">{{ currentEntity.name }}
