@@ -5,7 +5,7 @@
         @dragstart="onDragStart"
         @contextmenu.prevent="showContextMenu">
         <div class="h-32 w-full mt-1 rounded-md bg-black/30 overflow-hidden grid place-items-center">
-            <img v-if="asset.thumbnail" :src="asset.thumbnail" alt="thumbnail" class="h-32 w-full object-cover">
+            <img v-if="asset.thumbnail" :src="asset.thumbnail" alt="thumbnail" class="h-32 w-full object-cover" draggable="false">
             <UIcon v-else name="i-lucide-image" class="text-white/30 w-6 h-6" />
         </div>
         <div class="font-medium mx-1 mt-1 overflow-x-clip text-ellipsis">{{ asset.originalname }}</div>

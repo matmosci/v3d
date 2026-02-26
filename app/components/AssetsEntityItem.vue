@@ -6,7 +6,7 @@
         @contextmenu.prevent="showContextMenu">
         <div class="h-32 w-full mt-1 rounded-md bg-black/30 overflow-hidden grid place-items-center">
             <img v-if="entity.thumbnail" :src="entity.thumbnail" alt="thumbnail"
-                class="h-32 w-full object-cover object-center" />
+                class="h-32 w-full object-cover object-center" draggable="false" />
             <UIcon v-else name="i-lucide-rotate-3d" class="text-white/30 w-6 h-6" />
         </div>
         <div class="font-medium mx-1 mt-1 overflow-x-clip text-ellipsis">{{ entity.name }}</div>
