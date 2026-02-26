@@ -122,20 +122,19 @@ const contextMenu = ref({ show: false, x: 0, y: 0 });
 const isDragOver = ref(false);
 
 // Close context menu when clicking outside
+const closeContextMenu = (event) => {
+    if (contextMenu.value.show && !event.target.closest('.context-menu')) {
+        contextMenu.value.show = false;
+    }
+};
+
 onMounted(() => {
-    const closeContextMenu = (event) => {
-        if (contextMenu.value.show && !event.target.closest('.context-menu')) {
-            contextMenu.value.show = false;
-        }
-    };
-    
     document.addEventListener('click', closeContextMenu);
-    
-    onUnmounted(() => {
-        document.removeEventListener('click', closeContextMenu);
-    });
 });
 
+onUnmounted(() => {
+    document.removeEventListener('click', closeContextMenu);
+});
 function showContextMenu(event) {
     event.stopPropagation();
     contextMenu.value = {
@@ -205,7 +204,8 @@ function createSubfolder() {
 
 function handleDelete() {
     contextMenu.value.show = false;
-    if (confirm(`Delete "${props.folder.name}"?\n\nAny content inside will be moved to "All Assets".`)) {
+    const confirmed = confirm(`Delete "${props.folder.name}"?\n\nAny content inside will be moved to "All Assets".`);
+    if (confirmed) {
         emit('delete', props.folder._id);
     }
 }

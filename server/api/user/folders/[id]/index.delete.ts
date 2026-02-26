@@ -16,20 +16,38 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    // Find all child folders recursively to collect all content
-    const getAllChildFolderIds = async (folderId) => {
-        const childFolders = await FolderModel.find({ parent: folderId, deletedAt: null }).select('_id');
-        let allIds = [folderId];
-        
-        for (const child of childFolders) {
-            const descendants = await getAllChildFolderIds(child._id);
-            allIds = allIds.concat(descendants);
+    // Find all child folders (descendants) in a single query to collect all content
+    const aggregationResult = await FolderModel.aggregate([
+        {
+            $match: {
+                _id: folder._id,
+                user: user.id,
+                deletedAt: null
+            }
+        },
+        {
+            $graphLookup: {
+                from: FolderModel.collection.name,
+                startWith: '$_id',
+                connectFromField: '_id',
+                connectToField: 'parent',
+                as: 'descendants',
+                restrictSearchWithMatch: {
+                    user: user.id,
+                    deletedAt: null
+                }
+            }
+        },
+        {
+            $project: {
+                allFolderIds: {
+                    $concatArrays: [['$_id'], '$descendants._id']
+                }
+            }
         }
-        
-        return allIds;
-    };
+    ]);
 
-    const allFolderIds = await getAllChildFolderIds(id);
+    const allFolderIds = (aggregationResult[0]?.allFolderIds) || [folder._id];
     
     // Move all assets and entities from all these folders to root (folder: null)
     await Promise.all([
