@@ -95,25 +95,23 @@ const formData = ref({
 const newTag = ref('');
 const saving = ref(false);
 
-// Watch for prop changes and update form
-watch(() => props.item, (newItem) => {
-    if (newItem) {
+// Function to populate form data
+const populateForm = () => {
+    if (props.item && props.show) {
         formData.value = {
-            name: props.itemType === 'asset' ? newItem.originalname : newItem.name,
-            description: newItem.description || '',
-            tags: [...(newItem.tags || [])]
+            name: props.itemType === 'asset' ? props.item.originalname || '' : props.item.name || '',
+            description: props.item.description || '',
+            tags: [...(props.item.tags || [])]
         };
     }
-}, { immediate: true });
+};
+
+// Watch for prop changes and update form
+watch(() => props.item, populateForm, { immediate: true });
+watch(() => props.show, populateForm);
 
 function closeModal() {
     emit('close');
-    // Reset form
-    formData.value = {
-        name: '',
-        description: '',
-        tags: []
-    };
     newTag.value = '';
 }
 
