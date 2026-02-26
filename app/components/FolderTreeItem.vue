@@ -4,11 +4,15 @@
             class="flex items-center gap-2 p-1 rounded cursor-pointer transition-colors group"
             :class="{ 
                 'bg-primary/10 text-primary': currentFolder === folder._id, 
-                'hover:bg-elevated/50': currentFolder !== folder._id 
+                'hover:bg-elevated/50': currentFolder !== folder._id,
+                'bg-green-100 border-2 border-green-300': isDragOver
             }"
             :style="{ paddingLeft: `${level * 12 + 8}px` }"
             @click="$emit('select', folder._id)"
             @contextmenu.prevent="showContextMenu"
+            @dragover.prevent="onDragOver"
+            @dragleave="onDragLeave"
+            @drop.prevent="onDrop"
         >
             <UButton 
                 v-if="folder.children.length > 0"
@@ -22,7 +26,7 @@
             <UIcon 
                 name="i-lucide-folder" 
                 :style="{ color: folder.color }" 
-                class="w-4 h-4 flex-shrink-0"
+                class="w-4 h-4 shrink-0"
             />
             <span class="text-sm truncate flex-1">{{ folder.name }}</span>
             
@@ -59,6 +63,7 @@
                 @rename="$emit('rename', $event)"
                 @delete="$emit('delete', $event)"
                 @move="$emit('move', $event)"
+                @drop-item="$emit('drop-item', $event)"
             />
         </div>
         
@@ -111,10 +116,11 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['select', 'create-subfolder', 'rename', 'delete', 'move']);
+const emit = defineEmits(['select', 'create-subfolder', 'rename', 'delete', 'move', 'drop-item']);
 
 const expanded = ref(true);
 const contextMenu = ref({ show: false, x: 0, y: 0 });
+const isDragOver = ref(false);
 
 function showContextMenu(event) {
     return; // TODO fix
@@ -123,6 +129,51 @@ function showContextMenu(event) {
         x: event.clientX,
         y: event.clientY
     };
+}
+
+function onDragOver(event) {
+    event.preventDefault();
+    isDragOver.value = true;
+    event.dataTransfer.dropEffect = 'move';
+}
+
+function onDragLeave(event) {
+    // Only hide drag over if we're actually leaving this element
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+        isDragOver.value = false;
+    }
+}
+
+async function onDrop(event) {
+    event.preventDefault();
+    isDragOver.value = false;
+    
+    try {
+        const data = JSON.parse(event.dataTransfer.getData('application/json'));
+        
+        if (data.type === 'entity') {
+            await $fetch(`/api/entities/${data.id}/move`, {
+                method: 'PUT',
+                body: { folder: props.folder._id }
+            });
+        } else if (data.type === 'asset') {
+            await $fetch(`/api/assets/${data.id}/move`, {
+                method: 'PUT',
+                body: { folder: props.folder._id }
+            });
+        }
+        
+        // Emit event to parent to refresh the view
+        emit('drop-item', {
+            itemType: data.type,
+            itemId: data.id,
+            targetFolderId: props.folder._id
+        });
+        
+    } catch (error) {
+        console.error('Failed to move item:', error);
+        alert('Failed to move item: ' + (error.data?.statusMessage || error.message));
+    }
 }
 
 function handleRename() {

@@ -1,6 +1,9 @@
 <template>
     <div
-        class="border border-default duration-150 rounded-lg bg-default hover:bg-elevated/25 cursor-pointer px-1 pb-1 h-48 flex flex-col select-none">
+        class="border border-default duration-150 rounded-lg bg-default hover:bg-elevated/25 cursor-pointer px-1 pb-1 h-48 flex flex-col select-none"
+        draggable="true"
+        @dragstart="onDragStart"
+        @contextmenu.prevent="showContextMenu">
         <div class="h-32 w-full mt-1 rounded-md bg-black/30 overflow-hidden grid place-items-center">
             <img v-if="entity.thumbnail" :src="entity.thumbnail" alt="thumbnail"
                 class="h-32 w-full object-cover object-center" />
@@ -42,11 +45,25 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['deleted']);
+const emit = defineEmits(['deleted', 'moved']);
 
 function openEntity() {
     if (!props.entity?._id || showDeleteConfirm.value) return;
     location.href = `/${props.entity._id}`;
+}
+
+function showContextMenu(event) {
+    event.stopPropagation();
+    console.log('Context menu at:', event.clientX, event.clientY);
+}
+
+function onDragStart(event) {
+    event.dataTransfer.setData('application/json', JSON.stringify({
+        type: 'entity',
+        id: props.entity._id,
+        name: props.entity.name
+    }));
+    event.dataTransfer.effectAllowed = 'move';
 }
 
 async function deleteEntity() {

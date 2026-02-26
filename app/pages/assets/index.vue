@@ -13,8 +13,15 @@
                 <!-- Root folder -->
                 <div 
                     class="flex items-center gap-2 p-2 rounded cursor-pointer transition-colors"
-                    :class="{ 'bg-primary/10 text-primary': currentFolder === null, 'hover:bg-elevated/50': currentFolder !== null }"
+                    :class="{ 
+                        'bg-primary/10 text-primary': currentFolder === null, 
+                        'hover:bg-elevated/50': currentFolder !== null,
+                        'bg-green-100 border-2 border-green-300 border-dashed': isRootDragOver
+                    }"
                     @click="selectFolder(null)"
+                    @dragover.prevent="onRootDragOver"
+                    @dragleave="onRootDragLeave"
+                    @drop.prevent="onRootDrop"
                 >
                     <UIcon name="i-lucide-home" class="w-4 h-4" />
                     <span class="text-sm">All Assets</span>
@@ -34,6 +41,7 @@
                     @rename="renameFolder"
                     @delete="deleteFolder"
                     @move="handleFolderMove"
+                    @drop-item="handleDropItem"
                 />
             </div>
         </div>
@@ -109,7 +117,7 @@
                         :entity="entity" 
                         @click="selectEntity(entity)" 
                         @deleted="removeEntity"
-                        @move="handleItemMove($event, 'entity')"
+                        @moved="handleEntityMoved"
                     />
                 </div>
 
@@ -200,6 +208,7 @@ const newFolderName = ref('');
 const newFolderColor = ref('#3b82f6');
 const creatingFolder = ref(false);
 const contextMenu = ref({ show: false, x: 0, y: 0, folder: null });
+const isRootDragOver = ref(false);
 
 // Folder colors
 const folderColors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
@@ -341,6 +350,62 @@ async function handleContextMenuAction(action) {
 
 async function handleItemMove(folderId, itemType) {
     console.log('Move item to folder:', folderId, itemType);
+    // This function can be used for other move operations if needed
+}
+
+// Handle entity moved event
+async function handleEntityMoved(data) {
+    console.log('Entity moved:', data);
+    // Refresh the current folder view to reflect the change
+    await fetchEntities();
+}
+
+// Handle root folder drop zone
+function onRootDragOver(event) {
+    event.preventDefault();
+    isRootDragOver.value = true;
+    event.dataTransfer.dropEffect = 'move';
+}
+
+function onRootDragLeave(event) {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+        isRootDragOver.value = false;
+    }
+}
+
+async function onRootDrop(event) {
+    event.preventDefault();
+    isRootDragOver.value = false;
+    
+    try {
+        const data = JSON.parse(event.dataTransfer.getData('application/json'));
+        
+        if (data.type === 'entity') {
+            await $fetch(`/api/entities/${data.id}/move`, {
+                method: 'PUT',
+                body: { folder: null }
+            });
+        } else if (data.type === 'asset') {
+            await $fetch(`/api/assets/${data.id}/move`, {
+                method: 'PUT',
+                body: { folder: null }
+            });
+        }
+        
+        // Refresh the view
+        await fetchEntities();
+        
+    } catch (error) {
+        console.error('Failed to move item:', error);
+        alert('Failed to move item: ' + (error.data?.statusMessage || error.message));
+    }
+}
+
+// Handle drop events from folder tree
+async function handleDropItem(data) {
+    console.log('Item dropped:', data);
+    // Refresh the current folder view after a drop
+    await fetchEntities();
 }
 
 // Handle folder tree events

@@ -1,6 +1,9 @@
 <template>
     <div @click="selectAsset"
-        class="border border-default duration-150 rounded-lg bg-default hover:bg-elevated/25 cursor-pointer px-1 pb-1 h-48 flex flex-col select-none">
+        class="border border-default duration-150 rounded-lg bg-default hover:bg-elevated/25 cursor-pointer px-1 pb-1 h-48 flex flex-col select-none"
+        draggable="true"
+        @dragstart="onDragStart"
+        @contextmenu.prevent="showContextMenu">
         <div class="h-32 w-full mt-1 rounded-md bg-black/30 overflow-hidden grid place-items-center">
             <img v-if="asset.thumbnail" :src="asset.thumbnail" alt="thumbnail" class="h-32 w-full object-cover">
             <UIcon v-else name="i-lucide-image" class="text-white/30 w-6 h-6" />
@@ -41,10 +44,10 @@ const props = defineProps({
     asset: {
         type: Object,
         required: true,
-    },
+    }
 });
 
-const emit = defineEmits(['deleted']);
+const emit = defineEmits(['deleted', 'moved']);
 
 function selectAsset() {
     if (showDeleteConfirm.value) return; // Don't select if in delete mode
@@ -56,6 +59,20 @@ function selectAsset() {
         return;
     }
     push(`/assets/${props.asset._id}`);
+}
+
+function showContextMenu(event) {
+    event.stopPropagation();
+    console.log('Context menu at:', event.clientX, event.clientY);
+}
+
+function onDragStart(event) {
+    event.dataTransfer.setData('application/json', JSON.stringify({
+        type: 'asset',
+        id: props.asset._id,
+        name: props.asset.originalname
+    }));
+    event.dataTransfer.effectAllowed = 'move';
 }
 
 async function deleteAsset() {
