@@ -1,7 +1,19 @@
 export default defineEventHandler(async (event) => {
     const { user } = await requireUserSession(event);
+    const query = getQuery(event);
+    const folderId = query.folder || null;
 
-    const assets = await AssetModel.find({ user: user.id, deletedAt: null }).select("-user -__v").lean();
+    // Build query filter
+    const filter = { 
+        user: user.id, 
+        deletedAt: null,
+        folder: folderId
+    };
+
+    const assets = await AssetModel.find(filter)
+        .select("-user -__v")
+        .sort({ createdAt: -1 })
+        .lean();
 
     return assets;
 });

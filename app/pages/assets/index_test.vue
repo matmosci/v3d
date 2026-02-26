@@ -5,7 +5,7 @@
             <div class="p-4 border-b border-default">
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="font-semibold">Folders</h2>
-                    <UButton @click="openCreateModal" size="xs" variant="ghost" icon="i-lucide-plus">
+                    <UButton @click="showModal" size="xs" variant="ghost" icon="i-lucide-plus">
                         New
                     </UButton>
                 </div>
@@ -74,7 +74,7 @@
                     </h2>
                     
                     <div class="flex gap-2">
-                        <UButton @click="openCreateModal" size="sm" variant="outline" icon="i-lucide-folder-plus">
+                        <UButton @click="showModal" size="sm" variant="outline" icon="i-lucide-folder-plus">
                             New Folder
                         </UButton>
                     </div>
@@ -123,15 +123,10 @@
         </div>
     </div>
 
-    <!-- Create Folder Modal -->
+    <!-- Simple Modal for Testing -->
     <div v-if="showCreateFolderModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click="closeModal">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full mx-4 p-6" @click.stop>
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-semibold text-lg">Create New Folder</h3>
-                <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
-                    <UIcon name="i-lucide-x" class="w-5 h-5" />
-                </button>
-            </div>
+            <h3 class="font-semibold text-lg mb-4">Create New Folder</h3>
             
             <div class="space-y-4">
                 <div>
@@ -140,7 +135,6 @@
                         v-model="newFolderName" 
                         placeholder="Enter folder name..."
                         @keydown.enter="createFolder"
-                        autofocus
                     />
                 </div>
                 
@@ -232,10 +226,17 @@ const contextMenuItems = computed(() => [
     { key: 'delete', label: 'Delete', icon: 'i-lucide-trash-2', class: 'text-red-500' }
 ]);
 
-// Watch for modal state changes  
-watch(showCreateFolderModal, (newValue, oldValue) => {
-    console.log('Modal state changed:', { from: oldValue, to: newValue });
-});
+// Modal functions
+function showModal() {
+    console.log('Showing modal...');
+    showCreateFolderModal.value = true;
+}
+
+function closeModal() {
+    showCreateFolderModal.value = false;
+    newFolderName.value = '';
+    newFolderColor.value = '#3b82f6';
+}
 
 // Methods
 async function fetchEntities() {
@@ -273,24 +274,12 @@ function selectFolder(folderId) {
     fetchEntities();
 }
 
-// Modal functions
-function openCreateModal() {
-    console.log('Opening create folder modal...', showCreateFolderModal.value);
-    showCreateFolderModal.value = true;
-    console.log('Modal state after setting:', showCreateFolderModal.value);
-}
-
-function closeModal() {
-    showCreateFolderModal.value = false;
-    newFolderName.value = '';
-    newFolderColor.value = '#3b82f6';
-}
-
 async function createFolder() {
     if (!newFolderName.value.trim()) return;
     
     try {
         creatingFolder.value = true;
+        console.log('Creating folder:', newFolderName.value);
         await createFolderApi(newFolderName.value, currentFolder.value, newFolderColor.value);
         closeModal();
     } catch (error) {
@@ -350,7 +339,7 @@ async function createSubfolder(parentFolderId) {
         try {
             await createFolderApi(folderName.trim(), parentFolderId, '#3b82f6');
         } catch (error) {
-            alert('Failed to create folder');
+            alert('Failed to create folder: ' + error.message);
         }
     }
 }
@@ -384,6 +373,7 @@ async function handleFolderMove(data) {
 
 // Initialize
 onMounted(async () => {
+    console.log('Mounting assets page...');
     await fetchFolders();
     await fetchEntities();
     

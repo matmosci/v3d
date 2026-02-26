@@ -10,11 +10,28 @@ export default defineEventHandler(async (event) => {
         });
     }
 
+    // Validate folder if provided
+    if (body.folder) {
+        const folder = await FolderModel.findOne({ 
+            _id: body.folder, 
+            user: user.id, 
+            deletedAt: null 
+        });
+        
+        if (!folder) {
+            return createError({
+                statusCode: 400,
+                statusMessage: "Invalid folder",
+            });
+        }
+    }
+
     // Create new entity
     const entity = await EntityModel.create({
         user: user.id,
         name: body.name.trim(),
         description: body.description || '',
+        folder: body.folder || null,
         camera: {
             position: body.camera?.position || [0, 1.6, 5],
             quaternion: body.camera?.quaternion || [0, 0, 0, 1],

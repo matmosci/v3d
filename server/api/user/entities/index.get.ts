@@ -1,7 +1,16 @@
 export default defineEventHandler(async (event) => {
     const { user } = await requireUserSession(event);
+    const query = getQuery(event);
+    const folderId = query.folder || null;
 
-    const entities = await EntityModel.find({ user: user.id, deletedAt: null })
+    // Build query filter
+    const filter = { 
+        user: user.id, 
+        deletedAt: null,
+        folder: folderId
+    };
+
+    const entities = await EntityModel.find(filter)
         .select("-user -__v")
         .sort({ createdAt: -1 })
         .lean();
