@@ -7,10 +7,22 @@
     </div>
 
     <div class="absolute top-3 right-3 z-10 flex items-center gap-2">
+      <UButton size="sm" icon="i-lucide-file-up" :loading="replacingFile" @click="triggerFileInput">
+        Replace File
+      </UButton>
       <UButton size="sm" icon="i-lucide-image-up" :loading="savingThumbnail" @click="createThumbnail">
         Create Thumbnail
       </UButton>
     </div>
+
+    <!-- Hidden file input for replacement -->
+    <input 
+      ref="fileInput" 
+      type="file" 
+      accept=".glb"
+      style="display: none"
+      @change="handleFileSelection"
+    />
 
     <div v-if="loading" class="absolute inset-0 z-20 grid place-items-center text-white/80 text-sm">
       Loading asset...
@@ -37,6 +49,8 @@ const viewport = ref(null);
 const loading = ref(true);
 const error = ref("");
 const savingThumbnail = ref(false);
+const replacingFile = ref(false);
+const fileInput = ref(null);
 
 let renderer = null;
 let scene = null;
@@ -144,6 +158,47 @@ const setup = async () => {
     error.value = "Failed to load asset preview";
   } finally {
     loading.value = false;
+  }
+};
+
+const triggerFileInput = () => {
+  fileInput.value?.click();
+};
+
+const handleFileSelection = async (event) => {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+
+  const file = files[0];
+
+  // Validate file type
+  if (!file.name.endsWith('.glb')) {
+    error.value = "Only .glb files are supported";
+    return;
+  }
+
+  try {
+    replacingFile.value = true;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    await $fetch(`/api/assets/${route.params.id}/file`, {
+      method: 'PUT',
+      body: formData,
+    });
+
+    // Reload the page to show the new asset
+    window.location.reload();
+  } catch (e) {
+    console.error(e);
+    error.value = "Failed to replace file. Please try again.";
+  } finally {
+    replacingFile.value = false;
+    // Reset file input
+    if (fileInput.value) {
+      fileInput.value.value = '';
+    }
   }
 };
 

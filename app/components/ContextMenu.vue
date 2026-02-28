@@ -119,8 +119,12 @@ const resetAll = () => {
             </div>
             <div>
                 <span class="text-white/60">Source:</span>
-                <div class="break-all">{{ selected?.sourceType || 'asset' }} / {{ selected?.sourceId || selected?.asset
-                    }}</div>
+                <div class="break-all">
+                    <!-- <NuxtLink v-if="selected" :to="`${selected?.sourceType === 'asset' ? '/assets' : ''}/${selected?.sourceId}`" class="underline" :external="selected?.sourceType === 'entity'"> -->
+                    <NuxtLink v-if="selected" :to="`${selected?.sourceType === 'asset' ? '/assets' : ''}/${selected?.sourceId}`" class="underline" external>
+                        {{ selected?.sourceType || 'asset' }} / {{ selected?.sourceId || selected?.asset }}
+                    </NuxtLink>
+                </div>
             </div>
             <div class="pt-2">
                 <span class="text-white/60">Position</span>
