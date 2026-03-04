@@ -3,17 +3,17 @@
     <div ref="viewport" class="h-full w-full" />
 
     <div class="absolute top-3 left-3 z-10 flex items-center gap-2">
-      <UButton size="sm" icon="i-lucide-arrow-left" @click="goBack">Back</UButton>
+      <UButton size="sm" icon="i-lucide-arrow-left" @click="goBack" color="neutral" variant="ghost">Back</UButton>
     </div>
 
     <div class="absolute top-3 right-3 z-10 flex items-center gap-2">
-      <UButton size="sm" icon="i-lucide-download" @click="downloadFile">
+      <UButton size="sm" icon="i-lucide-download" @click="downloadFile" color="neutral" variant="ghost">
         Download File
       </UButton>
-      <UButton size="sm" icon="i-lucide-file-up" :loading="replacingFile" @click="triggerFileInput">
+      <UButton size="sm" icon="i-lucide-file-up" :loading="replacingFile" @click="triggerFileInput" color="neutral" variant="ghost">
         Replace File
       </UButton>
-      <UButton size="sm" icon="i-lucide-image-up" :loading="savingThumbnail" @click="createThumbnail">
+      <UButton size="sm" icon="i-lucide-image-up" :loading="savingThumbnail" @click="createThumbnail" color="neutral" variant="ghost">
         Create Thumbnail
       </UButton>
     </div>
