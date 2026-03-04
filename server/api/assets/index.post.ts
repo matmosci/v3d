@@ -7,6 +7,8 @@ export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig();
     const directory = config.uploads.path || "./uploads";
     const { user } = await requireUserSession(event);
+    const query = getQuery(event);
+    const folder = query.folder ? String(query.folder) : null;
 
     const files = await readMultipartFormData(event);
     if (!files || files.length === 0) {
@@ -51,6 +53,7 @@ export default defineEventHandler(async (event) => {
             user: user.id,
             originalname: file.filename,
             size: file.data.length,
+            folder: folder,
         });
 
         const id = asset._id.toString();
@@ -65,6 +68,7 @@ export default defineEventHandler(async (event) => {
             user: user.id,
             name: entityName,
             description: `Generated from ${file.filename}`,
+            folder: folder,
         });
         
         // Create an instance linking the asset to the entity

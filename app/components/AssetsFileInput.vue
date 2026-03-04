@@ -5,6 +5,13 @@
 </template>
 
 <script setup>
+const props = defineProps({
+    folder: {
+        type: String,
+        default: null,
+    }
+});
+
 const files = ref([]);
 const disabled = computed(() => files.value.length > 0);
 
@@ -16,9 +23,11 @@ async function uploadAssets() {
         formData.append('files', files.value[i]);
     };
     try {
+        const query = props.folder ? { folder: props.folder } : {};
         await $fetch('/api/assets', {
             method: 'POST',
             body: formData,
+            query,
         });
         emit('uploaded');
     } catch (error) {

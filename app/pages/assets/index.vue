@@ -74,7 +74,7 @@
                 <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8">
                     <!-- Upload and Create Options -->
                     <AssetsNewEntity @created="fetchEntities" />
-                    <AssetsFileInput @uploaded="handleFileUploaded" />
+                    <AssetsFileInput :folder="currentFolder" @uploaded="handleFileUploaded" />
 
                     <!-- Subfolders in current directory -->
                     <div v-for="subfolder in currentSubfolders" :key="subfolder._id"
