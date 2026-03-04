@@ -7,6 +7,9 @@
     </div>
 
     <div class="absolute top-3 right-3 z-10 flex items-center gap-2">
+      <UButton size="sm" icon="i-lucide-download" @click="downloadFile">
+        Download File
+      </UButton>
       <UButton size="sm" icon="i-lucide-file-up" :loading="replacingFile" @click="triggerFileInput">
         Replace File
       </UButton>
@@ -61,6 +64,10 @@ let resizeHandler = null;
 
 const goBack = () => {
   router.push("/assets");
+};
+
+const downloadFile = () => {
+  window.location.href = `/api/assets/${route.params.id}/download`;
 };
 
 const enforceBackfaceCulling = (object) => {
