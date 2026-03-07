@@ -125,6 +125,9 @@
     <!-- Edit Modal -->
     <EditItemModal :show="showEditModal" :item="entityData" item-type="entity" @close="showEditModal = false"
         @saved="handleEntityUpdated" />
+
+    <!-- Loading Indicator -->
+    <LoadingIndicator :editor="editor" />
 </template>
 
 <script setup>

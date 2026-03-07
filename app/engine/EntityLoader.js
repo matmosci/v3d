@@ -88,18 +88,55 @@ export default class EntityLoader {
             const resInstances = await fetch(`/api/entities/${id}/instances`);
             this.instancesData = await resInstances.json();
 
+            // Calculate total assets to load
+            const assetsToLoad = this.getAssetsToLoadCount(this.instancesData);
+            const instanceCount = this.instancesData.length;
+            
+            // Always emit loading start event (even if no new assets to download)
+            this.ctx.events.emit("loading:start", {
+                total: Math.max(assetsToLoad, instanceCount, 1), // Show progress for instances too
+                loaded: 0,
+                assetsToDownload: assetsToLoad,
+                instancesToPlace: instanceCount
+            });
+
             await this.getAssets();
 
+            let placedInstances = 0;
+            const totalInstances = this.instancesData.length;
+            
             for (const instance of this.instancesData) {
                 await this.placeInstance(instance, instance);
+                placedInstances++;
+                
+                // Emit progress for instance placement
+                this.ctx.events.emit("loading:progress", {
+                    total: Math.max(totalInstances, 1),
+                    loaded: placedInstances,
+                    phase: "placing"
+                });
             };
+
+            // Emit loading complete event
+            this.ctx.events.emit("loading:complete");
 
             this.applyTransform(this.camera, this.metaData.camera);
             return this.metaData;
         } catch (error) {
+            this.ctx.events.emit("loading:error", { error });
             alert(`Failed to load entity ${id}`);
             console.error(`Failed to load entity ${id}`, error);
         }
+    }
+
+    getAssetsToLoadCount(instances = []) {
+        const assetsSet = new Set(
+            instances
+                .map((instance) => this.normalizeInstanceSource(instance))
+                .filter((source) => source && source.sourceType === "asset")
+                .map((source) => source.sourceId)
+        );
+        return Array.from(assetsSet).filter(asset => !this.ctx.assets.has(asset)).length;
     }
 
     async getAssets() {
@@ -113,9 +150,18 @@ export default class EntityLoader {
                 .filter((source) => source && source.sourceType === "asset")
                 .map((source) => source.sourceId)
         );
+        
+        const assetsToLoad = Array.from(assetsSet).filter(asset => !this.ctx.assets.has(asset));
+        let loadedCount = 0;
+        
         await Promise.all(
-            Array.from(assetsSet).map(async (asset) => {
-                if (!this.ctx.assets.has(asset)) await this.cacheAsset(asset);
+            assetsToLoad.map(async (asset) => {
+                await this.cacheAsset(asset);
+                loadedCount++;
+                this.ctx.events.emit("loading:progress", {
+                    total: assetsToLoad.length,
+                    loaded: loadedCount
+                });
             })
         );
     }
