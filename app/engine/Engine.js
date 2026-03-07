@@ -6,6 +6,7 @@ import EntityLoader from "./EntityLoader";
 import Dust from "./Dust";
 import InputHandler from "./InputHandler";
 import Keybindings from "./Keybindings";
+import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 
 export default class Engine {
     constructor(container) {
@@ -46,7 +47,7 @@ export default class Engine {
         this.systems.cameraControls = new CameraControls(this.context);
         this.systems.cursor = new Cursor3D(this.context);
         this.systems.entity = new EntityLoader(this.context);
-        
+
         // Make cursor accessible through context for easier access
         this.context.cursor = this.systems.cursor;
     }
@@ -103,12 +104,19 @@ export default class Engine {
     }
 
     setupScene() {
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
-        this.context.scene.add(ambientLight);
+        // const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+        // this.context.scene.add(ambientLight);
 
         const bgColor = 0x0f172b;
         this.context.scene.background = new THREE.Color(bgColor);
         this.context.scene.fog = new THREE.FogExp2(bgColor, 0.01);
+
+        loadHdr("/assets/textures/dikhololo_night_1k.hdr").then((texture) => {
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            this.context.scene.environment = texture;
+        }).catch((error) => {
+            console.error("Failed to load HDR environment:", error);
+        });
     }
 
     async loadEntity(entityId) {
@@ -119,7 +127,7 @@ export default class Engine {
     async loadAsset(assetId) {
         // Clear the scene of any existing content
         this.clearScene();
-        
+
         // Load and display the asset
         try {
             await this.systems.entity.cacheAsset(assetId);
@@ -139,8 +147,8 @@ export default class Engine {
         // Remove all user-added objects but keep lights and camera
         const objectsToRemove = [];
         this.context.scene.traverse((object) => {
-            if (object !== this.context.camera && 
-                !object.isLight && 
+            if (object !== this.context.camera &&
+                !object.isLight &&
                 object.parent === this.context.scene) {
                 objectsToRemove.push(object);
             }
@@ -185,4 +193,11 @@ export default class Engine {
             this.context.renderer.domElement.parentElement.removeChild(this.context.renderer.domElement);
         }
     }
+}
+
+const hdr = new HDRLoader();
+async function loadHdr(url) {
+    return new Promise((resolve, reject) => {
+        hdr.load(url, (texture) => resolve(texture), undefined, (error) => reject(error));
+    });
 }
