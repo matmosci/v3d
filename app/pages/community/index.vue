@@ -2,8 +2,46 @@
     <div class="community-assets">
         <UIH1>COMMUNITY ASSETS</UIH1>
         
+        <!-- Search Section -->
+        <div class="mb-4">
+            <div class="relative max-w-md">
+                <UInput 
+                    ref="searchInput"
+                    v-model="searchQuery" 
+                    placeholder="Search assets... (Ctrl+K)" 
+                    size="lg"
+                    :ui="{ icon: { trailing: { pointer: '' } } }"
+                >
+                    <template #leading>
+                        <UIcon name="i-lucide-search" class="w-4 h-4 text-gray-400" />
+                    </template>
+                    <template #trailing>
+                        <UButton 
+                            v-if="searchQuery" 
+                            @click="clearSearch" 
+                            size="2xs" 
+                            variant="ghost" 
+                            icon="i-lucide-x"
+                            class="-mr-1"
+                        />
+                    </template>
+                </UInput>
+            </div>
+            
+            <!-- Search Results Info -->
+            <div v-if="searchQuery" class="mt-2 text-sm text-gray-500">
+                {{ filteredEntities.length }} of {{ entities.length }} assets found
+            </div>
+        </div>
+        
         <div v-if="loading" class="text-center py-8">
             <p>Loading entities...</p>
+        </div>
+        
+        <div v-else-if="filteredEntities.length === 0 && searchQuery" class="text-center py-8">
+            <UIcon name="i-lucide-search-x" class="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p class="text-gray-500 mb-2">No assets found matching "{{ searchQuery }}"</p>
+            <UButton @click="clearSearch" size="sm" variant="ghost">Clear search</UButton>
         </div>
         
         <div v-else-if="entities.length === 0" class="text-center py-8">
@@ -11,7 +49,7 @@
         </div>
         
         <div v-else class="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-            <div v-for="entity in entities" :key="entity._id" class="flex flex-col border border-default rounded-lg bg-default overflow-hidden cursor-pointer hover:bg-elevated/25 transition-colors" @click="selectEntity(entity)">
+            <div v-for="entity in filteredEntities" :key="entity._id" class="flex flex-col border border-default rounded-lg bg-default overflow-hidden cursor-pointer hover:bg-elevated/25 transition-colors" @click="selectEntity(entity)">
                 <div class="p-1">
                     <div class="h-32 w-full bg-black/30 rounded-md overflow-hidden">
                         <img v-if="entity.thumbnail" :src="entity.thumbnail" :alt="entity.name" class="h-full w-full object-cover object-center">
@@ -24,7 +62,20 @@
                 <div class="p-2">
                     <h3 class="font-medium text-sm mb-1 truncate">{{ entity.name }}</h3>
                     <p class="text-xs text-gray-400 mb-2" v-if="entity.description">{{ entity.description }}</p>
-                    <p class="text-xs text-gray-500">by Community User</p>
+                    
+                    <!-- Tags -->
+                    <div v-if="entity.tags && entity.tags.length > 0" class="mb-2">
+                        <div class="flex flex-wrap gap-1">
+                            <UBadge v-for="tag in entity.tags.slice(0, 2)" :key="tag" size="xs" class="text-xs px-1 py-0">
+                                #{{ tag }}
+                            </UBadge>
+                            <span v-if="entity.tags.length > 2" class="text-xs text-gray-500">
+                                +{{ entity.tags.length - 2 }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xs text-gray-500">by {{ entity.owner?.username || 'Community User' }}</p>
                 </div>
                 
                 <div class="flex items-center justify-between px-2 pt-0 py-1 mt-auto">
@@ -61,8 +112,74 @@
 const entities = ref([]);
 const loading = ref(true);
 const votingStates = ref({});
+const searchQuery = ref('');
+const searchInput = ref(null);
 const editor = useEditor();
 const { loggedIn, user } = useUserSession();
+
+// Computed property for filtered entities with debounced search
+const debouncedSearchQuery = ref('');
+
+// Simple debounce implementation
+let searchTimeout = null;
+watch(searchQuery, (newValue) => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        debouncedSearchQuery.value = newValue;
+    }, 300);
+}, { immediate: true });
+
+const filteredEntities = computed(() => {
+    if (!debouncedSearchQuery.value.trim()) {
+        return entities.value;
+    }
+    
+    const query = debouncedSearchQuery.value.toLowerCase().trim();
+    
+    return entities.value.filter(entity => {
+        // Search in name
+        if (entity.name && entity.name.toLowerCase().includes(query)) {
+            return true;
+        }
+        
+        // Search in description
+        if (entity.description && entity.description.toLowerCase().includes(query)) {
+            return true;
+        }
+        
+        // Search in tags
+        if (entity.tags && Array.isArray(entity.tags)) {
+            return entity.tags.some(tag => 
+                tag.toLowerCase().includes(query)
+            );
+        }
+        
+        return false;
+    });
+});
+
+// Function to clear search
+function clearSearch() {
+    searchQuery.value = '';
+    // Focus the input element within the UInput component
+    nextTick(() => {
+        searchInput.value?.$el?.querySelector('input')?.focus();
+    });
+}
+
+// Keyboard shortcut to focus search
+function handleKeyDown(event) {
+    // Ctrl+K or Cmd+K to focus search
+    if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        searchInput.value?.$el?.querySelector('input')?.focus();
+    }
+    
+    // Escape to clear search if input is focused
+    if (event.key === 'Escape' && document.activeElement === searchInput.value?.$el?.querySelector('input')) {
+        clearSearch();
+    }
+}
 
 // Fetch real entities from the community API
 async function fetchEntities() {
@@ -145,5 +262,11 @@ function openEntity(entity) {
 // Fetch entities when component mounts
 onMounted(() => {
     fetchEntities();
+    document.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('keydown', handleKeyDown);
+    if (searchTimeout) clearTimeout(searchTimeout);
 });
 </script>
