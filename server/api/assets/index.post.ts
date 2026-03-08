@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { buildLodFilename } from '../../utils/asset-lod';
 
 const acceptedExtensions = [".glb"];
 
@@ -7,6 +8,8 @@ export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig();
     const directory = config.uploads.path || "./uploads";
     const { user } = await requireUserSession(event);
+    const sessionUser = user as any;
+    const userId = sessionUser.id || sessionUser._id;
     const query = getQuery(event);
     const folder = query.folder ? String(query.folder) : null;
 
@@ -50,7 +53,7 @@ export default defineEventHandler(async (event) => {
         }
 
         const asset = await AssetModel.create({
-            user: user.id,
+            user: userId,
             originalname: file.filename,
             size: file.data.length,
             folder: folder,
@@ -59,13 +62,13 @@ export default defineEventHandler(async (event) => {
         const id = asset._id.toString();
         console.log(id);
 
-        const filePath = path.join(directory, asset._id.toString());
+        const filePath = path.join(directory, buildLodFilename(asset._id.toString(), 0));
         fs.writeFileSync(filePath, file.data);
         
         // Auto-create entity for the uploaded asset
         const entityName = file.filename.replace(/\.[^/.]+$/, ''); // Remove file extension
         const entity = await EntityModel.create({
-            user: user.id,
+            user: userId,
             name: entityName,
             description: `Generated from ${file.filename}`,
             folder: folder,
@@ -73,7 +76,7 @@ export default defineEventHandler(async (event) => {
         
         // Create an instance linking the asset to the entity
         await InstanceModel.create({
-            user: user.id,
+            user: userId,
             entity: entity._id,
             sourceType: 'asset',
             sourceId: asset._id,

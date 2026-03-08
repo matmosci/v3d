@@ -7,14 +7,51 @@
     </div>
 
     <div class="absolute top-3 right-3 z-10 flex items-center gap-2">
+      <div class="flex items-center gap-1 rounded bg-black/40 px-2 py-1">
+        <span class="text-[11px] text-white/70">Slot</span>
+        <UButton
+          v-for="level in lodSlots"
+          :key="level"
+          size="xs"
+          color="neutral"
+          variant="ghost"
+          :class="selectedLodLevel === level ? 'bg-white/20' : ''"
+          @click="selectedLodLevel = level"
+        >
+          LOD{{ level }}
+        </UButton>
+      </div>
+
       <UButton size="sm" icon="i-lucide-download" @click="downloadFile" color="neutral" variant="ghost">
         Download File
       </UButton>
       <UButton size="sm" icon="i-lucide-file-up" :loading="replacingFile" @click="triggerFileInput" color="neutral" variant="ghost">
-        Replace File
+        Replace LOD{{ selectedLodLevel }}
       </UButton>
       <UButton size="sm" icon="i-lucide-image-up" :loading="savingThumbnail" @click="createThumbnail" color="neutral" variant="ghost">
         Create Thumbnail
+      </UButton>
+    </div>
+
+    <div class="absolute right-3 bottom-3 z-10 rounded-lg bg-black/60 p-3 text-xs text-white min-w-64 space-y-2">
+      <div class="font-medium">LOD Slots</div>
+      <div v-for="level in lodSlots" :key="`slot-${level}`" class="grid grid-cols-[auto,1fr,auto] items-center gap-2">
+        <span>LOD{{ level }}</span>
+        <span :class="availableLodLevels.includes(level) ? 'text-emerald-300' : 'text-white/40'">
+          {{ availableLodLevels.includes(level) ? 'uploaded' : 'empty' }}
+        </span>
+        <UInput
+          v-if="level > 0"
+          v-model.number="lodDistances[level]"
+          type="number"
+          min="0"
+          size="xs"
+          class="w-20"
+        />
+        <span v-else class="text-white/60">0</span>
+      </div>
+      <UButton size="xs" color="neutral" variant="soft" :loading="savingLodDistances" @click="saveLodDistances">
+        Save Distances
       </UButton>
     </div>
 
@@ -53,7 +90,12 @@ const loading = ref(true);
 const error = ref("");
 const savingThumbnail = ref(false);
 const replacingFile = ref(false);
+const savingLodDistances = ref(false);
 const fileInput = ref(null);
+const selectedLodLevel = ref(0);
+const availableLodLevels = ref([]);
+const lodDistances = ref([0, 20, 60, 150]);
+const lodSlots = [0, 1, 2, 3];
 
 let renderer = null;
 let scene = null;
@@ -61,13 +103,61 @@ let camera = null;
 let controls = null;
 let frameId = null;
 let resizeHandler = null;
+let activeObject = null;
+let activePreviewLoadToken = 0;
 
 const goBack = () => {
   router.push("/assets");
 };
 
 const downloadFile = () => {
-  window.location.href = `/api/assets/${route.params.id}/download`;
+  window.location.href = `/api/assets/${route.params.id}/download?lod=lod${selectedLodLevel.value}`;
+};
+
+const normalizeLodDistances = (input = []) => {
+  const defaults = [0, 20, 60, 150];
+  const next = [...defaults];
+
+  for (let i = 0; i < defaults.length; i++) {
+    const value = Number(input?.[i]);
+    if (Number.isFinite(value) && value >= 0) {
+      next[i] = value;
+    }
+  }
+
+  next[0] = 0;
+  return next;
+};
+
+const fetchAssetMeta = async () => {
+  const asset = await $fetch(`/api/assets/${route.params.id}`);
+  availableLodLevels.value = Array.isArray(asset.availableLodLevels)
+    ? asset.availableLodLevels
+    : [0];
+  lodDistances.value = normalizeLodDistances(asset.lodDistances);
+};
+
+const loadAssetPreview = async (requestedLevel = selectedLodLevel.value) => {
+  const loader = new GLTFLoader();
+  const token = ++activePreviewLoadToken;
+  const assetId = route.params.id;
+
+  const gltf = await new Promise((resolve, reject) => {
+    loader.load(`/api/assets/${assetId}/data?lod=lod${requestedLevel}`, resolve, undefined, reject);
+  });
+
+  if (token !== activePreviewLoadToken) return;
+
+  const object = gltf.scene;
+  enforceBackfaceCulling(object);
+
+  if (activeObject?.parent) {
+    activeObject.parent.remove(activeObject);
+  }
+
+  activeObject = object;
+  scene.add(activeObject);
+  fitCameraToObject(activeObject);
 };
 
 const enforceBackfaceCulling = (object) => {
@@ -138,17 +228,8 @@ const setup = async () => {
     // const grid = new THREE.GridHelper(100, 100, 0x444444, 0x222222);
     // scene.add(grid);
 
-    const loader = new GLTFLoader();
-    const assetId = route.params.id;
-
-    const gltf = await new Promise((resolve, reject) => {
-      loader.load(`/api/assets/${assetId}/data`, resolve, undefined, reject);
-    });
-
-    const object = gltf.scene;
-    enforceBackfaceCulling(object);
-    scene.add(object);
-    fitCameraToObject(object);
+    await fetchAssetMeta();
+    await loadAssetPreview(selectedLodLevel.value);
 
     resizeHandler = () => {
       if (!renderer || !camera || !container) return;
@@ -192,11 +273,12 @@ const handleFileSelection = async (event) => {
 
     await $fetch(`/api/assets/${route.params.id}/file`, {
       method: 'PUT',
+      query: { lod: `lod${selectedLodLevel.value}` },
       body: formData,
     });
 
-    // Reload the page to show the new asset
-    window.location.reload();
+    await fetchAssetMeta();
+    await loadAssetPreview(selectedLodLevel.value);
   } catch (e) {
     console.error(e);
     error.value = "Failed to replace file. Please try again.";
@@ -208,6 +290,38 @@ const handleFileSelection = async (event) => {
     }
   }
 };
+
+const saveLodDistances = async () => {
+  try {
+    savingLodDistances.value = true;
+    lodDistances.value = normalizeLodDistances(lodDistances.value);
+    await $fetch(`/api/assets/${route.params.id}`, {
+      method: 'PUT',
+      body: {
+        lodDistances: lodDistances.value,
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    error.value = 'Failed to save LOD distances';
+  } finally {
+    savingLodDistances.value = false;
+  }
+};
+
+watch(selectedLodLevel, async (level) => {
+  if (!scene) return;
+
+  try {
+    loading.value = true;
+    await loadAssetPreview(level);
+  } catch (e) {
+    console.error(e);
+    error.value = `Failed to load lod${level} preview`;
+  } finally {
+    loading.value = false;
+  }
+});
 
 const createThumbnail = async () => {
   if (!renderer || !camera || !scene) return;

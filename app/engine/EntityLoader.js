@@ -4,6 +4,7 @@ import {
     BoxGeometry,
     ConeGeometry,
     CylinderGeometry,
+    LOD,
     GridHelper,
     Group,
     Matrix4,
@@ -167,10 +168,68 @@ export default class EntityLoader {
     }
 
     async cacheAsset(asset) {
-        const gltf = await loadGltf(`/api/assets/${asset}/data`);
-        const object = gltf.scene;
-        object.name = asset;
-        this.ctx.assets.set(asset, object);
+        const defaults = [0, 20, 60, 150];
+        let availableLevels = [0];
+        let lodDistances = defaults;
+
+        try {
+            const meta = await fetch(`/api/assets/${asset}`).then((res) => res.ok ? res.json() : null);
+            if (Array.isArray(meta?.availableLodLevels) && meta.availableLodLevels.length) {
+                availableLevels = [...meta.availableLodLevels].sort((a, b) => a - b);
+            }
+
+            if (Array.isArray(meta?.lodDistances) && meta.lodDistances.length) {
+                lodDistances = meta.lodDistances;
+            }
+        } catch (error) {
+            console.warn(`Failed to read asset metadata for ${asset}, using lod0 fallback`, error);
+        }
+
+        if (availableLevels.length <= 1) {
+            const singleLevel = availableLevels[0] ?? 0;
+            const gltf = await loadGltf(`/api/assets/${asset}/data?lod=${singleLevel}`);
+            const object = gltf.scene;
+            object.name = asset;
+            this.ctx.assets.set(asset, object);
+            return;
+        }
+
+        const lod = new LOD();
+        let successCount = 0;
+
+        for (const level of availableLevels) {
+            try {
+                const gltf = await loadGltf(`/api/assets/${asset}/data?lod=${level}`);
+                const object = gltf.scene;
+                const configuredDistance = Number(lodDistances[level]);
+                const fallbackDistance = defaults[level] ?? (level * 50);
+                const distance = Number.isFinite(configuredDistance) ? configuredDistance : fallbackDistance;
+                lod.addLevel(object, distance);
+                successCount++;
+            } catch (error) {
+                console.warn(`Failed to load lod${level} for asset ${asset}`, error);
+            }
+        }
+
+        if (successCount === 0) {
+            const gltf = await loadGltf(`/api/assets/${asset}/data?lod=0`);
+            const object = gltf.scene;
+            object.name = asset;
+            this.ctx.assets.set(asset, object);
+            return;
+        }
+
+        if (successCount === 1) {
+            const onlyLevel = lod.levels[0]?.object;
+            if (onlyLevel) {
+                onlyLevel.name = asset;
+                this.ctx.assets.set(asset, onlyLevel);
+                return;
+            }
+        }
+
+        lod.name = asset;
+        this.ctx.assets.set(asset, lod);
     }
 
     async resolvePlacementObject(source, visited = new Set()) {

@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { buildLodFilename, parseLodLevel } from '../../../utils/asset-lod';
 
 const acceptedExtensions = [".glb"];
 
@@ -8,6 +9,8 @@ export default defineEventHandler(async (event) => {
     const directory = config.uploads.path || "./uploads";
     const { user } = await requireUserSession(event);
     const { id } = getRouterParams(event);
+    const query = getQuery(event);
+    const level = parseLodLevel(query.lod, 0);
 
     // Find the asset and verify ownership
     const asset = await AssetModel.findOne({ 
@@ -64,8 +67,10 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    // Delete the old file from disk
-    const filePath = path.join(directory, asset._id.toString());
+    const targetFilename = buildLodFilename(asset._id.toString(), level);
+    const filePath = path.join(directory, targetFilename);
+
+    // Delete the old file for this slot to keep replacement semantics.
     if (fs.existsSync(filePath)) {
         try {
             fs.unlinkSync(filePath);
@@ -78,15 +83,16 @@ export default defineEventHandler(async (event) => {
     // Write the new file
     fs.writeFileSync(filePath, file.data);
 
-    // Update asset with new metadata
-    const updatedAsset = await AssetModel.findByIdAndUpdate(
-        id,
-        {
-            originalname: file.filename,
-            size: file.data.length
-        },
-        { new: true }
-    ).select("-user -__v");
+    const updates: Record<string, any> = {};
+    // Keep legacy top-level metadata aligned with lod0 for existing UI.
+    if (level === 0) {
+        updates.originalname = file.filename;
+        updates.size = file.data.length;
+    }
+
+    const updatedAsset = await AssetModel.findByIdAndUpdate(id, updates, { new: true }).select("-user -__v");
+
+    setHeader(event, 'X-Asset-Lod-Selected', String(level));
 
     return updatedAsset;
 });

@@ -14,6 +14,12 @@ export const AssetModel = defineMongooseModel({
         tags: { type: [String], default: [] },
         thumbnail: { type: String, required: false },
         size: { type: Number, required: true },
+        // Per-level switch distances used by runtime LOD selection.
+        // Index maps directly to lod level (lod0, lod1, ...).
+        lodDistances: {
+            type: [Number],
+            default: [0, 20, 60, 150],
+        },
         deletedAt: { type: Date, default: null },
     },
     options: {
