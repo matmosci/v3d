@@ -101,7 +101,21 @@
                         </button>
                     </div>
                     
-                    <UButton size="xs" variant="ghost" @click.stop="openEntity(entity)">Open</UButton>
+                    <div class="flex items-center gap-1">
+                        <UButton 
+                            v-if="loggedIn" 
+                            size="xs" 
+                            variant="ghost"
+                            class="px-1"
+                            @click.stop="addToMyAssets(entity)"
+                            :disabled="addingToAssets[entity._id]"
+                            :loading="addingToAssets[entity._id]"
+                            title="Add to my assets"
+                        >
+                            <UIcon name="i-lucide-plus" class="w-3 h-3" />
+                        </UButton>
+                        <UButton size="xs" variant="ghost" @click.stop="openEntity(entity)">Open</UButton>
+                    </div>
                 </div>
             </div>
         </div>
@@ -112,6 +126,7 @@
 const entities = ref([]);
 const loading = ref(true);
 const votingStates = ref({});
+const addingToAssets = ref({});
 const searchQuery = ref('');
 const searchInput = ref(null);
 const editor = useEditor();
@@ -236,6 +251,43 @@ async function vote(entityId, voteType) {
         console.error('Failed to vote:', error);
     } finally {
         votingStates.value[entityId] = false;
+    }
+}
+
+async function addToMyAssets(entity) {
+    if (!loggedIn.value) {
+        alert('Please log in to add assets');
+        return;
+    }
+    
+    if (addingToAssets.value[entity._id]) return;
+    
+    addingToAssets.value[entity._id] = true;
+    
+    try {
+        await $fetch('/api/user/entitylinks', {
+            method: 'POST',
+            body: {
+                targetEntityId: entity._id,
+                name: entity.name,
+                description: entity.description,
+                tags: entity.tags || []
+            }
+        });
+        
+        // Show success notification (you can replace with your toast system)
+        console.log('Entity added to your assets!');
+        // TODO: Add toast notification here if you have one
+        
+    } catch (error) {
+        console.error('Failed to add entity to assets:', error);
+        if (error.statusCode === 409) {
+            alert('This item is already in your assets');
+        } else {
+            alert('Failed to add item to assets');
+        }
+    } finally {
+        addingToAssets.value[entity._id] = false;
     }
 }
 

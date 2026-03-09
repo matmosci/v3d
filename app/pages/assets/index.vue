@@ -95,10 +95,14 @@
                     <!-- Entities -->
                     <AssetsEntityItem v-for="entity in entities" :key="entity._id" :entity="entity"
                         @click="selectEntity(entity)" @deleted="removeEntity" @moved="handleEntityMoved" />
+                    
+                    <!-- Entity Links -->
+                    <AssetsEntityLinkItem v-for="entityLink in entityLinks" :key="`link-${entityLink._id}`" :entity-link="entityLink"
+                        @deleted="removeEntityLink" @moved="handleEntityLinkMoved" />
                 </div>
 
                 <!-- Empty State -->
-                <div v-if="entities.length === 0 && currentSubfolders.length === 0" class="text-center py-12">
+                <div v-if="entities.length === 0 && entityLinks.length === 0 && currentSubfolders.length === 0" class="text-center py-12">
                     <UIcon name="i-lucide-folder-open" class="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <p class="text-gray-500">No assets or folders here yet.</p>
                     <p class="text-sm text-gray-400 mt-1">Create a new asset or upload files to get started.</p>
@@ -170,6 +174,7 @@ const { folders, currentFolder, fetchFolders, createFolder: createFolderApi, upd
 
 // State
 const entities = ref([]);
+const entityLinks = ref([]);
 const showCreateFolderModal = ref(false);
 const newFolderName = ref('');
 const newFolderColor = ref('#3b82f6');
@@ -218,8 +223,15 @@ watch(showCreateFolderModal, (newValue, oldValue) => {
 async function fetchEntities() {
     try {
         const params = currentFolder.value ? { folder: currentFolder.value } : {};
-        const data = await $fetch('/api/user/entities', { params });
-        entities.value = data;
+        
+        // Fetch both entities and entity links in parallel
+        const [entitiesData, entityLinksData] = await Promise.all([
+            $fetch('/api/user/entities', { params }),
+            $fetch('/api/user/entitylinks', { params })
+        ]);
+        
+        entities.value = entitiesData;
+        entityLinks.value = entityLinksData;
     } catch (error) {
         console.error(error);
     }
@@ -243,6 +255,21 @@ function selectEntity(entity) {
 
 function removeEntity(entityId) {
     entities.value = entities.value.filter(entity => entity._id !== entityId);
+}
+
+function removeEntityLink(entityLinkId) {
+    entityLinks.value = entityLinks.value.filter(link => link._id !== entityLinkId);
+}
+
+function handleEntityLinkMoved(entityLinkId, targetFolderId) {
+    // Handle entity link folder move
+    const entityLink = entityLinks.value.find(link => link._id === entityLinkId);
+    if (entityLink) {
+        entityLink.folder = targetFolderId;
+        if (targetFolderId !== currentFolder.value) {
+            removeEntityLink(entityLinkId);
+        }
+    }
 }
 
 function selectFolder(folderId) {
