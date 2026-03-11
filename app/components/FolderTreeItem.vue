@@ -179,6 +179,11 @@ async function onDrop(event) {
                 method: 'PUT',
                 body: { folder: props.folder._id }
             });
+        } else if (data.type === 'entity-link') {
+            await $fetch(`/api/user/entitylinks/${data.id}/move`, {
+                method: 'PUT',
+                body: { folder: props.folder._id }
+            });
         } else if (data.type === 'asset') {
             await $fetch(`/api/assets/${data.id}/move`, {
                 method: 'PUT',

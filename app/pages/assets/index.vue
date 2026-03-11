@@ -380,6 +380,11 @@ async function onRootDrop(event) {
                 method: 'PUT',
                 body: { folder: null }
             });
+        } else if (data.type === 'entity-link') {
+            await $fetch(`/api/user/entitylinks/${data.id}/move`, {
+                method: 'PUT',
+                body: { folder: null }
+            });
         } else if (data.type === 'asset') {
             await $fetch(`/api/assets/${data.id}/move`, {
                 method: 'PUT',
@@ -433,6 +438,11 @@ async function onInlineFolderDrop(event, folderId) {
         
         if (data.type === 'entity') {
             await $fetch(`/api/entities/${data.id}/move`, {
+                method: 'PUT',
+                body: { folder: folderId }
+            });
+        } else if (data.type === 'entity-link') {
+            await $fetch(`/api/user/entitylinks/${data.id}/move`, {
                 method: 'PUT',
                 body: { folder: folderId }
             });

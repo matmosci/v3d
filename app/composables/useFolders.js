@@ -82,11 +82,17 @@ export const useFolders = () => {
         }
     };
 
-    // Move item (asset or entity) to folder
+    // Move item (asset, entity, or entity-link) to folder
     const moveItem = async (itemId, itemType, targetFolderId) => {
         try {
-            const endpoint = itemType === 'asset' ? 'assets' : 'entities';
-            const updatedItem = await $fetch(`/api/${endpoint}/${itemId}/move`, {
+            const endpointMap = {
+                asset: '/api/assets',
+                entity: '/api/entities',
+                'entity-link': '/api/user/entitylinks'
+            };
+            const endpoint = endpointMap[itemType] || endpointMap.entity;
+
+            const updatedItem = await $fetch(`${endpoint}/${itemId}/move`, {
                 method: 'PUT',
                 body: { folder: targetFolderId }
             });
