@@ -99,15 +99,15 @@
                 <!-- Assets Grid -->
                 <div class="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12">
                     <!-- Upload and Create Options -->
-                    <AssetsNewEntity @created="fetchEntities" />
+                    <AssetsNewAsset @created="fetchEntities" />
                     <AssetsFileInput @uploaded="handleFileUploaded" />
                     
-                    <!-- Entities -->
-                    <AssetsEntityItem 
-                        v-for="entity in entities" 
-                        :key="entity._id" 
-                        :entity="entity" 
-                        @click="selectEntity(entity)" 
+                    <!-- Assets -->
+                    <AssetsAssetItem 
+                        v-for="asset in entities" 
+                        :key="asset._id" 
+                        :asset="asset" 
+                        @click="selectEntity(asset)" 
                         @deleted="removeEntity"
                         @move="handleItemMove($event, 'entity')"
                     />
@@ -242,7 +242,7 @@ function closeModal() {
 async function fetchEntities() {
     try {
         const params = currentFolder.value ? { folder: currentFolder.value } : {};
-        const data = await $fetch('/api/user/entities', { params });
+        const data = await $fetch('/api/user/assets', { params });
         entities.value = data;
     } catch (error) {
         console.error(error);
@@ -255,9 +255,9 @@ async function handleFileUploaded(uploadResults) {
 
 function selectEntity(entity) {
     const context = editor.getContext();
-    if (context.entity) {
+    if (context.assetId) {
         context.events.emit("object:placement:start", {
-            sourceType: "entity",
+            sourceType: "asset",
             sourceId: entity._id
         });
     } else {
@@ -381,12 +381,12 @@ onMounted(async () => {
     const context = editor.getContext();
     if (context) {
         context.events.on("thumbnail:created", ({ thumbnail }) => {
-            const currentEntityId = context.entity;
-            if (currentEntityId && entities.value) {
-                const entityIndex = entities.value.findIndex(entity => entity._id === currentEntityId);
-                if (entityIndex !== -1) {
-                    entities.value[entityIndex] = {
-                        ...entities.value[entityIndex],
+            const currentAssetId = context.assetId;
+            if (currentAssetId && entities.value) {
+                const assetIndex = entities.value.findIndex(entity => entity._id === currentAssetId);
+                if (assetIndex !== -1) {
+                    entities.value[assetIndex] = {
+                        ...entities.value[assetIndex],
                         thumbnail: thumbnail
                     };
                 }

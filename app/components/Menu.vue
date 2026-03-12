@@ -3,9 +3,9 @@
     <div class="flex justify-between items-center py-3">
       <div class="flex items-center gap-2">
         <NuxtLink to="/" class="text-lg font-bold">V<span class="text-primary">3D</span></NuxtLink>
-        <template v-if="loggedIn && currentEntity">
+        <template v-if="loggedIn && currentAsset">
           /
-          <NuxtLink :to="currentEntity.path" :class="$route.path === currentEntity.path ? 'border-b' : ''" class="hover:text-gray-300 transition-colors">{{ currentEntity.name }}
+          <NuxtLink :to="currentAsset.path" :class="$route.path === currentAsset.path ? 'border-b' : ''" class="hover:text-gray-300 transition-colors">{{ currentAsset.name }}
           </NuxtLink>
         </template>
       </div>
@@ -28,29 +28,29 @@
 const { loggedIn } = useUserSession();
 const editor = useEditor();
 
-// Reactive entity state that updates when editor loads an entity
-const currentEntity = ref(null);
+// Reactive asset state that updates when editor loads an asset
+const currentAsset = ref(null);
 
-// Watch for entity loading in editor
+// Watch for asset loading in editor
 onMounted(async () => {
   let context = null;
 
-  const updateEntity = (eventData) => {
-    if (eventData?.entityId && eventData?.entityData) {
-      currentEntity.value = {
-        id: eventData.entityId,
-        name: eventData.entityData.name || `Entity ${eventData.entityId.slice(0, 8)}`,
-        path: `/${eventData.entityId}`
+  const updateAsset = (eventData) => {
+    if (eventData?.assetId && eventData?.assetData) {
+      currentAsset.value = {
+        id: eventData.assetId,
+        name: eventData.assetData.name || `Asset ${eventData.assetId.slice(0, 8)}`,
+        path: `/${eventData.assetId}`
       };
     } else {
-      currentEntity.value = null;
+      currentAsset.value = null;
     }
   };
 
   // Setup cleanup handler synchronously
   onBeforeUnmount(() => {
     if (context?.events) {
-      context.events.off('entity:loaded', updateEntity);
+      context.events.off('asset:loaded', updateAsset);
     }
   });
 
@@ -71,9 +71,9 @@ onMounted(async () => {
 
   try {
     context = await waitForEditor();
-    context.events.on('entity:loaded', updateEntity);
+    context.events.on('asset:loaded', updateAsset);
   } catch (error) {
-    console.warn('Failed to attach entity event listeners:', error);
+    console.warn('Failed to attach asset event listeners:', error);
   }
 });
 </script>

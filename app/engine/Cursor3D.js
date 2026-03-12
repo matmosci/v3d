@@ -78,7 +78,7 @@ class GhostObject extends Object3D {
             this.resetPlacementRotation();
             const pickedObjectMaterialCache = new Map();
             this.ctx.state.pickedPlacementSource = source || {
-                sourceType: "asset",
+                sourceType: "file",
                 sourceId: object.name,
             };
             this.ctx.state.pickedAsset = this.ctx.state.pickedPlacementSource.sourceId;
@@ -137,7 +137,7 @@ class GhostObject extends Object3D {
             this.ctx.events.emit("object:placement:confirm", {
                 sourceType: source.sourceType,
                 sourceId: source.sourceId,
-                asset: source.sourceType === "asset" ? source.sourceId : undefined,
+                fileId: source.sourceType === "file" ? source.sourceId : undefined,
                 ...this.getPlacementTransform(event.ctrlKey),
             });
         }
@@ -824,7 +824,7 @@ export default class Cursor3D {
         this.ctx.events.emit("object:selected", {
             id: object.instanceId || object.uuid,
             asset: object.name,
-            sourceType: object.instanceSourceType || "asset",
+            sourceType: object.instanceSourceType || "file",
             sourceId: object.instanceSourceId || object.name,
             ...this.getObjectTransformForUi(object),
         });

@@ -104,6 +104,15 @@ const resetAll = () => {
     transform.sz = 1;
     emitTransformUpdate();
 };
+
+const sourcePath = computed(() => {
+    const sourceType = props.selected?.sourceType;
+    const sourceId = props.selected?.sourceId || props.selected?.asset;
+    if (!sourceId) return null;
+    if (sourceType === "file") return `/assets/${sourceId}`;
+    if (sourceType === "asset") return `/${sourceId}`;
+    return null;
+});
 </script>
 
 <template>
@@ -120,10 +129,12 @@ const resetAll = () => {
             <div>
                 <span class="text-white/60">Source:</span>
                 <div class="break-all">
-                    <!-- <NuxtLink v-if="selected" :to="`${selected?.sourceType === 'asset' ? '/assets' : ''}/${selected?.sourceId}`" class="underline" :external="selected?.sourceType === 'entity'"> -->
-                    <NuxtLink v-if="selected" :to="`${selected?.sourceType === 'asset' ? '/assets' : ''}/${selected?.sourceId}`" class="underline" external>
+                    <NuxtLink v-if="sourcePath" :to="sourcePath" class="underline" external>
                         {{ selected?.sourceType || 'asset' }} / {{ selected?.sourceId || selected?.asset }}
                     </NuxtLink>
+                    <span v-else>
+                        {{ selected?.sourceType || 'unknown' }} / {{ selected?.sourceId || selected?.asset || 'n/a' }}
+                    </span>
                 </div>
             </div>
             <div class="pt-2">
@@ -180,12 +191,12 @@ const resetAll = () => {
                 <UButton size="sm" icon="i-lucide-rotate-3d" variant="soft" @click="$emit('free-transform')">Free
                     Transform</UButton>
             </div>
-            <div v-if="selected?.sourceType === 'entity'" class="pt-3 flex gap-3">
-                <UButton size="sm" icon="i-lucide-split-square-vertical" title="Ungroup entity to separate objects" variant="soft"
+            <div v-if="selected?.sourceType === 'asset'" class="pt-3 flex gap-3">
+                <UButton size="sm" icon="i-lucide-split-square-vertical" title="Ungroup asset to separate objects" variant="soft"
                     @click="emit('ungroup', { recursive: recursiveUngroup })">
-                    Ungroup Entity
+                    Ungroup Asset
                 </UButton>
-                <label class="flex items-center gap-2 text-xs text-white/70" title="Ungroup all nested entities recursively">
+                <label class="flex items-center gap-2 text-xs text-white/70" title="Ungroup all nested assets recursively">
                     <input v-model="recursiveUngroup" type="checkbox" class="accent-emerald-500" />
                     Recursive
                 </label>

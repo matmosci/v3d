@@ -1,4 +1,4 @@
-@api={{$dotenv host}}/api/assets
+@api={{$dotenv host}}/api/files
 @cookie={{$dotenv cookie}}
 
 ###

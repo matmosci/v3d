@@ -82,13 +82,13 @@ export const useFolders = () => {
         }
     };
 
-    // Move item (asset, entity, or entity-link) to folder
+    // Move item (file, logical asset via `entity` token, or asset-link) to folder
     const moveItem = async (itemId, itemType, targetFolderId) => {
         try {
             const endpointMap = {
-                asset: '/api/assets',
-                entity: '/api/entities',
-                'entity-link': '/api/user/entitylinks'
+                asset: '/api/files',
+                entity: '/api/assets',
+                'asset-link': '/api/user/assetlinks'
             };
             const endpoint = endpointMap[itemType] || endpointMap.entity;
 

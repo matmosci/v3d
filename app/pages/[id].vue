@@ -1,17 +1,17 @@
 <template>
     <UIH1>ASSET</UIH1>
-    <div v-if="entityData" class="flex justify-between gap-5">
+    <div v-if="assetData" class="flex justify-between gap-5">
         <div>
             <h2 class="text-xl font-bold mb-2">
-                {{ entityData.name }}
+                {{ assetData.name }}
                 <UButton v-if="isOwner" @click="showEditModal = true" size="sm" variant="ghost" icon="i-lucide-edit-2">
                 </UButton>
             </h2>
-            <p class="text-gray-500">{{ entityData.description }}</p>
+            <p class="text-gray-500">{{ assetData.description }}</p>
 
             <div class="mt-2">
-                <div v-if="entityData.tags && entityData.tags.length > 0" class="flex flex-wrap gap-1">
-                    <UBadge v-for="tag in entityData.tags" :key="tag" class="bg-warning px-1 py-0 rounded-full">
+                <div v-if="assetData.tags && assetData.tags.length > 0" class="flex flex-wrap gap-1">
+                    <UBadge v-for="tag in assetData.tags" :key="tag" class="bg-warning px-1 py-0 rounded-full">
                         #{{ tag }}
                     </UBadge>
                 </div>
@@ -30,7 +30,7 @@
                     <div class="text-xs text-warning-600 dark:text-warning-400 mt-1">
                         Changes won't be saved permanently.<br>Create your own copy to make persistent modifications.
                     </div>
-                    <UButton @click="createCopy" size="xs" variant="soft" color="neutral" :loading="copyingEntity"
+                    <UButton @click="createCopy" size="xs" variant="soft" color="neutral" :loading="copyingAsset"
                         class="mt-2">
                         <UIcon name="i-lucide-copy" class="w-3 h-3 mr-1" />
                         Copy Asset
@@ -123,8 +123,8 @@
     </div>
 
     <!-- Edit Modal -->
-    <EditItemModal :show="showEditModal" :item="entityData" item-type="entity" @close="showEditModal = false"
-        @saved="handleEntityUpdated" />
+    <EditItemModal :show="showEditModal" :item="assetData" item-type="asset" @close="showEditModal = false"
+        @saved="handleAssetUpdated" />
 
     <!-- Loading Indicator -->
     <LoadingIndicator :editor="editor" />
@@ -133,31 +133,31 @@
 <script setup>
 const route = useRoute();
 const editor = useEditor();
-const entityData = ref(null);
+const assetData = ref(null);
 const showEditModal = ref(false);
 
 // Camera save on thumbnail functionality
 const { isSaving, saveWithThumbnail } = useCameraSaveOnThumbnail(computed(() => route.params.id));
 
-// Entity ownership functionality
-const { isOwner, createEntityCopy } = useEntityOwnership();
+// Asset ownership functionality
+const { isOwner, createAssetCopy } = useAssetOwnership();
 const { loggedIn } = useUserSession();
-const copyingEntity = ref(false);
+const copyingAsset = ref(false);
 
 const createCopy = async () => {
-    copyingEntity.value = true;
+    copyingAsset.value = true;
     try {
-        await createEntityCopy();
-        // Navigation will happen in createEntityCopy
+        await createAssetCopy();
+        // Navigation will happen in createAssetCopy.
     } catch (error) {
         console.error('Failed to create copy:', error);
     } finally {
-        copyingEntity.value = false;
+        copyingAsset.value = false;
     }
 };
 
-function handleEntityUpdated(updatedEntity) {
-    entityData.value = updatedEntity;
+function handleAssetUpdated(updatedAsset) {
+    assetData.value = updatedAsset;
 }
 
 onMounted(async () => {
@@ -180,19 +180,19 @@ onMounted(async () => {
         checkEditor();
     });
 
-    // Load the entity specified in the route
-    const entityId = route.params.id;
+    // Load the asset specified in the route.
+    const assetId = route.params.id;
 
     try {
-        entityData.value = await editor.loadEntity(entityId);
+        assetData.value = await editor.loadAsset(assetId);
 
-        // Make entity data available in editor context for ownership checks
+        // Make asset data available in editor context for ownership checks.
         if (editor.getContext()) {
-            editor.getContext().entityData = entityData.value;
+            editor.getContext().assetData = assetData.value;
 
-            editor.getContext().events.emit("entity:loaded", {
-                entityId,
-                entityData: entityData.value
+            editor.getContext().events.emit("asset:loaded", {
+                assetId,
+                assetData: assetData.value
             });
 
             // Listen for thumbnail creation events (KeyT press)
@@ -209,27 +209,27 @@ onMounted(async () => {
             });
         }
     } catch (error) {
-        console.error('Failed to load entity:', error);
+        console.error('Failed to load asset:', error);
     }
 });
 
-// Watch for route changes to load different entities
+// Watch for route changes to load different assets.
 watch(() => route.params.id, async (newId, oldId) => {
     if (newId && newId !== oldId) {
         try {
-            entityData.value = await editor.loadEntity(newId);
+            assetData.value = await editor.loadAsset(newId);
 
-            // Make entity data available in editor context for ownership checks
+            // Make asset data available in editor context for ownership checks.
             if (editor.getContext()) {
-                editor.getContext().entityData = entityData.value;
+                editor.getContext().assetData = assetData.value;
 
-                editor.getContext().events.emit("entity:loaded", {
-                    entityId: newId,
-                    entityData: entityData.value
+                editor.getContext().events.emit("asset:loaded", {
+                    assetId: newId,
+                    assetData: assetData.value
                 });
             }
         } catch (error) {
-            console.error('Failed to load entity:', error);
+            console.error('Failed to load asset:', error);
         }
     }
 });

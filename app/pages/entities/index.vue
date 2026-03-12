@@ -1,6 +1,6 @@
 <template>
     <div class="grid gap-4" :class="entities.length ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4' : 'grid-cols-1'">
-        <AssetsNewEntity />
+        <AssetsNewAsset />
         <UCard 
             v-for="entity in entities" 
             :key="entity._id" 
@@ -38,7 +38,7 @@
         <UCard class="w-full max-w-sm mx-4">
             <template #header>
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold">Delete Entity</h3>
+                    <h3 class="text-lg font-semibold">Delete Asset</h3>
                     <UButton icon="i-lucide-x" variant="ghost" size="xs" @click="deleteConfirmation = null" />
                 </div>
             </template>
@@ -76,7 +76,7 @@ const isDeleting = ref(false);
 
 async function fetchEntities() {
     try {
-        const data = await $fetch('/api/user/entities');
+        const data = await $fetch('/api/user/assets');
         entities.value = data;
     } catch (error) {
         console.error('Error fetching entities:', error);
@@ -92,7 +92,7 @@ async function confirmDelete() {
     
     isDeleting.value = true;
     try {
-        await $fetch(`/api/entities/${deleteConfirmation.value._id}`, {
+        await $fetch(`/api/assets/${deleteConfirmation.value._id}`, {
             method: 'DELETE'
         });
         
@@ -100,7 +100,7 @@ async function confirmDelete() {
         entities.value = entities.value.filter(e => e._id !== deleteConfirmation.value._id);
         deleteConfirmation.value = null;
     } catch (error) {
-        console.error('Error deleting entity:', error);
+        console.error('Error deleting asset:', error);
     } finally {
         isDeleting.value = false;
     }

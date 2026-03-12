@@ -24,7 +24,7 @@ async function uploadAssets() {
     };
     try {
         const query = props.folder ? { folder: props.folder } : {};
-        await $fetch('/api/assets', {
+        await $fetch('/api/files', {
             method: 'POST',
             body: formData,
             query,

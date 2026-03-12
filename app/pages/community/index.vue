@@ -200,7 +200,7 @@ function handleKeyDown(event) {
 async function fetchEntities() {
     try {
         loading.value = true;
-        const data = await $fetch('/api/entities');
+        const data = await $fetch('/api/assets');
         
         // Server now returns processed vote counts
         entities.value = data;
@@ -237,12 +237,12 @@ async function vote(entityId, voteType) {
     votingStates.value[entityId] = true;
     
     try {
-        const response = await $fetch(`/api/entities/${entityId}/vote`, {
+        const response = await $fetch(`/api/assets/${entityId}/vote`, {
             method: 'POST',
             body: { voteType }
         });
         
-        // Update the entity with new vote data
+        // Update the asset with new vote data
         entity.likesCount = response.likesCount;
         entity.dislikesCount = response.dislikesCount;
         entity.userVote = response.userVote;
@@ -265,10 +265,10 @@ async function addToMyAssets(entity) {
     addingToAssets.value[entity._id] = true;
     
     try {
-        await $fetch('/api/user/entitylinks', {
+        await $fetch('/api/user/assetlinks', {
             method: 'POST',
             body: {
-                targetEntityId: entity._id,
+                targetAssetId: entity._id,
                 name: entity.name,
                 description: entity.description,
                 tags: entity.tags || []
@@ -276,11 +276,11 @@ async function addToMyAssets(entity) {
         });
         
         // Show success notification (you can replace with your toast system)
-        console.log('Entity added to your assets!');
+        console.log('Asset added to your assets!');
         // TODO: Add toast notification here if you have one
         
     } catch (error) {
-        console.error('Failed to add entity to assets:', error);
+        console.error('Failed to add asset to assets:', error);
         if (error.statusCode === 409) {
             alert('This item is already in your assets');
         } else {
@@ -293,21 +293,21 @@ async function addToMyAssets(entity) {
 
 function selectEntity(entity) {
     const context = editor.getContext();
-    if (context?.entity) {
-        // Already in an entity, place this entity as an instance
+    if (context?.assetId) {
+        // Already in an asset, place this asset as an instance
         context.events.emit("object:placement:start", {
-            sourceType: "entity",
+            sourceType: "asset",
             sourceId: entity._id
         });
         return; // Don't navigate
     } else {
-        // Not in an entity, navigate to it
+        // Not in an asset, navigate to it
         navigateTo(`/${entity._id}`, { external: true });
     }
 }
 
 function openEntity(entity) {
-    // Always navigate to entity regardless of context
+    // Always navigate to asset regardless of context
     navigateTo(`/${entity._id}`, { external: true });
 }
 

@@ -6,15 +6,15 @@ export const InstanceModel = defineMongooseModel({
   schema: {
     _id: { type: String, default: () => crypto.randomUUID() },
     user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
-    entity: { type: String, required: true, ref: 'Entity' },
+    assetId: { type: String, required: true, ref: 'Asset' },
     sourceType: {
       type: String,
-      enum: ["asset", "builtin", "custom", "entity"],
-      default: "asset",
+      enum: ["file", "builtin", "custom", "asset"],
+      default: "file",
       required: true,
     },
     sourceId: { type: String, required: true },
-    asset: { type: String, required: false, ref: 'Asset' },
+    fileId: { type: String, required: false, ref: 'File' },
     position: {
       type: [Number],
       default: [0, 0, 0]

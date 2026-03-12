@@ -2,7 +2,7 @@ import * as THREE from "three";
 import EngineContext from "./EngineContext";
 import CameraControls from "./CameraControls";
 import Cursor3D from "./Cursor3D";
-import EntityLoader from "./EntityLoader";
+import AssetLoader from "./AssetLoader";
 import Dust from "./Dust";
 import InputHandler from "./InputHandler";
 import Keybindings from "./Keybindings";
@@ -46,7 +46,7 @@ export default class Engine {
         this.systems.dust = new Dust(this.context);
         this.systems.cameraControls = new CameraControls(this.context);
         this.systems.cursor = new Cursor3D(this.context);
-        this.systems.entity = new EntityLoader(this.context);
+        this.systems.assetLoader = new AssetLoader(this.context);
 
         // Make cursor accessible through context for easier access
         this.context.cursor = this.systems.cursor;
@@ -119,26 +119,26 @@ export default class Engine {
         });
     }
 
-    async loadEntity(entityId) {
-        this.context.entity = entityId;
-        return await this.systems.entity.load(entityId);
+    async loadAsset(assetId) {
+        this.context.assetId = assetId;
+        return await this.systems.assetLoader.load(assetId);
     }
 
-    async loadAsset(assetId) {
+    async loadFile(fileId) {
         // Clear the scene of any existing content
         this.clearScene();
 
         // Load and display the asset
         try {
-            await this.systems.entity.cacheAsset(assetId);
-            const asset = this.systems.entity.ctx.assets.get(assetId);
+            await this.systems.assetLoader.cacheAsset(fileId);
+            const asset = this.systems.assetLoader.ctx.assets.get(fileId);
             if (asset) {
                 const assetClone = asset.clone();
                 this.context.scene.add(assetClone);
                 return assetClone;
             }
         } catch (error) {
-            console.error('Failed to load asset:', error);
+            console.error('Failed to load file:', error);
             throw error;
         }
     }
@@ -169,6 +169,7 @@ export default class Engine {
         this.systems.dust.update();
         const delta = this.context.clock.getDelta();
         if (this.context.state.enabled) this.systems.cameraControls.update(delta);
+        this.systems.assetLoader.updateLods(this.context.camera);
         this.context.renderer.render(this.context.scene, this.context.camera);
         requestAnimationFrame(this.animate.bind(this));
     }

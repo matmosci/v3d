@@ -49,13 +49,13 @@ export default defineEventHandler(async (event) => {
 
     const allFolderIds = (aggregationResult[0]?.allFolderIds) || [folder._id];
     
-    // Move all assets and entities from all these folders to root (folder: null)
+    // Move all files and assets from all these folders to root (folder: null)
     await Promise.all([
-        AssetModel.updateMany(
+        FileModel.updateMany(
             { folder: { $in: allFolderIds }, user: user.id, deletedAt: null },
             { folder: null }
         ),
-        EntityModel.updateMany(
+        AssetModel.updateMany(
             { folder: { $in: allFolderIds }, user: user.id, deletedAt: null },
             { folder: null }
         )

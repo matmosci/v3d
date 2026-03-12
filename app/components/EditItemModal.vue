@@ -3,7 +3,7 @@
         <UCard class="bg-default rounded-lg shadow-lg max-w-md w-full mx-4" @click.stop>
             <template #header>
                 <div class="flex items-center justify-between">
-                    <h3 class="font-semibold text-lg">Edit {{ itemType === 'entity' ? 'Entity' : 'Asset' }}</h3>
+                    <h3 class="font-semibold text-lg">Edit {{ itemType === 'file' ? 'File' : 'Asset' }}</h3>
                     <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
                         <UIcon name="i-lucide-x" class="w-5 h-5" />
                     </button>
@@ -14,9 +14,9 @@
                 <!-- Name Field -->
                 <div>
                     <label class="block text-sm font-medium mb-1">
-                        {{ itemType === 'asset' ? 'File Name' : 'Name' }}
+                        {{ itemType === 'file' ? 'File Name' : 'Name' }}
                     </label>
-                    <UInput v-model="formData.name" :placeholder="`Enter ${itemType === 'asset' ? 'file' : ''} name...`"
+                    <UInput v-model="formData.name" :placeholder="`Enter ${itemType === 'file' ? 'file' : ''} name...`"
                         required />
                 </div>
 
@@ -79,8 +79,8 @@ const props = defineProps({
     },
     itemType: {
         type: String,
-        required: true, // 'entity' or 'asset'
-        validator: (value) => ['entity', 'asset'].includes(value)
+        required: true, // 'asset' or 'file'
+        validator: (value) => ['asset', 'file'].includes(value)
     }
 });
 
@@ -99,7 +99,7 @@ const saving = ref(false);
 const populateForm = () => {
     if (props.item && props.show) {
         formData.value = {
-            name: props.itemType === 'asset' ? props.item.originalname || '' : props.item.name || '',
+            name: props.itemType === 'file' ? props.item.originalname || '' : props.item.name || '',
             description: props.item.description || '',
             tags: [...(props.item.tags || [])]
         };
@@ -135,14 +135,14 @@ async function saveChanges() {
     try {
         saving.value = true;
 
-        const endpoint = props.itemType === 'asset' ? 'assets' : 'entities';
+        const endpoint = props.itemType === 'file' ? 'files' : 'assets';
         const updateData = {
             description: formData.value.description,
             tags: formData.value.tags
         };
 
         // Add name field with correct property name
-        if (props.itemType === 'asset') {
+        if (props.itemType === 'file') {
             updateData.originalname = formData.value.name;
         } else {
             updateData.name = formData.value.name;

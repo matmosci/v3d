@@ -111,7 +111,7 @@ const goBack = () => {
 };
 
 const downloadFile = () => {
-  window.location.href = `/api/assets/${route.params.id}/download?lod=lod${selectedLodLevel.value}`;
+  window.location.href = `/api/files/${route.params.id}/download?lod=lod${selectedLodLevel.value}`;
 };
 
 const normalizeLodDistances = (input = []) => {
@@ -130,7 +130,7 @@ const normalizeLodDistances = (input = []) => {
 };
 
 const fetchAssetMeta = async () => {
-  const asset = await $fetch(`/api/assets/${route.params.id}`);
+  const asset = await $fetch(`/api/files/${route.params.id}`);
   availableLodLevels.value = Array.isArray(asset.availableLodLevels)
     ? asset.availableLodLevels
     : [0];
@@ -143,7 +143,7 @@ const loadAssetPreview = async (requestedLevel = selectedLodLevel.value) => {
   const assetId = route.params.id;
 
   const gltf = await new Promise((resolve, reject) => {
-    loader.load(`/api/assets/${assetId}/data?lod=lod${requestedLevel}`, resolve, undefined, reject);
+    loader.load(`/api/files/${assetId}/data?lod=lod${requestedLevel}`, resolve, undefined, reject);
   });
 
   if (token !== activePreviewLoadToken) return;
@@ -271,7 +271,7 @@ const handleFileSelection = async (event) => {
     const formData = new FormData();
     formData.append('file', file);
 
-    await $fetch(`/api/assets/${route.params.id}/file`, {
+    await $fetch(`/api/files/${route.params.id}/file`, {
       method: 'PUT',
       query: { lod: `lod${selectedLodLevel.value}` },
       body: formData,
@@ -295,7 +295,7 @@ const saveLodDistances = async () => {
   try {
     savingLodDistances.value = true;
     lodDistances.value = normalizeLodDistances(lodDistances.value);
-    await $fetch(`/api/assets/${route.params.id}`, {
+    await $fetch(`/api/files/${route.params.id}`, {
       method: 'PUT',
       body: {
         lodDistances: lodDistances.value,
@@ -360,7 +360,7 @@ const createThumbnail = async () => {
       renderer.setClearColor(previousClearColor, previousClearAlpha);
     }
 
-    await $fetch(`/api/assets/${route.params.id}/thumbnail`, {
+    await $fetch(`/api/files/${route.params.id}/thumbnail`, {
       method: "POST",
       body: { thumbnail },
     });

@@ -73,7 +73,7 @@
                 <!-- Assets Grid -->
                 <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8">
                     <!-- Upload and Create Options -->
-                    <AssetsNewEntity @created="fetchEntities" />
+                    <AssetsNewAsset @created="fetchEntities" />
                     <AssetsFileInput :folder="currentFolder" @uploaded="handleFileUploaded" />
 
                     <!-- Subfolders in current directory -->
@@ -92,17 +92,17 @@
                         <span class="text-sm text-center truncate w-full">{{ subfolder.name }}</span>
                     </div>
 
-                    <!-- Entities -->
-                    <AssetsEntityItem v-for="entity in entities" :key="entity._id" :entity="entity"
-                        @click="selectEntity(entity)" @deleted="removeEntity" @moved="handleEntityMoved" />
+                    <!-- Assets -->
+                    <AssetsAssetItem v-for="asset in entities" :key="asset._id" :asset="asset"
+                        @click="selectEntity(asset)" @deleted="removeEntity" @moved="handleEntityMoved" />
                     
-                    <!-- Entity Links -->
-                    <AssetsEntityLinkItem v-for="entityLink in entityLinks" :key="`link-${entityLink._id}`" :entity-link="entityLink"
-                        @deleted="removeEntityLink" @moved="handleEntityLinkMoved" />
+                    <!-- Asset Links -->
+                    <AssetsAssetLinkItem v-for="assetLink in assetLinks" :key="`link-${assetLink._id}`" :asset-link="assetLink"
+                        @deleted="removeAssetLink" @moved="handleAssetLinkMoved" />
                 </div>
 
                 <!-- Empty State -->
-                <div v-if="entities.length === 0 && entityLinks.length === 0 && currentSubfolders.length === 0" class="text-center py-12">
+                <div v-if="entities.length === 0 && assetLinks.length === 0 && currentSubfolders.length === 0" class="text-center py-12">
                     <UIcon name="i-lucide-folder-open" class="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <p class="text-gray-500">No assets or folders here yet.</p>
                     <p class="text-sm text-gray-400 mt-1">Create a new asset or upload files to get started.</p>
@@ -174,7 +174,7 @@ const { folders, currentFolder, fetchFolders, createFolder: createFolderApi, upd
 
 // State
 const entities = ref([]);
-const entityLinks = ref([]);
+const assetLinks = ref([]);
 const showCreateFolderModal = ref(false);
 const newFolderName = ref('');
 const newFolderColor = ref('#3b82f6');
@@ -224,14 +224,14 @@ async function fetchEntities() {
     try {
         const params = currentFolder.value ? { folder: currentFolder.value } : {};
         
-        // Fetch both entities and entity links in parallel
-        const [entitiesData, entityLinksData] = await Promise.all([
-            $fetch('/api/user/entities', { params }),
-            $fetch('/api/user/entitylinks', { params })
+        // Fetch both entities and asset links in parallel
+        const [entitiesData, assetLinksData] = await Promise.all([
+            $fetch('/api/user/assets', { params }),
+            $fetch('/api/user/assetlinks', { params })
         ]);
         
         entities.value = entitiesData;
-        entityLinks.value = entityLinksData;
+        assetLinks.value = assetLinksData;
     } catch (error) {
         console.error(error);
     }
@@ -243,9 +243,9 @@ async function handleFileUploaded(uploadResults) {
 
 function selectEntity(entity) {
     const context = editor.getContext();
-    if (context.entity) {
+    if (context.assetId) {
         context.events.emit("object:placement:start", {
-            sourceType: "entity",
+            sourceType: "asset",
             sourceId: entity._id
         });
     } else {
@@ -257,17 +257,17 @@ function removeEntity(entityId) {
     entities.value = entities.value.filter(entity => entity._id !== entityId);
 }
 
-function removeEntityLink(entityLinkId) {
-    entityLinks.value = entityLinks.value.filter(link => link._id !== entityLinkId);
+function removeAssetLink(assetLinkId) {
+    assetLinks.value = assetLinks.value.filter(link => link._id !== assetLinkId);
 }
 
-function handleEntityLinkMoved(entityLinkId, targetFolderId) {
-    // Handle entity link folder move
-    const entityLink = entityLinks.value.find(link => link._id === entityLinkId);
-    if (entityLink) {
-        entityLink.folder = targetFolderId;
+function handleAssetLinkMoved(assetLinkId, targetFolderId) {
+    // Handle asset link folder move
+    const assetLink = assetLinks.value.find(link => link._id === assetLinkId);
+    if (assetLink) {
+        assetLink.folder = targetFolderId;
         if (targetFolderId !== currentFolder.value) {
-            removeEntityLink(entityLinkId);
+            removeAssetLink(assetLinkId);
         }
     }
 }
@@ -348,9 +348,9 @@ async function handleItemMove(folderId, itemType) {
     // This function can be used for other move operations if needed
 }
 
-// Handle entity moved event
+// Handle asset moved event
 async function handleEntityMoved(data) {
-    console.log('Entity moved:', data);
+    console.log('Asset moved:', data);
     // Refresh the current folder view to reflect the change
     await fetchEntities();
 }
@@ -376,17 +376,17 @@ async function onRootDrop(event) {
         const data = JSON.parse(event.dataTransfer.getData('application/json'));
 
         if (data.type === 'entity') {
-            await $fetch(`/api/entities/${data.id}/move`, {
+            await $fetch(`/api/assets/${data.id}/move`, {
                 method: 'PUT',
                 body: { folder: null }
             });
-        } else if (data.type === 'entity-link') {
-            await $fetch(`/api/user/entitylinks/${data.id}/move`, {
+        } else if (data.type === 'asset-link') {
+            await $fetch(`/api/user/assetlinks/${data.id}/move`, {
                 method: 'PUT',
                 body: { folder: null }
             });
         } else if (data.type === 'asset') {
-            await $fetch(`/api/assets/${data.id}/move`, {
+            await $fetch(`/api/files/${data.id}/move`, {
                 method: 'PUT',
                 body: { folder: null }
             });
@@ -437,17 +437,17 @@ async function onInlineFolderDrop(event, folderId) {
         const data = JSON.parse(event.dataTransfer.getData('application/json'));
         
         if (data.type === 'entity') {
-            await $fetch(`/api/entities/${data.id}/move`, {
+            await $fetch(`/api/assets/${data.id}/move`, {
                 method: 'PUT',
                 body: { folder: folderId }
             });
-        } else if (data.type === 'entity-link') {
-            await $fetch(`/api/user/entitylinks/${data.id}/move`, {
+        } else if (data.type === 'asset-link') {
+            await $fetch(`/api/user/assetlinks/${data.id}/move`, {
                 method: 'PUT',
                 body: { folder: folderId }
             });
         } else if (data.type === 'asset') {
-            await $fetch(`/api/assets/${data.id}/move`, {
+            await $fetch(`/api/files/${data.id}/move`, {
                 method: 'PUT',
                 body: { folder: folderId }
             });
@@ -538,12 +538,12 @@ onMounted(async () => {
     const context = editor.getContext();
     if (context) {
         context.events.on("thumbnail:created", ({ thumbnail }) => {
-            const currentEntityId = context.entity;
-            if (currentEntityId && entities.value) {
-                const entityIndex = entities.value.findIndex(entity => entity._id === currentEntityId);
-                if (entityIndex !== -1) {
-                    entities.value[entityIndex] = {
-                        ...entities.value[entityIndex],
+            const currentAssetId = context.assetId;
+            if (currentAssetId && entities.value) {
+                const assetIndex = entities.value.findIndex(asset => asset._id === currentAssetId);
+                if (assetIndex !== -1) {
+                    entities.value[assetIndex] = {
+                        ...entities.value[assetIndex],
                         thumbnail: thumbnail
                     };
                 }

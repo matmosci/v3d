@@ -58,8 +58,8 @@ function selectAsset() {
     if (showDeleteConfirm.value) return; // Don't select if in delete mode
 
     const context = editor.getContext();
-    if (context.entity) {
-        // Already in an entity, just start placement
+    if (context.assetId) {
+        // Already in an asset, just start placement
         context.events.emit("object:placement:start", { asset: props.asset._id });
         return;
     }
@@ -85,7 +85,7 @@ async function deleteAsset() {
 
     deleting.value = true;
     try {
-        await $fetch(`/api/assets/${props.asset._id}`, {
+        await $fetch(`/api/files/${props.asset._id}`, {
             method: 'DELETE'
         });
 

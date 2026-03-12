@@ -105,11 +105,6 @@ export default function useEditor() {
         engine.context.events.emit("object:deselected");
     }
 
-    function loadEntity(entityId) {
-        if (!engine) return;
-        return engine.loadEntity(entityId);
-    }
-
     function loadAsset(assetId) {
         if (!engine) return;
         return engine.loadAsset(assetId);
@@ -133,7 +128,6 @@ export default function useEditor() {
         updateSelectedTransform,
         ungroupSelectedInstance,
         deselectSelectedInstance,
-        loadEntity,
         loadAsset,
         clearScene,
     };

@@ -10,10 +10,10 @@ export default defineEventHandler(async (event) => {
         folder: folderId
     };
 
-    const assets = await AssetModel.find(filter)
+    const entities = await AssetModel.find(filter)
         .select("-user -__v")
         .sort({ createdAt: -1 })
         .lean();
 
-    return assets;
+    return entities;
 });

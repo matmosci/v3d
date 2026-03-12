@@ -75,13 +75,13 @@ async function deleteEntity() {
 
     deleting.value = true;
     try {
-        await $fetch(`/api/entities/${props.entity._id}`, {
+        await $fetch(`/api/assets/${props.entity._id}`, {
             method: 'DELETE'
         });
 
         emit('deleted', props.entity._id);
     } catch (error) {
-        console.error('Failed to delete entity:', error);
+        console.error('Failed to delete asset:', error);
         // You might want to show a toast notification here
     } finally {
         deleting.value = false;
